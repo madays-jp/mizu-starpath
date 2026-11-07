@@ -95,8 +95,8 @@ $('titleSettings').onclick=openSettings;$('gameSettings').onclick=openSettings;
 $('languageSetting').onchange=()=>{const value=$('languageSetting').value==='en';transaction(()=>{heart.prefs.en=value;preferences();});};
 $('motionSetting').onchange=()=>{const value=$('motionSetting').checked;transaction(()=>{heart.prefs.motion=value;preferences();});};
 $('buttonsSetting').onchange=()=>{const value=$('buttonsSetting').checked;transaction(()=>{heart.prefs.buttons=value;preferences();});};
-const priorMove=move;move=d=>{if(!inPlay||$('settings').open)return;return transaction(()=>priorMove(d));};
-const priorLoad=load;load=i=>transaction(()=>{if(!Number.isInteger(i)||i<0||i>unlockedThrough())return;heart.paid=false;priorLoad(i);preferences();});
+const priorMove=move;move=d=>{if(!inPlay||$('settings').open)return;return transaction(()=>{const before=won;priorMove(d);if(!before&&won)scheduleClearReturn();});};
+const priorLoad=load;load=i=>transaction(()=>{cancelClearReturn();if(!Number.isInteger(i)||i<0||i>unlockedThrough())return;heart.paid=false;priorLoad(i);preferences();});
 const priorUndo=$('undo').onclick;$('undo').onclick=()=>transaction(priorUndo);
 $('lang').onclick=()=>transaction(()=>{heart.prefs.en=!heart.prefs.en;preferences();});
 window.addEventListener('storage',e=>{if(e.key===HEARTKEY){heartBlocked=true;heartDisplay();}});
@@ -110,9 +110,14 @@ function mapCurrent(){return won?Math.min(29,level+1):level;}
 function paintCourseMap(){const wrap=$('levels');wrap.innerHTML='';const current=mapCurrent(),unlocked=unlockedThrough();for(let row=0;row<6;row++){const indices=Array.from({length:5},(_,j)=>row*5+j);if(row%2)indices.reverse();for(const i of indices){const b=document.createElement('button');b.type='button';b.className='course-node'+(save.best[i]?' done':'')+(i===current?' current':'');b.disabled=i>unlocked;b.setAttribute('aria-label',txt('ステージ ','Stage ')+(i+1)+(i>unlocked?txt(' 未解放',' locked'):save.best[i]?txt(' クリア済み',' cleared'):'')+(i===current?txt(' ミズーはここ',' Mizu is here'):''));if(i===current){const img=document.createElement('img');img.src='mizu.png';img.alt=txt('ミズー','Mizu');img.className='map-mizu';b.append(img);b.setAttribute('aria-current','step');}const n=document.createElement('span');n.textContent=String(i+1);b.append(n);const mark=document.createElement('small');mark.textContent=i>unlocked?'🔒':save.best[i]?'★':'•';b.append(mark);b.onclick=()=>selectCourse(i);wrap.append(b);}}$('select').textContent=txt('ミズーのほしみちマップ','Mizu’s starpath map');}
 function celebrateIce(){const fx=$('iceCelebration');fx.replaceChildren();fx.hidden=false;const reduced=!heart.prefs.motion||(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches);fx.className='ice-celebration'+(reduced?' calm':'');const halo=document.createElement('div');halo.className='ice-halo';fx.append(halo);if(!reduced){const rays=document.createElement('div');rays.className='ice-rays';fx.append(rays);const ring=document.createElement('div');ring.className='ice-ring';fx.append(ring);}if(!reduced)for(let i=0;i<32;i++){const star=document.createElement('i');star.textContent=i%3?'✧':'✦';star.style.setProperty('--x',((i*37)%100)+'%');star.style.setProperty('--delay',(i%5)*60+'ms');star.style.setProperty('--hue',String(i*29));fx.append(star);}clearTimeout(celebrateIce.timer);celebrateIce.timer=setTimeout(()=>{fx.hidden=true;fx.replaceChildren();},2000);}
 
-function showMap(){inPlay=false;$('titleScreen').hidden=true;$('gameScreen').hidden=true;$('mapScreen').hidden=false;preferences();$('mapTitle').focus();}
-function showTitle(){inPlay=false;$('gameScreen').hidden=true;$('mapScreen').hidden=true;$('titleScreen').hidden=false;preferences();$('startGame').focus();}
-async function selectCourse(i){if(!Number.isInteger(i)||i<0||i>unlockedThrough())return;await transaction(()=>{if(i!==level||won){heart.paid=false;priorLoad(i);}inPlay=true;$('titleScreen').hidden=true;$('mapScreen').hidden=true;$('gameScreen').hidden=false;preferences();render();$('backMap').focus();});}
+function showMap(){cancelClearReturn();inPlay=false;$('titleScreen').hidden=true;$('gameScreen').hidden=true;$('mapScreen').hidden=false;preferences();$('mapTitle').focus();}
+function showTitle(){cancelClearReturn();inPlay=false;$('gameScreen').hidden=true;$('mapScreen').hidden=true;$('titleScreen').hidden=false;preferences();$('startGame').focus();}
+async function selectCourse(i){cancelClearReturn();if(!Number.isInteger(i)||i<0||i>unlockedThrough())return;await transaction(()=>{if(i!==level||won){heart.paid=false;priorLoad(i);}inPlay=true;$('titleScreen').hidden=true;$('mapScreen').hidden=true;$('gameScreen').hidden=false;preferences();render();$('backMap').focus();});}
+
+// Clear feedback finishes before navigation. A new navigation invalidates the old timer.
+let clearReturnTimer=null,clearReturnGeneration=0;
+function cancelClearReturn(){clearReturnGeneration++;if(clearReturnTimer!==null)clearTimeout(clearReturnTimer);clearReturnTimer=null;}
+function scheduleClearReturn(){cancelClearReturn();const generation=clearReturnGeneration,cleared=level;clearReturnTimer=setTimeout(()=>{clearReturnTimer=null;if(generation===clearReturnGeneration&&inPlay&&won&&level===cleared&&!heartBlocked)showMap();},2100);}
 
 </script></html>
 
