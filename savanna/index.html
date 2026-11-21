@@ -200,7 +200,7 @@
   </div>
 
   <div class="card">
-    <h2>🎖️ ハンターレベル（見守りレベル）</h2>
+    <h2>🎖️ みまもりレベル</h2>
     <div class="small" id="levelGuide" style="line-height:1.8;"></div>
     <button class="act" id="btnReset" style="width:100%; margin-top:8px; font-size:13px; padding:8px;">はじめからやり直す</button>
   </div>
@@ -534,7 +534,7 @@ function showLevelUp(){
   pendingCampNote = '';
   document.getElementById('levelText').innerHTML = '新しい変化：<b>'+lv.desc+'</b>'+extra+campNote+'<br><br>懐かせた数や群れの成長で、見守り人として認められてきた証拠だ。';
   document.getElementById('levelSheet').classList.remove('hidden');
-  addLog('🎖️ ハンターレベルが Lv.'+S.level+'「'+lv.title+'」に上がった！ '+lv.desc);
+  addLog('🎖️ みまもりレベルが Lv.'+S.level+'「'+lv.title+'」に上がった！ '+lv.desc);
 }
 
 /* ===== actions ===== */
@@ -725,7 +725,7 @@ function showSeason(oldSeason){
     '・餌をあげた回数：<b>'+st.fed+'回</b><br>' +
     '・新しい仲間：<b>'+st.newFriends+'頭</b><br>' +
     '・育った子：<b>'+st.grew+'頭</b>／ 誕生：<b>'+st.births+'頭</b><br>' +
-    '・今の群れ：<b>'+S.animals.filter(function(a){return a.joined;}).length+'頭</b>　見守りレベル：<b>Lv.'+S.level+' '+LEVELS[S.level].title+'</b><br><br>' +
+    '・今の群れ：<b>'+S.animals.filter(function(a){return a.joined;}).length+'頭</b>　みまもりレベル：<b>Lv.'+S.level+' '+LEVELS[S.level].title+'</b><br><br>' +
     (wasDry ? '雨で草が伸び、赤ちゃんが生まれやすい季節になる。' : '水と餌が貴重になる。集める日を大切に。') +
     '<br>物語は終わらない。次の季節も、日々を見守っていこう。';
   document.getElementById('seasonSheet').classList.remove('hidden');
