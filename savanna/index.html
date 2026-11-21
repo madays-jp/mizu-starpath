@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>サバンナの見守り人 | Savanna Keeper (試作)</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; background:#f7ead0; color:#33291a; }
+  #app { max-width: 520px; margin: 0 auto; min-height: 100vh; display:flex; flex-direction:column; }
+  header { background:#7a4a21; color:#fff7e6; padding:10px 14px 8px; }
+  header h1 { font-size:20px; margin:0; }
+  header p { font-size:12px; margin:2px 0 0; opacity:.9; }
+  #status { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fff3d6; border-bottom:2px solid #e0c48a; font-size:13px; }
+  .chip { background:#fff; border:1px solid #d9bd7f; border-radius:999px; padding:3px 9px; }
+  .chip b { color:#7a4a21; }
+  #xpbar { height:6px; background:#e8dcc0; border-radius:3px; overflow:hidden; margin-top:3px; }
+  #xpfill { height:100%; background:#e08a2e; width:0%; transition:width .3s; }
+  /* ===== map ===== */
+  #mapWrap { position:relative; height:430px; overflow:hidden; touch-action:none; background:#d9ae54; border-bottom:2px solid #e0c48a; }
+  #world { position:absolute; left:0; top:0; width:1200px; height:900px; will-change:transform; }
+  #world.dry { background: radial-gradient(circle at 70% 30%, #f2d488 0, #e8c26e 45%, #d9ae54 100%); }
+  #world.rainy { background: radial-gradient(circle at 70% 30%, #b7d977 0, #93bd5e 45%, #7fb254 100%); }
+  .decor { position:absolute; transform:translate(-50%,-50%); pointer-events:none; line-height:1; }
+  #waterhole { position:absolute; width:170px; height:110px; transform:translate(-50%,-50%); background:radial-gradient(ellipse at center, #a8dcf0 0%, #6fb9d9 70%, #57a3c4 100%); border-radius:50%; pointer-events:none; text-align:center; }
+  #waterhole span { position:relative; top:38px; font-size:22px; }
+  #campZone { position:absolute; width:260px; height:260px; transform:translate(-50%,-50%); border:2px dashed rgba(255,250,230,.65); border-radius:50%; pointer-events:none; }
+  #camp { position:absolute; transform:translate(-50%,-88%); text-align:center; pointer-events:none; line-height:1.05; }
+  #camp .tent { font-size:56px; display:block; filter:drop-shadow(0 4px 3px rgba(0,0,0,.25)); }
+  #camp .fam { font-size:21px; display:block; }
+  #camp .lbl { font-size:11px; font-weight:700; background:rgba(255,248,231,.85); border-radius:8px; padding:1px 6px; color:#7a4a21; }
+  .sprite { position:absolute; left:0; top:0; pointer-events:none; will-change:transform; }
+  .spr-in { transform:translate(-50%,-92%); text-align:center; line-height:1.05; }
+  .spr-emoji { display:block; filter:drop-shadow(0 3px 2px rgba(0,0,0,.25)); }
+  .spr-name { display:inline-block; font-size:11px; font-weight:700; background:rgba(255,248,231,.85); border-radius:8px; padding:0 5px; color:#4a3512; margin-top:1px; }
+  .spr-badge { position:absolute; top:-14px; right:-16px; font-size:17px; display:none; }
+  .spr-ring { position:absolute; left:50%; top:64%; width:64px; height:64px; transform:translate(-50%,-50%); border:3px solid #ff8c1a; border-radius:50%; display:none; animation:pulse 1s infinite; }
+  .spr-print { position:absolute; left:50%; top:-30px; transform:translateX(-50%); font-size:16px; display:none; }
+  .sprite.target .spr-ring { display:block; }
+  .sprite.target .spr-print { display:block; }
+  .sprite.alerted .spr-badge { display:block; }
+  .sprite.roaring .spr-badge { display:block; }
+  @keyframes pulse { 0%{opacity:1; } 50%{opacity:.35; } 100%{opacity:1; } }
+  #playerSprite .spr-name { background:#2f6db3; color:#fff; }
+  #mapHint { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); background:rgba(40,26,8,.72); color:#fff7e6; font-size:12px; padding:5px 12px; border-radius:999px; pointer-events:none; white-space:nowrap; z-index:5; }
+  #zoneLabel { position:absolute; left:8px; top:8px; background:rgba(40,26,8,.75); color:#fff7e6; font-size:13px; font-weight:700; padding:5px 12px; border-radius:999px; z-index:6; pointer-events:none; }
+  .zoneTint { position:absolute; pointer-events:none; }
+  .zoneName { position:absolute; transform:translate(-50%,-50%); font-size:15px; font-weight:700; color:rgba(74,53,18,.6); background:rgba(255,248,231,.45); padding:2px 10px; border-radius:999px; pointer-events:none; white-space:nowrap; }
+  /* intro dialogue */
+  #introBox { display:flex; gap:12px; align-items:flex-start; background:#fff; border:2px solid #e0c48a; border-radius:14px; padding:12px; text-align:left; cursor:pointer; margin-top:8px; }
+  #introFace { font-size:46px; line-height:1.1; }
+  #introName { font-weight:700; color:#7a4a21; font-size:14px; }
+  #introText { margin:2px 0 4px; font-size:15px; line-height:1.7; }
+  #campNameInput { width:100%; font-size:17px; padding:12px; border-radius:12px; border:2px solid #c99b4a; margin:6px 0 2px; background:#fff; }
+  /* seasonal event dialogue (same form as the intro) */
+  #eventBox { display:flex; gap:12px; align-items:flex-start; background:#fff; border:2px solid #e0c48a; border-radius:14px; padding:12px; text-align:left; margin-top:8px; }
+  #eventFace { font-size:46px; line-height:1.1; }
+  #eventName { font-weight:700; color:#7a4a21; font-size:14px; }
+  #eventText { margin:2px 0 4px; font-size:15px; line-height:1.7; }
+  /* cards */
+  .card { background:#fffdf6; margin:8px 10px; padding:10px 12px; border-radius:14px; border:1px solid #e6d3a3; box-shadow:0 1px 3px rgba(90,60,10,.08); }
+  .card h2 { font-size:15px; margin:0 0 6px; color:#7a4a21; }
+  .trustbar { height:10px; background:#eee0bd; border-radius:5px; overflow:hidden; }
+  .trustfill { height:100%; background:#e86a8a; transition:width .3s; }
+  .small { font-size:12px; color:#6b5a3e; }
+  /* actions */
+  #actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 10px; }
+  button.act { font-size:16px; padding:13px 6px; border-radius:14px; border:2px solid #c99b4a; background:#fff8e7; color:#4a3512; font-weight:700; cursor:pointer; }
+  button.act:active { transform:scale(.97); }
+  button.act:disabled { opacity:.38; }
+  button.act.sleep { grid-column:1 / -1; background:#3d4a7a; color:#fff; border-color:#2c3760; }
+  button.act.primary { background:#ffb84d; border-color:#d98a1f; }
+  #feedArea { display:none; margin:0 10px 8px; background:#fff0f3; border:1px solid #efb7c6; border-radius:14px; padding:10px 12px; }
+  #feedArea.open { display:block; }
+  #feedArea h3 { margin:0 0 8px; font-size:14px; color:#a03d5c; }
+  .foodrow { display:flex; gap:8px; flex-wrap:wrap; }
+  button.food { font-size:15px; padding:10px 12px; border-radius:12px; border:2px solid #d98aa5; background:#fff; cursor:pointer; font-weight:700; }
+  button.food:disabled { opacity:.35; }
+  /* food palette (持ち替え) */
+  button.palfood { font-size:15px; padding:10px 12px; border-radius:12px; border:2px solid #c99b4a; background:#fff; cursor:pointer; font-weight:700; }
+  button.palfood.sel { background:#ffb84d; border-color:#d98a1f; box-shadow:0 0 0 2px rgba(217,138,31,.35); }
+  /* binoculars: faint footprint marker on animals spotted at range */
+  .sprite.nearprint .spr-print { display:block; opacity:.55; }
+  /* gather points */
+  .gplbl { display:block; font-size:10px; font-weight:700; background:rgba(255,248,231,.85); border-radius:6px; padding:0 4px; color:#4a3512; text-align:center; margin-top:1px; }
+  /* camera field guide */
+  #guideGrid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:6px; }
+  .gcard { width:47%; background:#fff8e7; border:1px solid #e6d3a3; border-radius:12px; padding:8px 6px; text-align:center; }
+  .gcard .e { font-size:36px; display:block; line-height:1.1; }
+  .gcard .nm { font-size:13px; font-weight:700; }
+  .gchips { margin-top:4px; }
+  .gchips span { display:block; font-size:11px; color:#6b5a3e; text-align:left; padding-left:8px; }
+  /* herd */
+  #herdList { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .mate { min-width:96px; text-align:center; background:#fff8e7; border:1px solid #e6d3a3; border-radius:12px; padding:8px 4px; }
+  .mate .e { font-size:38px; display:block; line-height:1.1; }
+  .mate .e.child { font-size:24px; } .mate .e.young { font-size:31px; }
+  .mate .nm { font-size:13px; font-weight:700; }
+  /* log */
+  #log { font-size:13px; line-height:1.65; max-height:170px; overflow-y:auto; }
+  #log div { border-bottom:1px dashed #eee0bd; padding:2px 0; }
+  #log div:first-child { font-weight:700; }
+  /* overlays */
+  .overlay { position:fixed; inset:0; background:rgba(40,26,8,.72); display:flex; align-items:center; justify-content:center; z-index:10; padding:18px; }
+  .overlay.hidden { display:none; }
+  .sheet { background:#fff8e7; border-radius:20px; padding:22px 20px; max-width:440px; width:100%; text-align:center; max-height:86vh; overflow-y:auto; }
+  .sheet h2 { margin:4px 0 8px; color:#7a4a21; font-size:22px; }
+  .sheet p { font-size:14px; line-height:1.7; text-align:left; }
+  .sheet .big { font-size:56px; }
+  .sheet button { font-size:17px; font-weight:700; padding:13px 26px; border-radius:14px; border:none; background:#e08a2e; color:#fff; cursor:pointer; margin-top:10px; width:100%; }
+  .sheet button.sub { background:#fff; color:#7a4a21; border:2px solid #c99b4a; }
+  #toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(80px); background:#33291a; color:#fff7e6; padding:10px 18px; border-radius:999px; font-size:14px; font-weight:700; transition:transform .3s; z-index:20; max-width:92vw; text-align:center; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+  footer { text-align:center; font-size:11px; color:#9a8560; padding:8px 0 18px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🌅 サバンナの見守り人</h1>
+    <p>狩らない。マップを歩いて探し、そっと近づき、餌をあげて、群れに受け入れられていく日々のゲーム（試作）</p>
+  </header>
+
+  <div id="status">
+    <span class="chip">📅 <b id="stDay">1日目</b></span>
+    <span class="chip">🌍 <b id="stSeason">乾季 1/7日</b></span>
+    <span class="chip">⚡ 行動力 <b id="stEnergy">4</b></span>
+    <span class="chip">💪 体力 <b id="stStamina">5</b></span>
+    <span class="chip">⛺ <b id="stCamp">キャンプ</b></span>
+    <span class="chip" id="stBino" style="display:none;">🔭 <b>双眼鏡</b></span>
+    <span class="chip" style="flex:1; min-width:170px;">🎖️ <b id="stLevel">Lv.1 見守り見習い</b>
+      <div id="xpbar"><div id="xpfill"></div></div>
+      <span class="small" id="stXp"></span>
+    </span>
+  </div>
+
+  <div id="mapWrap">
+    <div id="world" class="dry"></div>
+    <div id="zoneLabel">📍 キャンプ</div>
+    <div id="mapHint">👆タップ：歩く　✊ドラッグ：走る（動物が逃げる）　⛺キャンプで眠れる</div>
+  </div>
+
+  <div class="card" id="encCard" style="display:none;">
+    <h2 id="encTitle">？？？</h2>
+    <div class="small" id="encClue"></div>
+    <div style="margin-top:6px;">懐き度 <b id="encTrustNum">0</b> <span class="small" id="encTrustLabel"></span></div>
+    <div class="trustbar"><div class="trustfill" id="encTrustFill" style="width:0%"></div></div>
+    <div class="small" style="margin-top:6px;">距離：<b id="encDist"></b>　大きさ：<b id="encStage"></b>　性格：<b id="encPersona"></b></div>
+    <div class="small" id="encAlertRow" style="margin-top:2px;">警戒：<b id="encAlert"></b></div>
+  </div>
+
+  <div id="actions">
+    <button class="act primary" id="btnSearch">🔍 足跡を探す</button>
+    <button class="act" id="btnGather">🌿 餌を集める</button>
+    <button class="act" id="btnApproach">🤫 そっと近づく</button>
+    <button class="act" id="btnObserve">👀 見守る</button>
+    <button class="act" id="btnCamp">⛺ キャンプへ戻る</button>
+    <button class="act" id="btnFeedSel">🍽️ 餌をあげる</button>
+    <button class="act" id="btnDummy" style="visibility:hidden;">.</button>
+    <button class="act sleep" id="btnSleep">🌙 眠る（キャンプで・次の日へ）</button>
+  </div>
+
+  <div class="card" id="foodPalette">
+    <h2>🎒 餌の持ち替え（タップで選ぶ）</h2>
+    <div class="foodrow">
+      <button class="palfood" data-food="grass">🌾 草 <span class="pc">×3</span></button>
+      <button class="palfood" data-food="nuts">🍃 葉っぱ <span class="pc">×2</span></button>
+      <button class="palfood" data-food="fruit">🍎 果実 <span class="pc">×2</span></button>
+      <button class="palfood" data-food="salt">🧂 塩 <span class="pc">×1</span></button>
+      <button class="palfood" data-food="special">✨ ごちそう <span class="pc">×0</span></button>
+    </div>
+    <div class="small" style="margin-top:6px;">選んだ餌は「🍽️ 餌をあげる」で使える。動物ごとに好物が違う（草・葉っぱ・果実・塩・ごちそう）。マップの採取ポイント（草むら・葉の木・実の木・塩の岩）に近づいて「餌を集める」と、その餌が多めに集まる。</div>
+  </div>
+
+  <div id="feedArea">
+    <h3>🍽️ 餌をあげる（すぐそばで、動物が落ち着いたら選べる）</h3>
+    <div class="foodrow">
+      <button class="food" data-food="grass">🌾 草 <span id="invGrass">×3</span></button>
+      <button class="food" data-food="nuts">🍃 葉っぱ <span id="invNuts">×2</span></button>
+      <button class="food" data-food="fruit">🍎 果実 <span id="invFruit">×2</span></button>
+      <button class="food" data-food="salt">🧂 塩 <span id="invSalt">×1</span></button>
+      <button class="food" data-food="special">✨ ごちそう <span id="invSpecial">×0</span></button>
+    </div>
+    <div class="small" style="margin-top:6px;">動物ごとに好きな餌が違う。好きな餌だと懐き度が大きく上がる。</div>
+  </div>
+
+  <div style="margin:0 10px 8px;">
+    <button class="act" id="btnGuide" style="width:100%;">📖 どうぶつ図鑑（カメラの記録）</button>
+  </div>
+
+  <div class="card">
+    <h2>🐾 群れの仲間（懐き度30で仲間入り）</h2>
+    <div id="herdList"></div>
+    <div class="small" id="herdEmpty">まだ仲間はいない。最初の1頭を懐かせよう。</div>
+  </div>
+
+  <div class="card">
+    <h2>📖 見守り日誌</h2>
+    <div id="log"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎖️ ハンターレベル（見守りレベル）</h2>
+    <div class="small" id="levelGuide" style="line-height:1.8;"></div>
+    <button class="act" id="btnReset" style="width:100%; margin-top:8px; font-size:13px; padding:8px;">はじめからやり直す</button>
+  </div>
+
+  <footer>試作版：見た目は簡素です。核のループの手触り確認用 ／ 自動保存（この端末のみ）</footer>
+</div>
+
+<div class="overlay hidden" id="intro">
+  <div class="sheet">
+    <div class="big">🚙🌅⛺</div>
+    <h2>サバンナに到着！</h2>
+    <div id="introBox">
+      <div id="introFace">👨</div>
+      <div>
+        <div id="introName">パパ</div>
+        <p id="introText"></p>
+        <div class="small">▼ タップでつづき</div>
+      </div>
+    </div>
+    <div id="introNameStep" style="display:none;">
+      <p style="text-align:center;">⛺ キャンプの名前を決めよう</p>
+      <input id="campNameInput" type="text" maxlength="12" placeholder="たとえば：ほしぞらキャンプ">
+      <button id="btnCampName">この名前にする</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="welcome">
+  <div class="sheet">
+    <div class="big">🦁🌅🐘</div>
+    <h2>サバンナの見守り人</h2>
+    <p>あなたはミズー。家族と一緒に、サバンナのほとりのキャンプで暮らし始めた。<br>
+    動物を狩るのではなく、<b>マップを歩いて足跡を探し、そっと近づき、餌をあげて</b>、少しずつ懐かせていく。<br>
+    走って近づくと動物は逃げてしまう。ゆっくり歩いて、近くで待つと、心を開いてくれる。<br>
+    子どもは育ち、群れは増え、乾季と雨季がめぐる。終わりはない。日々の積み重ねがゲームになる。</p>
+    <p>🎖️ 懐かせるとレベルが上がり、新しい動物や手がかりが増えていく（全5段階）。</p>
+    <button id="btnStart">見守りをはじめる</button>
+    <button id="btnContinue" class="sub" style="display:none;">つづきから遊ぶ</button>
+    <button id="btnGuideTitle" class="sub">📖 どうぶつ図鑑</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="guide">
+  <div class="sheet">
+    <div class="big">📖📸</div>
+    <h2>どうぶつ図鑑</h2>
+    <p>出会った動物をカメラで記録した図鑑。餌をあげたり、懐かせたり、大人に育てたりすると、種類ごとの記録が増えていく。</p>
+    <div id="guideGrid"></div>
+    <button id="btnGuideOk">とじる</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="seasonSheet">
+  <div class="sheet">
+    <div class="big" id="seasonEmoji">🌧️</div>
+    <h2 id="seasonTitle">季節の節目</h2>
+    <p id="seasonText"></p>
+    <button id="btnSeasonOk">次の季節へ</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="levelSheet">
+  <div class="sheet">
+    <div class="big">🎖️</div>
+    <h2 id="levelTitle">レベルアップ！</h2>
+    <p id="levelText"></p>
+    <button id="btnLevelOk">やった！</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="eventSheet">
+  <div class="sheet">
+    <div class="big" id="eventEmoji">🌧️</div>
+    <h2 id="eventTitle">季節の出来事</h2>
+    <div id="eventBox">
+      <div id="eventFace">👩</div>
+      <div>
+        <div id="eventName">ママ</div>
+        <p id="eventText"></p>
+      </div>
+    </div>
+    <button id="btnEventA">見守る</button>
+    <button id="btnEventB" class="sub">もうひとつの行動</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ===== Savanna Keeper prototype (single file) ===== */
+var SAVE_KEY = 'savanna-keeper-v1';
+var SEASON_LEN = 7;
+var STAMINA_MAX = 5; /* 体力: 行動力とは別のゲージ。猛獣の威嚇で減り、眠ると全回復 */
+var ROAR_RANGE = 95; /* 猛獣が吠えて威嚇する距離 */
+
+var SPECIES = {
+  zebra:   { emoji:'🦓', name:'シマウマ', pref:'grass',   zone:'grass',  foot:'ひづめの跡が2列に並んでいる', unlock:1 },
+  giraffe: { emoji:'🦒', name:'キリン',   pref:'nuts',    zone:'forest', foot:'大きな丸い足跡と、高い枝の葉が食いちぎられている', unlock:1 },
+  elephant:{ emoji:'🐘', name:'ゾウ',     pref:'fruit',   zone:'water',  foot:'洗面器みたいな巨大な足跡。地面が少しへこんでいる', unlock:2, big:true },
+  lion:    { emoji:'🦁', name:'ライオン', pref:'special', zone:'grass',  foot:'肉球の跡。周りの動物の気配が消えている', unlock:3, beast:true },
+  rhino:   { emoji:'🦏', name:'サイ',     pref:'salt',    zone:'river',  foot:'3本指の大きな足跡と、泥浴びの跡', unlock:4, big:true },
+  whitelion:{ emoji:'🦁', name:'白いライオン', pref:'special', zone:'rocks', foot:'白い毛が1本、草に引っかかっている…珍しい気配！', unlock:5, rare:true, beast:true }
+};
+var FOODS = { grass:{name:'草', emoji:'🌾'}, nuts:{name:'葉っぱ', emoji:'🍃'}, fruit:{name:'果実', emoji:'🍎'}, salt:{name:'塩', emoji:'🧂'}, special:{name:'ごちそう', emoji:'✨'} };
+var NAMES = ['ポコ','モモ','サラ','テオ','ルル','ナラ','ココ','タマ','ソラ','ムギ','ピコ','ノア','ハル','ユキ','マル','レン'];
+var PERSONAS = ['慎重派','食いしん坊','甘えん坊','のんびり屋','好奇心旺盛','少し臆病'];
+var LEVELS = [
+  null,
+  { title:'見守り見習い', need:0,   desc:'シマウマとキリンに出会える' },
+  { title:'足跡読み',     need:30,  desc:'ゾウが現れる／手がかりで動物の種類が分かる' },
+  { title:'群れの友達',   need:75,  desc:'ライオンが現れる／ごちそうが集まるようになる／🔭双眼鏡が手に入る（遠くの気配に気づける）' },
+  { title:'サバンナの守り人', need:130, desc:'サイが現れる／近づくのが上手くなる' },
+  { title:'群れの一員',   need:200, desc:'珍しい白いライオンの噂／群れがあなたを迎えに来る' }
+];
+var STAGES = { child:'子ども', young:'若者', adult:'大人' };
+var STAGE_SIZE = { child:34, young:44, adult:58 };
+
+function rnd(n){ return Math.floor(Math.random()*n); }
+function pick(a){ return a[rnd(a.length)]; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+/* ===== map constants ===== */
+var WORLD_W = 1200, WORLD_H = 900, VIEW_H = 430;
+var CAMP = { x:210, y:690 };
+var WATER = { x:890, y:250 };
+var BAND1 = 70, BAND2 = 160, ACQUIRE = 200, CLEAR = 300, SLEEP_R = 130;
+var WALK_STEP = 5, RUN_STEP = 12; /* per 50ms tick: walk 100px/s, run 240px/s */
+var CALM_ALERT = 0.3;
+
+/* ===== zones ===== */
+var ZONES = {
+  camp:{ name:'キャンプ' }, water:{ name:'水場' }, grass:{ name:'草原' },
+  forest:{ name:'林' }, rocks:{ name:'岩山' }, river:{ name:'川辺' }
+};
+/* ===== gather points: walk close and use 餌を集める for that food ===== */
+var GATHER_POINTS = [
+  { type:'grass', name:'草むら',   emoji:'🌾', x:520,  y:520 },
+  { type:'nuts',  name:'葉の木',   emoji:'🌳', x:985,  y:565 },
+  { type:'fruit', name:'実の木',   emoji:'🍑', x:1085, y:765 },
+  { type:'salt',  name:'塩の岩',   emoji:'🪨', x:170,  y:150 }
+];
+var GATHER_R = 100;
+function riverX(y){ return 620 + Math.round(50 * Math.sin(y / 200)); }
+function zoneAt(x, y){
+  if (Math.hypot(x - CAMP.x, y - CAMP.y) < 190) return 'camp';
+  if (Math.hypot(x - WATER.x, y - WATER.y) < 160) return 'water';
+  if (x <= 340 && y <= 310) return 'rocks';
+  if (x >= 860 && y >= 500) return 'forest';
+  if (Math.abs(x - riverX(y)) <= 55) return 'river';
+  return 'grass';
+}
+function pointInZone(zone, minCampDist){
+  for (var i=0;i<60;i++){
+    var x = 40 + rnd(1120), y = 40 + rnd(820);
+    if (zoneAt(x, y) !== zone) continue;
+    if (Math.hypot(x - CAMP.x, y - CAMP.y) < minCampDist) continue;
+    if (zone === 'water' && Math.hypot(x - WATER.x, y - WATER.y) < 80) continue; // shore, not the middle of the pond
+    return { x:x, y:y };
+  }
+  return null;
+}
+function spawnForSpecies(key){
+  var home = SPECIES[key] && SPECIES[key].zone;
+  if (home && Math.random() < 0.8){
+    var p = pointInZone(home, 250);
+    if (p) return p;
+  }
+  return spawnPos();
+}
+
+function spawnPos(){
+  for (var i=0;i<14;i++){
+    var x = 360 + rnd(800), y = 60 + rnd(780);
+    if (Math.hypot(x-CAMP.x, y-CAMP.y) > 260 && Math.hypot(x-WATER.x, y-WATER.y) > 130) return { x:x, y:y };
+  }
+  return { x:940, y:150 };
+}
+function ensurePos(a){
+  if (typeof a.x !== 'number'){ var p = spawnPos(); a.x = p.x; a.y = p.y; }
+  if (typeof a.wx !== 'number'){ a.wx = a.x; a.wy = a.y; }
+  if (typeof a.alert !== 'number') a.alert = a.joined ? 0 : (a.species==='whitelion' ? 0.5 : 0.35);
+  if (typeof a.fleeT !== 'number') a.fleeT = 0;
+  if (typeof a.fleeDx !== 'number'){ a.fleeDx = 1; a.fleeDy = 0; }
+  if (typeof a.roarCd !== 'number') a.roarCd = 0;
+  if (typeof a.roarT !== 'number') a.roarT = 0;
+}
+function pickWander(a){
+  if (a.joined){
+    a.wx = CAMP.x + (rnd(361)-180); a.wy = CAMP.y + (rnd(301)-150);
+  } else {
+    var home = SPECIES[a.species].zone;
+    var p = (home && Math.random() < 0.7) ? pointInZone(home, 190) : null;
+    if (p){ a.wx = p.x; a.wy = p.y; }
+    else {
+      a.wx = 50 + rnd(1100); a.wy = 50 + rnd(800);
+      if (Math.hypot(a.wx-CAMP.x, a.wy-CAMP.y) < 170){ a.wx = 1000; a.wy = 140; }
+    }
+  }
+  a.wx = clamp(a.wx, 30, WORLD_W-30); a.wy = clamp(a.wy, 30, WORLD_H-30);
+}
+
+function uniqueName(){
+  if (typeof S === 'undefined' || !S.animals) return pick(NAMES);
+  var used = S.animals.map(function(a){ return a.name; });
+  var free = NAMES.filter(function(n){ return used.indexOf(n) < 0; });
+  return free.length ? pick(free) : pick(NAMES) + '2世';
+}
+function newAnimal(speciesKey){
+  var sp = SPECIES[speciesKey];
+  var a = {
+    id: 'a' + Date.now() + '_' + rnd(99999),
+    species: speciesKey,
+    name: uniqueName(),
+    stage: Math.random() < 0.45 ? 'child' : (Math.random() < 0.5 ? 'young' : 'adult'),
+    growth: 0, trust: speciesKey==='whitelion' ? 5 : 10 + rnd(11),
+    joined: false, fedToday: false, persona: pick(PERSONAS), rare: !!sp.rare
+  };
+  var pp = spawnForSpecies(speciesKey);
+  a.x = pp.x; a.y = pp.y; a.wx = pp.x; a.wy = pp.y;
+  ensurePos(a);
+  return a;
+}
+function defaultState(){
+  var first = newAnimal('zebra'); first.stage='child'; first.trust=20; first.name='ポコ';
+  first.x = 540; first.y = 430; first.wx = 540; first.wy = 430;
+  return {
+    day:1, seasonDay:1, season:'dry', seasonNo:1,
+    energy:4, stamina:STAMINA_MAX, xp:0, level:1,
+    eventSeasonNo:0, lastEvent:'',
+    inv:{ grass:3, nuts:2, fruit:2, salt:1, special:0 },
+    animals:[first], encounterId:null, distance:3,
+    px:CAMP.x, py:CAMP.y,
+    selFood:'grass', hasBino:false, guide:{},
+    seasonStats:{ fed:0, newFriends:0, births:0, grew:0 },
+    totalStats:{ fed:0, newFriends:0, births:0, grew:0, searches:0 },
+    log:[], started:true, campName:'', introDone:false
+  };
+}
+function guideRec(species){
+  if (!S.guide) S.guide = {};
+  if (!S.guide[species]) S.guide[species] = { met:false, fed:false, joined:false, adult:false };
+  return S.guide[species];
+}
+function guideMark(species, key){
+  var r = guideRec(species); r[key] = true;
+}
+var S = defaultState();
+var hasSave = false;
+try { var raw = localStorage.getItem(SAVE_KEY); if (raw){ S = JSON.parse(raw); hasSave = true; } } catch(e){}
+if (typeof S.px !== 'number'){ S.px = CAMP.x; S.py = CAMP.y; }
+if (typeof S.campName !== 'string') S.campName = hasSave ? '一家のキャンプ' : '';
+if (typeof S.introDone !== 'boolean') S.introDone = hasSave; // old saves skip the intro
+if (!S.inv || typeof S.inv.salt !== 'number'){ if (!S.inv) S.inv = { grass:0, nuts:0, fruit:0, salt:0, special:0 }; if (typeof S.inv.salt !== 'number') S.inv.salt = 0; }
+if (typeof S.selFood !== 'string' || !FOODS[S.selFood]) S.selFood = 'grass';
+if (typeof S.hasBino !== 'boolean') S.hasBino = S.level >= 3; // binoculars arrive at Lv.3
+if (!S.guide || typeof S.guide !== 'object'){
+  S.guide = {};
+  S.animals.forEach(function(a){ // derive what we can for old saves
+    var r = guideRec(a.species); r.met = true;
+    if (a.joined){ r.joined = true; if (a.stage === 'adult') r.adult = true; }
+  });
+}
+if (typeof S.stamina !== 'number') S.stamina = STAMINA_MAX; // stage-4 fields: old saves get defaults
+if (typeof S.eventSeasonNo !== 'number') S.eventSeasonNo = 0;
+if (typeof S.lastEvent !== 'string') S.lastEvent = '';
+S.animals.forEach(ensurePos);
+
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
+function animalById(id){ for (var i=0;i<S.animals.length;i++) if (S.animals[i].id===id) return S.animals[i]; return null; }
+function encounter(){ return S.encounterId ? animalById(S.encounterId) : null; }
+function trustLabel(t){ return t<25?'警戒している':(t<50?'興味を持ち始めた':(t<75?'だいぶ懐いてきた':(t<100?'すっかり懐いている':'群れの家族同然'))); }
+function addLog(msg){ S.log.unshift('Day'+S.day+'：'+msg); if (S.log.length>40) S.log.length=40; }
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2200); }
+function dirText(a){
+  var dx = a.x - S.px, dy = a.y - S.py;
+  var dirs = ['東','南東','南','南西','西','北西','北','北東'];
+  var idx = Math.round(Math.atan2(dy, dx) / (Math.PI/4));
+  return dirs[((idx % 8) + 8) % 8];
+}
+function canFeed(){
+  var a = encounter(); if (!a) return false;
+  return S.distance <= 1 && (a.joined || a.alert <= CALM_ALERT);
+}
+
+/* ===== camp upgrades: the camp grows with the keeper's level ===== */
+function campStageForLevel(lv){ return lv>=5?4:(lv>=4?3:(lv>=3?2:(lv>=2?1:0))); }
+function campStage(){ return campStageForLevel(S.level); }
+var CAMP_UPGRADES = [null,
+  '焚き火まわりが充実した（お鍋と丸太のベンチ）',
+  'テントが小屋になった',
+  '見張り台が立った（朝、動物の気配が分かるようになる）',
+  'キャンプのまわりに花が咲き、看板が立った'];
+var pendingCampNote = '';
+var lastCampStage = -1;
+function updateCampVisual(){
+  var st = campStage();
+  if (st === lastCampStage) return;
+  var main = document.getElementById('campMain');
+  if (!main) return; // map not built yet
+  lastCampStage = st;
+  main.textContent = st >= 2 ? '🛖' : '⛺';                       // Lv.3: hut instead of tent
+  var fam = document.getElementById('campFam');
+  if (fam) fam.textContent = '👨👩👦🔥' + (st >= 1 ? '🪵🍲' : ''); // Lv.2: fire-side pot & logs
+  var extra = document.getElementById('campExtra');
+  if (extra) extra.textContent = st >= 4 ? '🌸🌼🌸' : '';          // Lv.5: flowers around the camp
+  var tower = document.getElementById('campTower');
+  if (tower) tower.style.display = st >= 3 ? 'block' : 'none';    // Lv.4: watchtower
+}
+
+function gainXp(amount){
+  S.xp += amount;
+  while (S.level < 5 && S.xp >= LEVELS[S.level+1].need){
+    S.level++;
+    if (S.level >= 3 && !S.hasBino){
+      S.hasBino = true;
+      addLog('🔭 双眼鏡を手に入れた！遠くの動物の気配にも気づけるようになった。');
+    }
+    if (campStageForLevel(S.level) > campStageForLevel(S.level - 1)){
+      pendingCampNote = CAMP_UPGRADES[campStageForLevel(S.level)];
+      addLog('⛺ キャンプが改良された：' + pendingCampNote);
+    }
+    showLevelUp();
+  }
+}
+function showLevelUp(){
+  var lv = LEVELS[S.level];
+  document.getElementById('levelTitle').textContent = 'Lv.'+S.level+' '+lv.title+' になった！';
+  var extra = (S.level === 3) ? '<br>🔭 <b>双眼鏡</b>を手に入れた！歩いていると遠くの動物の足跡にも気づけるし、「足跡を探す」と距離まで分かるようになった。' : '';
+  var campNote = pendingCampNote ? '<br>⛺ <b>キャンプも改良された：</b>' + pendingCampNote : '';
+  pendingCampNote = '';
+  document.getElementById('levelText').innerHTML = '新しい変化：<b>'+lv.desc+'</b>'+extra+campNote+'<br><br>懐かせた数や群れの成長で、見守り人として認められてきた証拠だ。';
+  document.getElementById('levelSheet').classList.remove('hidden');
+  addLog('🎖️ ハンターレベルが Lv.'+S.level+'「'+lv.title+'」に上がった！ '+lv.desc);
+}
+
+/* ===== actions ===== */
+function spendEnergy(n){
+  if (S.energy < n){ toast('今日の行動力が足りない。キャンプで眠って休もう'); return false; }
+  S.energy -= n; return true;
+}
+function doSearch(){
+  if (!spendEnergy(1)) return;
+  S.totalStats.searches++;
+  // Most of the time you re-find an animal you already know, so you can
+  // keep working on the same individual (focus is the core of the loop).
+  var a = null;
+  var notJoined = S.animals.filter(function(x){ return !x.joined; }).sort(function(p,q){ return q.trust - p.trust; });
+  var roll = Math.random();
+  if (S.animals.length && roll < 0.72){
+    if (notJoined.length && roll < 0.58){ a = notJoined[rnd(Math.min(2, notJoined.length))]; }
+    else { a = pick(S.animals); }
+  } else if (S.animals.length < 12) {
+    var pool = Object.keys(SPECIES).filter(function(k){ return SPECIES[k].unlock <= S.level; });
+    var key;
+    if (S.level >= 5 && Math.random() < 0.16) key = 'whitelion';
+    else key = pick(pool.filter(function(k){ return k!=='whitelion'; }));
+    a = newAnimal(key); S.animals.push(a);
+  } else { a = pick(S.animals); }
+  ensurePos(a);
+  S.encounterId = a.id; focusLock = true; followId = null;
+  var sp = SPECIES[a.species];
+  var firstMet = !guideRec(a.species).met;
+  guideMark(a.species, 'met');
+  if (firstMet) addLog('📸 カメラで '+sp.name+' を記録した！（どうぶつ図鑑に登録）');
+  var clue;
+  if (S.level === 1) clue = '何かの足跡がある…（Lv.2になると種類まで分かる）';
+  else if (S.level === 2) clue = '手がかり：'+sp.foot;
+  else clue = '手がかり：'+sp.foot+'／どうやら'+(a.persona)+'らしい。'+(S.level>=3 ? '好きそうなのは '+FOODS[sp.pref].emoji+FOODS[sp.pref].name+'。' : '');
+  clue += '（'+dirText(a)+'のほうにいる。マップの👣が目印）';
+  if (S.hasBino){
+    var bd = Math.hypot(a.x - S.px, a.y - S.py);
+    clue += ' 🔭双眼鏡：あと約'+Math.max(10, Math.round(bd/40)*10)+'m。';
+  }
+  addLog('🔍 足跡を追う… '+dirText(a)+'のほうで '+sp.name+' の気配を見つけた！歩いて近づこう。');
+  document.getElementById('encClue').textContent = clue;
+  render(); save();
+}
+function doGather(){
+  if (!spendEnergy(1)) return;
+  // near a gather point: that food is plentiful there
+  for (var gi=0; gi<GATHER_POINTS.length; gi++){
+    var gp = GATHER_POINTS[gi];
+    if (Math.hypot(gp.x - S.px, gp.y - S.py) <= GATHER_R){
+      S.inv[gp.type] += 2;
+      addLog('🌿 '+gp.name+' で採取した：'+FOODS[gp.type].emoji+FOODS[gp.type].name+' ×2');
+      toast('採取：'+FOODS[gp.type].emoji+FOODS[gp.type].name+' ×2');
+      render(); save();
+      return;
+    }
+  }
+  var gains = [];
+  for (var i=0;i<2;i++){
+    var pool = ['grass','nuts','fruit'];
+    if (S.level>=3 && Math.random()<0.3) pool.push('special');
+    var k = pick(pool); S.inv[k]++; gains.push(FOODS[k].emoji+FOODS[k].name);
+  }
+  if (S.season==='rainy' && Math.random()<0.5){ S.inv.grass++; gains.push('🌾草(雨で増えた)'); }
+  addLog('🌿 餌を集めた：'+gains.join('、'));
+  toast('集めた：'+gains.join(' ')); render(); save();
+}
+function doApproach(){
+  // "Approach" now means: start creeping toward the animal on foot.
+  // The tick loop walks Mizu slowly (safe speed) and stops at feeding range.
+  var a = encounter(); if (!a){ toast('まず足跡を探そう'); return; }
+  if (S.distance<=1){ toast('もうすぐそばにいる'); return; }
+  if (followId !== a.id){
+    followId = a.id;
+    addLog('🤫 風下から、そっと歩いて近づいていく…');
+  }
+  render(); save();
+}
+function doObserve(){
+  var a = encounter(); if (!a){ toast('まず足跡を探そう'); return; }
+  if (!spendEnergy(1)) return;
+  a.trust = clamp(a.trust+3, 0, 100); gainXp(3);
+  if (!a.joined && S.distance <= 2) a.alert = Math.max(0, a.alert - 0.4); // watching quietly calms them
+  checkJoin(a);
+  var hint = S.level>=2 ? ('好きな餌は '+FOODS[SPECIES[a.species].pref].emoji+FOODS[SPECIES[a.species].pref].name+' かもしれない。') : 'じっと見ていると、少しだけ心を開いた気がする。';
+  addLog('👀 '+a.name+' を見守った。懐き度+3。'+hint);
+  render(); save();
+}
+function checkJoin(a){
+  if (!a.joined && a.trust >= 30){
+    a.joined = true; a.alert = 0; S.seasonStats.newFriends++; S.totalStats.newFriends++;
+    guideMark(a.species, 'joined');
+    if (a.stage === 'adult') guideMark(a.species, 'adult');
+    addLog('🎉 '+a.name+'（'+SPECIES[a.species].name+'）が群れの仲間になった！');
+    toast('🎉 '+a.name+' が仲間になった！');
+  }
+}
+function doFeed(foodKey){
+  var a = encounter(); if (!a){ toast('まず足跡を探そう'); return; }
+  if (S.distance > 1){ toast('まだ遠い。歩いて近づいてから'); return; }
+  if (!a.joined && a.alert > CALM_ALERT){ toast('まだ警戒している。近くで少し待とう'); return; }
+  if (S.inv[foodKey] <= 0){ toast(FOODS[foodKey].name+' がない。餌を集めよう'); return; }
+  if (!spendEnergy(1)) return;
+  S.inv[foodKey]--; a.fedToday = true; S.selFood = foodKey;
+  guideMark(a.species, 'fed');
+  var sp = SPECIES[a.species];
+  var gain = (foodKey === sp.pref) ? 14 : 8;
+  if (foodKey === 'special') gain = Math.max(gain, 15);
+  if (a.stage === 'child') gain += 2;
+  a.trust = clamp(a.trust + gain, 0, 100);
+  a.growth++;
+  S.seasonStats.fed++; S.totalStats.fed++;
+  gainXp(gain); checkJoin(a);
+  addLog((foodKey===sp.pref?'😋 大好きな':'🍽️ ')+FOODS[foodKey].name+'をあげた。'+a.name+' の懐き度 +'+gain+'（'+a.trust+'）');
+  if (foodKey===sp.pref) toast('😋 大好きだったみたい！懐き度+'+gain);
+  render(); save();
+}
+function doSleep(){
+  var grewMsgs = [], born = null;
+  // growth
+  S.animals.forEach(function(a){
+    if (a.joined && a.fedToday && a.growth >= 2 && a.stage !== 'adult'){
+      a.stage = (a.stage==='child') ? 'young' : 'adult'; a.growth = 0;
+      if (a.stage === 'adult') guideMark(a.species, 'adult');
+      S.seasonStats.grew++; S.totalStats.grew++;
+      grewMsgs.push(a.name+' が '+STAGES[a.stage]+' に育った！');
+    }
+    a.fedToday = false; // trust never decays: this is a calm, no-pressure game
+    if (a.joined) pickWander(a); // the herd drifts back toward camp overnight
+  });
+  // birth: two joined adults of same species with high trust
+  var bySpecies = {};
+  S.animals.forEach(function(a){ if (a.joined && a.stage==='adult' && a.trust>=70){ (bySpecies[a.species]=bySpecies[a.species]||[]).push(a); } });
+  var keys = Object.keys(bySpecies);
+  for (var i=0;i<keys.length;i++){
+    if (bySpecies[keys[i]].length>=2 && Math.random()<0.45){
+      born = newAnimal(keys[i]); born.stage='child'; born.trust=45; born.joined=true; born.growth=0; born.alert=0;
+      born.x = CAMP.x + (rnd(161)-80); born.y = CAMP.y + (rnd(121)-60); born.wx = born.x; born.wy = born.y;
+      S.animals.push(born); S.seasonStats.births++; S.totalStats.births++; break;
+    }
+  }
+  S.day++; S.seasonDay++; S.energy = 4; S.stamina = STAMINA_MAX; S.encounterId = null; S.distance = 3;
+  focusLock = false; followId = null; pTarget = null;
+  grewMsgs.forEach(function(m){ addLog('🌱 '+m); });
+  if (born) { addLog('🍼 群れに赤ちゃんが誕生！ '+born.name+'（'+SPECIES[born.species].name+'）'); toast('🍼 赤ちゃんが誕生した！'); }
+  // season turn
+  var turned = false;
+  if (S.seasonDay > SEASON_LEN){
+    turned = true;
+    var oldSeason = S.season;
+    S.season = (S.season==='dry') ? 'rainy' : 'dry'; S.seasonDay = 1; S.seasonNo++;
+    if (S.season==='rainy'){ S.inv.grass += 2; }
+    showSeason(oldSeason);
+    S.seasonStats = { fed:0, newFriends:0, births:0, grew:0 };
+  } else {
+    var morning = S.season==='rainy' ? '🌧️ 雨の朝。水場に動物が集まりそうだ。' : '🌅 乾いた風の朝。足跡がよく見える。';
+    addLog(morning+'（'+S.day+'日目）');
+    if (S.level>=5 && Math.random()<0.3) addLog('✨ 白いライオンの噂が風に乗って聞こえた…');
+    // watchtower (camp Lv.4+): a morning hint about a wild animal's whereabouts
+    if (S.level >= 4){
+      var wilds = S.animals.filter(function(x){ return !x.joined; });
+      if (wilds.length){
+        var w = pick(wilds);
+        addLog('🗼 見張り台から見えた：'+SPECIES[w.species].name+' が '+ZONES[zoneAt(w.x, w.y)].name+' のほうにいそうだ。');
+      }
+    }
+  }
+  render(); save();
+  if (!turned) maybeEvent(); // a small seasonal event, about once per season
+}
+function trySleep(){
+  var d = Math.hypot(S.px - CAMP.x, S.py - CAMP.y);
+  if (d > SLEEP_R){
+    toast('⛺ 眠るにはキャンプに戻ろう');
+    addLog('⛺ 眠るには一家のキャンプ（テント）に戻ろう。');
+    render();
+    return;
+  }
+  doSleep();
+}
+function showSeason(oldSeason){
+  var st = S.seasonStats;
+  var wasDry = oldSeason==='dry';
+  document.getElementById('seasonEmoji').textContent = wasDry ? '🌧️' : '☀️';
+  document.getElementById('seasonTitle').textContent = wasDry ? '雨季がやってきた' : '乾季がやってきた';
+  document.getElementById('seasonText').innerHTML =
+    '季節の節目の振り返り（'+(wasDry?'乾季':'雨季')+'の'+SEASON_LEN+'日間）<br>' +
+    '・餌をあげた回数：<b>'+st.fed+'回</b><br>' +
+    '・新しい仲間：<b>'+st.newFriends+'頭</b><br>' +
+    '・育った子：<b>'+st.grew+'頭</b>／ 誕生：<b>'+st.births+'頭</b><br>' +
+    '・今の群れ：<b>'+S.animals.filter(function(a){return a.joined;}).length+'頭</b>　見守りレベル：<b>Lv.'+S.level+' '+LEVELS[S.level].title+'</b><br><br>' +
+    (wasDry ? '雨で草が伸び、赤ちゃんが生まれやすい季節になる。' : '水と餌が貴重になる。集める日を大切に。') +
+    '<br>物語は終わらない。次の季節も、日々を見守っていこう。';
+  document.getElementById('seasonSheet').classList.remove('hidden');
+  addLog('🍂 季節が変わった：'+(wasDry?'雨季':'乾季')+' の始まり（振り返りをした）');
+}
+
+/* ===== map: build & draw ===== */
+var worldEl = document.getElementById('world');
+var wrapEl = document.getElementById('mapWrap');
+var cam = { x:0, y:0 };
+var pTarget = null, pMode = 'walk';
+var pointerDown = false, dragging = false, downPt = null;
+var followId = null, focusLock = false;
+var fleeCount = 0;
+var spriteEls = {};   // animal id -> element
+var playerEl = null;
+var lastBand = -1, lastFeedOpen = null, lastZone = '';
+
+function buildMap(){
+  worldEl.innerHTML = '';
+  // water hole
+  var wh = document.createElement('div'); wh.id = 'waterhole';
+  wh.style.left = WATER.x+'px'; wh.style.top = WATER.y+'px'; wh.style.zIndex = 2;
+  wh.innerHTML = '<span>💧</span>';
+  worldEl.appendChild(wh);
+  // camp sleep zone + camp (family tent)
+  var cz = document.createElement('div'); cz.id = 'campZone';
+  cz.style.left = CAMP.x+'px'; cz.style.top = CAMP.y+'px'; cz.style.zIndex = 1;
+  worldEl.appendChild(cz);
+  var camp = document.createElement('div'); camp.id = 'camp';
+  camp.style.left = CAMP.x+'px'; camp.style.top = CAMP.y+'px'; camp.style.zIndex = 3;
+  camp.innerHTML = '<span class="tent" id="campMain">⛺</span><span class="fam" id="campFam">👨👩👦🔥</span><span class="lbl" id="campLabel">一家のキャンプ</span><span id="campExtra" style="display:block; font-size:15px;"></span>';
+  worldEl.appendChild(camp);
+  // watchtower (appears at camp stage 3 / Lv.4)
+  var tower = document.createElement('div'); tower.id = 'campTower'; tower.className = 'decor';
+  tower.style.left = (CAMP.x + 105)+'px'; tower.style.top = (CAMP.y - 62)+'px'; tower.style.zIndex = 3; tower.style.display = 'none';
+  tower.innerHTML = '<div style="font-size:24px; line-height:1;">🔭</div><div style="font-size:20px; line-height:1;">🪜</div><div style="font-size:10px; font-weight:700; background:rgba(255,248,231,.85); border-radius:6px; padding:0 4px; color:#7a4a21;">見張り台</div>';
+  worldEl.appendChild(tower);
+  // zone ground tints, river and place-name labels
+  function tint(left, top, w, h, bg, radius, z){
+    var d = document.createElement('div'); d.className = 'zoneTint';
+    d.style.left = left+'px'; d.style.top = top+'px'; d.style.width = w+'px'; d.style.height = h+'px';
+    d.style.background = bg; d.style.borderRadius = radius; d.style.zIndex = z;
+    worldEl.appendChild(d);
+  }
+  tint(0, 0, 340, 310, 'rgba(146,134,120,.38)', '0 0 90px 0', 0);              // 岩山
+  tint(860, 500, 340, 400, 'rgba(43,105,48,.30)', '90px 0 0 0', 0);           // 林
+  tint(WATER.x-175, WATER.y-145, 350, 290, 'rgba(110,180,220,.22)', '50%', 0); // 水場まわり
+  for (var ry=0; ry<WORLD_H; ry+=46){
+    tint(riverX(ry+23)-58, ry, 116, 50, 'rgba(96,172,222,.5)', '42%', 1);      // 川
+  }
+  [['岩山',170,58],['水場',890,128],['草原',430,298],['川辺',riverX(430),418],['林',1032,848]].forEach(function(zn){
+    var lb = document.createElement('div'); lb.className = 'zoneName';
+    lb.style.left = zn[1]+'px'; lb.style.top = zn[2]+'px'; lb.style.zIndex = 1; lb.textContent = zn[0];
+    worldEl.appendChild(lb);
+  });
+  [['⛰️',120,140,92],['🪨',255,215,30],['🌲',950,600,44],['🌲',1105,755,48],['🌳',1000,838,40]].forEach(function(dc){
+    var d = document.createElement('div'); d.className = 'decor';
+    d.style.left = dc[1]+'px'; d.style.top = dc[2]+'px'; d.style.fontSize = dc[3]+'px'; d.style.zIndex = 2;
+    d.textContent = dc[0];
+    worldEl.appendChild(d);
+  });
+  // scattered landmarks (stable layout via a tiny LCG)
+  var seed = 1234567;
+  function mrnd(){ seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+  function scatter(emoji, size, n){
+    for (var i=0;i<n;i++){
+      var x = 50 + mrnd()*1100, y = 50 + mrnd()*800;
+      if (Math.hypot(x-CAMP.x, y-CAMP.y) < 165 || Math.hypot(x-WATER.x, y-WATER.y) < 125) continue;
+      var d = document.createElement('div'); d.className = 'decor';
+      d.style.left = x+'px'; d.style.top = y+'px'; d.style.fontSize = size+'px'; d.style.zIndex = 2;
+      d.textContent = emoji;
+      worldEl.appendChild(d);
+    }
+  }
+  scatter('🌳', 46, 7);
+  scatter('🌴', 40, 4);
+  scatter('🪨', 26, 6);
+  scatter('🌾', 20, 16);
+  scatter('🌿', 18, 10);
+  // gather points (walk close, then 餌を集める)
+  GATHER_POINTS.forEach(function(gp){
+    var d = document.createElement('div'); d.className = 'decor';
+    d.style.left = gp.x+'px'; d.style.top = gp.y+'px'; d.style.zIndex = 2; d.style.textAlign = 'center';
+    d.innerHTML = '<span style="font-size:32px;">'+gp.emoji+'</span><span class="gplbl">'+gp.name+'（'+FOODS[gp.type].name+'）</span>';
+    worldEl.appendChild(d);
+  });
+  // player (Mizu)
+  playerEl = document.createElement('div');
+  playerEl.className = 'sprite'; playerEl.id = 'playerSprite';
+  playerEl.innerHTML = '<div class="spr-in"><span class="spr-emoji" style="font-size:40px;">👦</span><span class="spr-name">ミズー</span></div>';
+  worldEl.appendChild(playerEl);
+  spriteEls = {};
+}
+function syncSprites(){
+  var seen = {};
+  S.animals.forEach(function(a){
+    seen[a.id] = true;
+    var el = spriteEls[a.id];
+    if (!el){
+      el = document.createElement('div');
+      el.className = 'sprite';
+      el.innerHTML = '<div class="spr-in"><span class="spr-ring"></span><span class="spr-print">👣</span><span class="spr-badge">❗</span><span class="spr-emoji"></span><span class="spr-name"></span></div>';
+      worldEl.appendChild(el);
+      spriteEls[a.id] = el;
+    }
+    el.querySelector('.spr-emoji').textContent = SPECIES[a.species].emoji;
+    el.querySelector('.spr-emoji').style.fontSize = STAGE_SIZE[a.stage]+'px';
+    var nm = el.querySelector('.spr-name');
+    if (a.joined || S.encounterId === a.id){ nm.style.display = 'inline-block'; nm.textContent = (a.rare?'✨':'') + a.name; }
+    else nm.style.display = 'none';
+    el.classList.toggle('target', S.encounterId === a.id && focusLock);
+  });
+  Object.keys(spriteEls).forEach(function(id){
+    if (!seen[id]){ spriteEls[id].remove(); delete spriteEls[id]; }
+  });
+}
+function drawSprites(){
+  S.animals.forEach(function(a){
+    var el = spriteEls[a.id]; if (!el) return;
+    el.style.transform = 'translate(' + a.x + 'px,' + a.y + 'px)';
+    el.style.zIndex = 10 + Math.round(a.y);
+    el.classList.toggle('alerted', !a.joined && a.alert > 0.55);
+    el.classList.toggle('roaring', a.roarT > 0);
+    var badge = el.querySelector('.spr-badge');
+    if (badge) badge.textContent = a.roarT > 0 ? '💢' : '❗';
+    // with binoculars, footprints of wild animals show up from farther away
+    el.classList.toggle('nearprint', !!S.hasBino && !a.joined && S.encounterId !== a.id && Math.hypot(a.x - S.px, a.y - S.py) <= acquireR());
+  });
+  if (playerEl){
+    playerEl.style.transform = 'translate(' + S.px + 'px,' + S.py + 'px)';
+    playerEl.style.zIndex = 10 + Math.round(S.py) + 1;
+  }
+}
+function updateCamera(){
+  var vw = wrapEl.clientWidth || 390;
+  cam.x = clamp(S.px - vw/2, 0, Math.max(0, WORLD_W - vw));
+  cam.y = clamp(S.py - VIEW_H/2, 0, Math.max(0, WORLD_H - VIEW_H));
+  worldEl.style.transform = 'translate(' + (-cam.x) + 'px,' + (-cam.y) + 'px)';
+}
+function worldFromEvent(e){
+  var r = wrapEl.getBoundingClientRect();
+  return { x: clamp(e.clientX - r.left + cam.x, 10, WORLD_W-10), y: clamp(e.clientY - r.top + cam.y, 10, WORLD_H-10) };
+}
+
+/* ===== proximity / alert ===== */
+function acquireR(){ return S.hasBino ? 330 : ACQUIRE; } // binoculars widen the notice range
+function updateProximity(){
+  var a = encounter();
+  if (!a){
+    var best = null, bd = 1e9;
+    S.animals.forEach(function(x){
+      var d = Math.hypot(x.x - S.px, x.y - S.py);
+      if (d < bd){ bd = d; best = x; }
+    });
+    if (best && bd <= acquireR()){ S.encounterId = best.id; a = best; }
+  }
+  if (a){
+    var d = Math.hypot(a.x - S.px, a.y - S.py);
+    S.distance = d <= BAND1 ? 1 : (d <= BAND2 ? 2 : 3);
+    if (focusLock && d < acquireR()) focusLock = false;
+    if (!focusLock && d > CLEAR){ S.encounterId = null; S.distance = 3; }
+  }
+}
+function startFlee(a){
+  var dx = a.x - S.px, dy = a.y - S.py, d = Math.hypot(dx, dy) || 1;
+  a.fleeDx = dx/d; a.fleeDy = dy/d; a.fleeT = 24;
+  fleeCount++;
+  addLog('💨 '+a.name+'（'+SPECIES[a.species].name+'）は驚いて逃げていった！走って近づくと逃げてしまう。ゆっくり歩こう。');
+  if (S.encounterId === a.id) toast('💨 逃げられてしまった…ゆっくり近づこう');
+  render();
+}
+
+/* ===== threats: beasts stand their ground and roar; big animals bellow ===== */
+var roarCount = 0, warnCount = 0;
+function pushPlayerBack(a, dist){
+  // step back away from the animal, biased toward the camp side
+  var vx = S.px - a.x, vy = S.py - a.y, vd = Math.hypot(vx, vy) || 1;
+  var cx = CAMP.x - S.px, cy = CAMP.y - S.py, cd = Math.hypot(cx, cy) || 1;
+  var dx = vx/vd + 0.6*(cx/cd), dy = vy/vd + 0.6*(cy/cd), dd = Math.hypot(dx, dy) || 1;
+  S.px = clamp(S.px + dx/dd*dist, 24, WORLD_W-24);
+  S.py = clamp(S.py + dy/dd*dist, 24, WORLD_H-24);
+  followId = null; pTarget = null;
+}
+function doRoar(a){
+  // a wary lion does NOT run: it roars, and the keeper startles back (no injury, just a scare)
+  a.roarCd = 100; a.roarT = 30; a.alert = 0.25; // after roaring it settles a little
+  roarCount++;
+  S.stamina = Math.max(0, S.stamina - 1);
+  pushPlayerBack(a, 170);
+  addLog('🦁💢 '+a.name+'（'+SPECIES[a.species].name+'）が吠えて威嚇した！びっくりして後ずさった…（体力-1）');
+  toast('🦁💢 吠えられた！びっくりして後ずさった');
+  if (S.stamina <= 0){
+    S.px = CAMP.x + 40; S.py = CAMP.y + 30; S.stamina = 2;
+    S.encounterId = null; S.distance = 3;
+    addLog('😮‍💨 体力を使い果たした…キャンプに戻って少し休んだ（体力2まで回復）');
+    toast('😮‍💨 キャンプに戻って休んだ');
+  }
+  render();
+}
+function doWarn(a){
+  // elephants & rhinos: a loud warning at point-blank range; the keeper steps back (no stamina loss)
+  a.roarCd = 80; a.roarT = 25; a.alert = Math.max(0.3, a.alert - 0.25);
+  warnCount++;
+  pushPlayerBack(a, 90);
+  addLog(SPECIES[a.species].emoji+'💦 '+a.name+'（'+SPECIES[a.species].name+'）が大きく鳴いて威嚇した。驚いて少し下がった（体力は減らない）');
+  toast('💦 大きく鳴かれた…少し下がろう');
+  render();
+}
+
+/* ===== game tick (50ms): movement, wandering, alert ===== */
+function tick(){
+  var moving = false, running = false;
+  if (followId){
+    var fa = animalById(followId);
+    if (!fa) followId = null;
+    else {
+      var fd = Math.hypot(fa.x - S.px, fa.y - S.py);
+      if (fd <= BAND1 - 8) followId = null;
+      else { pTarget = { x:fa.x, y:fa.y }; pMode = 'walk'; }
+    }
+  }
+  if (pTarget){
+    var dx = pTarget.x - S.px, dy = pTarget.y - S.py, d = Math.hypot(dx, dy);
+    var step = (pMode === 'run') ? RUN_STEP : WALK_STEP;
+    if (d <= step){ S.px = pTarget.x; S.py = pTarget.y; if (!followId) pTarget = null; }
+    else { S.px += dx/d*step; S.py += dy/d*step; }
+    moving = true; running = (pMode === 'run');
+  }
+  S.px = clamp(S.px, 24, WORLD_W-24); S.py = clamp(S.py, 24, WORLD_H-24);
+  S.animals.forEach(function(a){
+    ensurePos(a);
+    if (a.fleeT > 0){
+      a.fleeT--;
+      a.x += a.fleeDx * 13; a.y += a.fleeDy * 13;
+      if (a.fleeT === 0) a.alert = 0.45;
+    } else {
+      var wdx = a.wx - a.x, wdy = a.wy - a.y, wd = Math.hypot(wdx, wdy);
+      if (wd < 6 || Math.random() < 0.006) pickWander(a);
+      else { a.x += wdx/wd*0.8; a.y += wdy/wd*0.8; }
+    }
+    a.x = clamp(a.x, 30, WORLD_W-30); a.y = clamp(a.y, 30, WORLD_H-30);
+    if (!a.joined){
+      var pd = Math.hypot(a.x - S.px, a.y - S.py);
+      var spA = SPECIES[a.species];
+      if (a.roarCd > 0) a.roarCd--;
+      if (a.roarT > 0) a.roarT--;
+      if (moving && running && a.fleeT === 0 && pd < 150){
+        a.alert = Math.min(1, a.alert + (pd < 75 ? 0.22 : 0.10));
+        if (a.alert >= 1){
+          if (spA.beast){ a.alert = 0.95; if (pd <= 170 && a.roarCd <= 0) doRoar(a); } // beasts never flee
+          else startFlee(a);
+        }
+      } else if (pd < 210 && !running){
+        // lions calm down slowly; big animals stay wary when you are in their face
+        var decay = spA.beast ? 0.012 : (spA.big && pd <= 90 ? 0.006 : 0.025);
+        a.alert = Math.max(0, a.alert - decay);
+      } else {
+        a.alert = Math.max(0, a.alert - 0.006);
+      }
+      // too close while still wary: beasts roar you back, big animals bellow you back
+      if (a.fleeT === 0 && a.roarCd <= 0){
+        if (spA.beast && pd <= ROAR_RANGE && a.alert > CALM_ALERT) doRoar(a);
+        else if (spA.big && pd <= BAND1 && a.alert > 0.5) doWarn(a);
+      }
+    } else a.alert = 0;
+  });
+  updateProximity();
+  updateCamera();
+  drawSprites();
+  var pz = zoneAt(S.px, S.py);
+  if (pz !== lastZone){
+    lastZone = pz;
+    var zl = document.getElementById('zoneLabel');
+    if (zl) zl.textContent = '📍 ' + ZONES[pz].name;
+  }
+  var fo = canFeed();
+  if (S.distance !== lastBand || fo !== lastFeedOpen){ lastBand = S.distance; lastFeedOpen = fo; render(); }
+}
+
+/* ===== pointer controls: tap = walk, drag = run ===== */
+wrapEl.addEventListener('pointerdown', function(e){
+  pointerDown = true; dragging = false; downPt = { x:e.clientX, y:e.clientY };
+  followId = null;
+  pTarget = worldFromEvent(e); pMode = 'walk';
+  try { wrapEl.setPointerCapture(e.pointerId); } catch(err){}
+});
+wrapEl.addEventListener('pointermove', function(e){
+  if (!pointerDown) return;
+  if (Math.hypot(e.clientX - downPt.x, e.clientY - downPt.y) > 8) dragging = true;
+  if (dragging){ pTarget = worldFromEvent(e); pMode = 'run'; }
+});
+function endPointer(){
+  if (dragging) pTarget = null;
+  pointerDown = false; dragging = false;
+}
+wrapEl.addEventListener('pointerup', endPointer);
+wrapEl.addEventListener('pointercancel', endPointer);
+
+/* ===== render ===== */
+function render(){
+  document.getElementById('stDay').textContent = S.day + '日目';
+  document.getElementById('stSeason').textContent = (S.season==='dry'?'乾季':'雨季') + ' ' + S.seasonDay + '/' + SEASON_LEN + '日';
+  document.getElementById('stEnergy').textContent = S.energy;
+  document.getElementById('stStamina').textContent = S.stamina;
+  document.getElementById('stLevel').textContent = 'Lv.'+S.level+' '+LEVELS[S.level].title;
+  document.getElementById('stBino').style.display = S.hasBino ? '' : 'none';
+  var campNameDisp = S.campName || '一家のキャンプ';
+  document.getElementById('stCamp').textContent = campNameDisp;
+  var campLbl = document.getElementById('campLabel'); if (campLbl) campLbl.textContent = campNameDisp;
+  updateCampVisual();
+  var nextNeed = S.level<5 ? LEVELS[S.level+1].need : S.xp;
+  var prevNeed = LEVELS[S.level].need;
+  var pct = S.level>=5 ? 100 : clamp(Math.round((S.xp-prevNeed)/(nextNeed-prevNeed)*100),0,100);
+  document.getElementById('xpfill').style.width = pct + '%';
+  document.getElementById('stXp').textContent = S.level>=5 ? '経験 '+S.xp+'（最高レベル）' : '経験 '+S.xp+' / 次まで '+(nextNeed - S.xp);
+  worldEl.className = S.season;
+  syncSprites();
+  updateProximity();
+  var a = encounter();
+  if (a) guideMark(a.species, 'met'); // meeting an animal up close also records it
+  var card = document.getElementById('encCard');
+  if (a){
+    var sp = SPECIES[a.species];
+    card.style.display = 'block';
+    document.getElementById('encTitle').textContent = (a.rare?'✨ ':'')+sp.name+' の '+a.name+(a.joined?'（仲間）':'');
+    document.getElementById('encTrustNum').textContent = a.trust;
+    document.getElementById('encTrustLabel').textContent = '（'+trustLabel(a.trust)+'）';
+    document.getElementById('encTrustFill').style.width = a.trust+'%';
+    document.getElementById('encDist').textContent = (S.distance===3?'遠くにいる':(S.distance===2?'少し近づいた':'すぐそば！')) + (S.distance>1 ? '（'+dirText(a)+'のほう）' : '');
+    document.getElementById('encStage').textContent = STAGES[a.stage];
+    document.getElementById('encPersona').textContent = a.persona;
+    var alertRow = document.getElementById('encAlertRow');
+    if (a.joined){ alertRow.style.display = 'none'; }
+    else {
+      alertRow.style.display = 'block';
+      var beast = !!sp.beast;
+      document.getElementById('encAlert').textContent = a.alert > 0.55
+        ? (beast ? 'とても警戒している！（近づきすぎると吠えられそう…離れるか、ゆっくり待とう）' : 'とても警戒している！（離れるか、ゆっくり待とう）')
+        : (a.alert > CALM_ALERT
+          ? (beast ? 'まだ警戒している（近づきすぎると吠えられる。近くで待つと落ち着く）' : 'まだ警戒している（近くで待つと落ち着く）')
+          : '落ち着いている（餌をあげられる）');
+    }
+    if (!document.getElementById('encClue').textContent) document.getElementById('encClue').textContent = '手がかり：'+sp.foot;
+  } else {
+    card.style.display = 'none';
+  }
+  document.getElementById('feedArea').classList.toggle('open', canFeed());
+  document.getElementById('invGrass').textContent = '×'+S.inv.grass;
+  document.getElementById('invNuts').textContent = '×'+S.inv.nuts;
+  document.getElementById('invFruit').textContent = '×'+S.inv.fruit;
+  document.getElementById('invSalt').textContent = '×'+S.inv.salt;
+  document.getElementById('invSpecial').textContent = '×'+S.inv.special;
+  document.querySelectorAll('button.food').forEach(function(b){ b.disabled = S.inv[b.getAttribute('data-food')]<=0 || S.energy<=0; });
+  // food palette (持ち替え): highlight the selected food, show counts
+  if (!FOODS[S.selFood]) S.selFood = 'grass';
+  document.querySelectorAll('button.palfood').forEach(function(b){
+    var k = b.getAttribute('data-food');
+    b.classList.toggle('sel', k === S.selFood);
+    b.querySelector('.pc').textContent = '×'+S.inv[k];
+  });
+  var feedSelBtn = document.getElementById('btnFeedSel');
+  feedSelBtn.textContent = '🍽️ 餌をあげる（'+FOODS[S.selFood].emoji+FOODS[S.selFood].name+'）';
+  feedSelBtn.disabled = !(canFeed() && S.inv[S.selFood] > 0 && S.energy > 0);
+  document.getElementById('btnApproach').disabled = !a || S.distance<=1;
+  document.getElementById('btnObserve').disabled = !a;
+  // herd
+  var herd = S.animals.filter(function(x){ return x.joined; });
+  var hl = document.getElementById('herdList'); hl.innerHTML='';
+  herd.forEach(function(x){
+    var d = document.createElement('div'); d.className='mate';
+    d.innerHTML = '<span class="e '+x.stage+'">'+SPECIES[x.species].emoji+'</span><span class="nm">'+x.name+'</span><br><span class="small">'+SPECIES[x.species].name+'・'+STAGES[x.stage]+'<br>懐き '+x.trust+'</span>';
+    hl.appendChild(d);
+  });
+  document.getElementById('herdEmpty').style.display = herd.length ? 'none' : 'block';
+  // log
+  document.getElementById('log').innerHTML = S.log.map(function(l){ return '<div>'+l+'</div>'; }).join('') || '<div>まだ記録がない。</div>';
+  // level guide
+  document.getElementById('levelGuide').innerHTML = LEVELS.slice(1).map(function(lv,i){
+    var n=i+1; return (n<=S.level?'✅':'🔒')+' Lv.'+n+' '+lv.title+'（経験'+lv.need+'〜）：'+lv.desc;
+  }).join('<br>');
+  drawSprites();
+}
+
+/* ===== camera field guide （どうぶつ図鑑） ===== */
+function renderGuide(){
+  var grid = document.getElementById('guideGrid');
+  grid.innerHTML = '';
+  Object.keys(SPECIES).forEach(function(k){
+    var sp = SPECIES[k];
+    var rec = (S.guide && S.guide[k]) || {};
+    var d = document.createElement('div'); d.className = 'gcard';
+    if (rec.met){
+      d.innerHTML = '<span class="e">'+sp.emoji+'</span><span class="nm">'+sp.name+'</span>' +
+        '<div class="gchips">' +
+        '<span>📸 出会った ✅</span>' +
+        '<span>🍽️ 餌をあげた '+(rec.fed ? '✅' : '―')+'</span>' +
+        '<span>🤝 懐いた '+(rec.joined ? '✅' : '―')+'</span>' +
+        '<span>🌱 大人になった '+(rec.adult ? '✅' : '―')+'</span>' +
+        '</div>';
+    } else {
+      d.innerHTML = '<span class="e">❓</span><span class="nm">？？？</span>' +
+        '<div class="gchips"><span>'+(S.level < sp.unlock ? 'Lv.'+sp.unlock+' で現れるらしい' : 'まだ出会っていない')+'</span></div>';
+    }
+    grid.appendChild(d);
+  });
+}
+function openGuide(){
+  renderGuide();
+  document.getElementById('guide').classList.remove('hidden');
+}
+
+/* ===== intro: arrival scene (guide = Papa) ===== */
+var INTRO_LINES = [
+  { face:'👨', name:'パパ', text:'さあ、ついたぞ。ここが今日から ぼくらが住む場所、サバンナだ。' },
+  { face:'👨', name:'パパ', text:'見てごらん。北には岩山、あっちには水場と川、林も広がっている。たくさんの動物たちが暮らしているんだ。' },
+  { face:'👨', name:'パパ', text:'動物たちは まだ人を警戒している。走って近づくと逃げてしまう。ゆっくり歩いて近づいて、餌をあげて、少しずつ仲良くなるんだ。' },
+  { face:'👩', name:'ママ', text:'餌はキャンプのまわりでも集められるからね。夜になったら、キャンプに戻って眠るのよ。' },
+  { face:'👨', name:'パパ', text:'ここが ぼくらのキャンプだ。さあ、このキャンプに名前をつけよう。なんて名前がいいかな？' }
+];
+var introIdx = 0;
+function startIntro(){
+  introIdx = 0;
+  document.getElementById('intro').classList.remove('hidden');
+  document.getElementById('introBox').style.display = 'flex';
+  document.getElementById('introNameStep').style.display = 'none';
+  showIntroLine();
+}
+function showIntroLine(){
+  var L = INTRO_LINES[introIdx];
+  document.getElementById('introFace').textContent = L.face;
+  document.getElementById('introName').textContent = L.name;
+  document.getElementById('introText').textContent = L.text;
+}
+function advanceIntro(){
+  introIdx++;
+  if (introIdx >= INTRO_LINES.length){
+    document.getElementById('introBox').style.display = 'none';
+    document.getElementById('introNameStep').style.display = 'block';
+  } else showIntroLine();
+}
+function confirmCampName(){
+  var inp = document.getElementById('campNameInput');
+  var v = ((inp && inp.value) || '').trim();
+  S.campName = v || 'ほしぞらキャンプ';
+  S.introDone = true;
+  document.getElementById('intro').classList.add('hidden');
+  addLog('🌅 家族と一緒にサバンナにやってきた。キャンプの名前は「'+S.campName+'」に決めた！');
+  addLog('👀 草原の向こうで子どものシマウマ「ポコ」がこちらを見ている。歩いて近づいてみよう。');
+  toast('⛺ 「'+S.campName+'」で見守りスタート！');
+  render(); save();
+}
+
+/* ===== seasonal events: one small event per season, told like the intro ===== */
+var EVENTS = {
+  water: { emoji:'🌧️', title:'水場の集い', face:'👩', name:'ママ',
+    text:'雨季の水場に、たくさんの動物たちが水を飲みに集まってきたよ。みんな穏やかな顔をしている。どうする？',
+    a:'静かに見守る', b:'餌を分けてあげる' },
+  lost: { emoji:'🐾', title:'迷子の子ども', face:'👨', name:'パパ',
+    text:'キャンプの近くで、小さな動物の子どもが鳴いている。群れからはぐれてしまったみたいだ。どうする？',
+    a:'群れのほうへ案内する', b:'そっと見守る' },
+  migration: { emoji:'🦓', title:'群れの移動', face:'👨', name:'パパ',
+    text:'遠くで大きな群れが移動しているのが見える。サバンナの季節の風物詩だ。どうする？',
+    a:'キャンプから見送る', b:'近くまで見に行く' }
+};
+var pendingEvent = null;
+function maybeEvent(){
+  if (pendingEvent) return;
+  if (S.eventSeasonNo === S.seasonNo) return;              // at most once per season
+  if (S.seasonDay < 2 || S.seasonDay > SEASON_LEN - 1) return;
+  if (Math.random() >= 0.45) return;
+  var roll = Math.random();
+  var id = roll < 0.2 ? 'migration' : (S.season === 'rainy' ? 'water' : 'lost');
+  S.eventSeasonNo = S.seasonNo; S.lastEvent = id; pendingEvent = id;
+  var ev = EVENTS[id];
+  document.getElementById('eventEmoji').textContent = ev.emoji;
+  document.getElementById('eventTitle').textContent = ev.title;
+  document.getElementById('eventFace').textContent = ev.face;
+  document.getElementById('eventName').textContent = ev.name;
+  document.getElementById('eventText').textContent = ev.text;
+  document.getElementById('btnEventA').textContent = ev.a;
+  document.getElementById('btnEventB').textContent = ev.b;
+  document.getElementById('eventSheet').classList.remove('hidden');
+  addLog('✨ 季節の出来事：' + ev.title);
+  save();
+}
+function spawnEventAnimal(childOnly){
+  var pool = Object.keys(SPECIES).filter(function(k){ return SPECIES[k].unlock <= S.level && k !== 'whitelion'; });
+  var a = newAnimal(pick(pool));
+  if (childOnly){ a.stage = 'child'; a.trust = 25; a.growth = 0; }
+  a.x = CAMP.x + 150 + rnd(80); a.y = CAMP.y - 60 + rnd(80); a.wx = a.x; a.wy = a.y;
+  S.animals.push(a);
+  return a;
+}
+function chooseEvent(choice){
+  if (!pendingEvent) return;
+  var id = pendingEvent; pendingEvent = null;
+  document.getElementById('eventSheet').classList.add('hidden');
+  if (id === 'water'){
+    if (choice === 'a'){
+      S.animals.forEach(function(x){ x.trust = clamp(x.trust + 3, 0, 100); });
+      gainXp(6);
+      addLog('🌧️ 水場の集いを静かに見守った。動物たちとの距離が少し縮まった気がする（みんなの懐き度+3、経験+6）');
+      toast('🌧️ 穏やかな時間だった');
+    } else {
+      if (S.inv.grass > 0) S.inv.grass--;
+      var wild = S.animals.filter(function(x){ return !x.joined; });
+      if (wild.length){
+        var w = pick(wild); w.trust = clamp(w.trust + 12, 0, 100); guideMark(w.species, 'met');
+        addLog('🌧️ 水場で餌を分けたら、'+w.name+'（'+SPECIES[w.species].name+'）が喜んで食べた（懐き度+12）');
+      } else {
+        gainXp(6);
+        addLog('🌧️ 水場で餌を分けた。動物たちがのんびり過ごしている（経験+6）');
+      }
+      toast('🌧️ 餌を分けてあげた');
+    }
+  } else if (id === 'lost'){
+    if (choice === 'a'){
+      var c = spawnEventAnimal(true);
+      addLog('🐾 迷子の '+c.name+'（'+SPECIES[c.species].name+' の子ども）を群れのほうへ案内した。近くにいるから、様子を見てあげよう（懐き度25）');
+      toast('🐾 子どもを案内した');
+    } else {
+      gainXp(6);
+      addLog('🐾 迷子の子どもをそっと見守った。やがて鳴き声を聞いた仲間が迎えに来た（経験+6）');
+      toast('🐾 無事に迎えが来た');
+    }
+  } else if (id === 'migration'){
+    if (choice === 'a'){
+      var joined = S.animals.filter(function(x){ return x.joined; });
+      if (joined.length){
+        joined.forEach(function(x){ x.trust = clamp(x.trust + 3, 0, 100); });
+        addLog('🦓 移動する群れをキャンプから見送った。仲間たちもなんだか誇らしげだ（仲間の懐き度+3）');
+      } else {
+        gainXp(5);
+        addLog('🦓 移動する群れを見送った。サバンナの大きさを感じた（経験+5）');
+      }
+      toast('🦓 群れを見送った');
+    } else {
+      S.energy = Math.max(0, S.energy - 1);
+      var n = spawnEventAnimal(false);
+      addLog('🦓 群れの近くまで見に行ったら、はぐれた '+n.name+'（'+SPECIES[n.species].name+'）に出会った！（行動力-1）');
+      toast('🦓 新しい出会いがあった');
+    }
+  }
+  render(); save();
+}
+
+/* ===== wiring ===== */
+document.getElementById('btnSearch').addEventListener('click', doSearch);
+document.getElementById('btnGather').addEventListener('click', doGather);
+document.getElementById('btnApproach').addEventListener('click', doApproach);
+document.getElementById('btnObserve').addEventListener('click', doObserve);
+document.getElementById('btnCamp').addEventListener('click', function(){
+  followId = null; pTarget = { x:CAMP.x, y:CAMP.y }; pMode = 'walk';
+  toast('⛺ キャンプへ戻る');
+});
+document.getElementById('btnSleep').addEventListener('click', trySleep);
+document.querySelectorAll('button.food').forEach(function(b){ b.addEventListener('click', function(){ doFeed(b.getAttribute('data-food')); }); });
+document.querySelectorAll('button.palfood').forEach(function(b){ b.addEventListener('click', function(){
+  S.selFood = b.getAttribute('data-food');
+  toast('🎒 持ち替えた：'+FOODS[S.selFood].emoji+FOODS[S.selFood].name);
+  render(); save();
+}); });
+document.getElementById('btnFeedSel').addEventListener('click', function(){ doFeed(S.selFood); });
+document.getElementById('btnGuide').addEventListener('click', openGuide);
+document.getElementById('btnGuideTitle').addEventListener('click', openGuide);
+document.getElementById('btnGuideOk').addEventListener('click', function(){ document.getElementById('guide').classList.add('hidden'); });
+document.getElementById('btnEventA').addEventListener('click', function(){ chooseEvent('a'); });
+document.getElementById('btnEventB').addEventListener('click', function(){ chooseEvent('b'); });
+document.getElementById('btnSeasonOk').addEventListener('click', function(){ document.getElementById('seasonSheet').classList.add('hidden'); });
+document.getElementById('btnLevelOk').addEventListener('click', function(){ document.getElementById('levelSheet').classList.add('hidden'); });
+document.getElementById('btnReset').addEventListener('click', function(){
+  if (confirm('記録を消して、はじめから遊びますか？')){ localStorage.removeItem(SAVE_KEY); hasSave = false; S = defaultState(); focusLock=false; followId=null; pTarget=null; document.getElementById('btnContinue').style.display='none'; document.getElementById('welcome').classList.remove('hidden'); render(); }
+});
+document.getElementById('introBox').addEventListener('click', advanceIntro);
+document.getElementById('btnCampName').addEventListener('click', confirmCampName);
+function startGame(fresh){
+  document.getElementById('welcome').classList.add('hidden');
+  if (fresh && !S.introDone){ startIntro(); render(); return; }
+  if (fresh && !hasSave){ addLog('🌅 家族と一緒にサバンナのほとりのキャンプにやってきた。見守りの日々が始まる。'); addLog('👀 草原の向こうで子どものシマウマ「ポコ」がこちらを見ている。歩いて近づいてみよう。'); }
+  render(); save();
+}
+document.getElementById('btnStart').addEventListener('click', function(){ startGame(true); });
+document.getElementById('btnContinue').addEventListener('click', function(){ startGame(false); });
+if (hasSave) document.getElementById('btnContinue').style.display='block';
+buildMap();
+render();
+setInterval(tick, 50);
+// exposed for headless verification
+window.__savanna = {
+  getState:function(){ return S; },
+  search:doSearch, gather:doGather, approach:doApproach, observe:doObserve, feed:doFeed, sleep:doSleep,
+  camp:CAMP, water:WATER,
+  gatherPoints:GATHER_POINTS, foods:FOODS, prefs:Object.keys(SPECIES).reduce(function(o,k){ o[k]=SPECIES[k].pref; return o; },{}),
+  zoneAt:zoneAt, spawnFor:spawnForSpecies, zones:ZONES,
+  debug:function(){
+    return {
+      player:{ x:S.px, y:S.py },
+      zone: zoneAt(S.px, S.py),
+      zoneName: ZONES[zoneAt(S.px, S.py)].name,
+      cam:{ x:cam.x, y:cam.y },
+      fleeCount:fleeCount,
+      roarCount:roarCount,
+      warnCount:warnCount,
+      stamina:S.stamina,
+      campStage:campStage(),
+      pendingEvent:pendingEvent,
+      distance:S.distance,
+      encounterId:S.encounterId,
+      animals:S.animals.map(function(a){ return { id:a.id, species:a.species, name:a.name, x:a.x, y:a.y, alert:a.alert, trust:a.trust, joined:a.joined, stage:a.stage }; })
+    };
+  },
+  toClient:function(wx, wy){
+    var r = wrapEl.getBoundingClientRect();
+    return { x: r.left + (wx - cam.x), y: r.top + (wy - cam.y) };
+  }
+};
+</script>
+</body>
+</html>
