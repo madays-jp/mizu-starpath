@@ -54,40 +54,61 @@
   .chip { background:rgba(255,255,255,.92); border-radius:999px; padding:6px 13px; font-weight:bold; font-size:14px;
     box-shadow:0 2px 4px rgba(0,0,0,.12); }
   .iconbtn { border:none; cursor:pointer; background:rgba(255,255,255,.92); border-radius:999px;
-    width:38px; height:38px; font-size:18px; box-shadow:0 2px 4px rgba(0,0,0,.12); }
+    min-width:38px; height:38px; padding:0 10px; font-size:15px; font-weight:bold; color:#5b4632;
+    box-shadow:0 2px 4px rgba(0,0,0,.12); }
+  .iconbtn:disabled { opacity:.45; }
+  #queuebar { display:flex; align-items:center; gap:7px; max-width:440px; margin:0 auto 8px;
+    background:rgba(255,255,255,.85); border-radius:12px; padding:6px 12px; box-shadow:0 2px 4px rgba(0,0,0,.10); }
+  #queuebar .qlabel { font-size:13px; font-weight:bold; color:#7a5a34; white-space:nowrap; }
+  #queuebar .qicons { display:flex; align-items:center; gap:4px; }
+  #queuebar .qicons .qhouse { width:30px; height:30px; }
+  #queuebar .qicons .qhouse.first { width:38px; height:38px; filter:drop-shadow(0 0 4px rgba(245,166,35,.9)); }
+  #queuebar .qicons svg { width:100%; height:100%; display:block; }
+  #queuebar .qarrow { color:#b09a76; font-weight:bold; font-size:12px; }
+  #queuebar .qrest { margin-left:auto; font-size:12px; color:#9a8f7d; white-space:nowrap; }
   #boardwrap { position:relative; max-width:440px; margin:0 auto; }
   #fence { position:absolute; inset:-13px; border-radius:16px; pointer-events:none; z-index:1;
     border:13px solid #b07a45;
     border-image:repeating-linear-gradient(90deg,#b07a45 0 26px,#96622f 26px 52px) 13;
     box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 0 0 2px rgba(0,0,0,.08); }
   #board { position:relative; width:100%; border-radius:6px; z-index:2;
-    background:
-      linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px),
-      radial-gradient(circle at 30% 20%, #9ccc7a, #86bd63 70%);
-    background-color:#8fc473; }
-  .pig { position:absolute; cursor:pointer; transition:left .22s ease-in, top .22s ease-in, opacity .25s;
+    background:radial-gradient(circle at 50% 40%, #d9b77c, #c39a5b 75%); background-color:#c39a5b; }
+  .tile { position:absolute; z-index:0; background:#8fc473; box-shadow:inset 0 0 0 1px rgba(255,255,255,.16); }
+  .tile.alt { background:#86bd63; }
+  .pig { position:absolute; cursor:pointer; transition:left .3s ease-in, top .3s ease-in, opacity .25s;
     will-change:left,top; z-index:2; }
   .pig svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-  .pig .arrow { position:absolute; width:0; height:0; left:50%; top:50%; z-index:3; pointer-events:none;
-    transition:transform .22s ease-in; }
+  .pig .arrow { position:absolute; width:0; height:0; left:50%; top:50%; z-index:3; pointer-events:none; }
   .pig.movable .arrow { filter:drop-shadow(0 0 3px rgba(255,255,255,.9)); }
   .pig.shake { animation:shake .3s; }
   @keyframes shake { 0%,100%{margin-left:0} 25%{margin-left:-4px} 75%{margin-left:4px} }
   .pig.gone { opacity:0; pointer-events:none; }
-  .pig.sleeping svg { filter:saturate(.55) brightness(.97) drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-  .pig .zzz { position:absolute; right:-2px; top:-8px; font-size:15px; font-weight:bold; color:#3a6fd8;
-    z-index:4; pointer-events:none; text-shadow:0 1px 0 #fff; animation:zfloat 1.6s ease-in-out infinite; }
-  @keyframes zfloat { 0%,100%{transform:translateY(0) rotate(-6deg)} 50%{transform:translateY(-4px) rotate(6deg)} }
-  .pig.woke { animation:wokepop .35s ease-out; }
-  @keyframes wokepop { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
   .pig.hint svg { animation:hintpulse 1.1s ease-in-out infinite; }
   @keyframes hintpulse { 0%,100%{filter:drop-shadow(0 0 2px rgba(255,255,120,.0))} 50%{filter:drop-shadow(0 0 9px rgba(255,240,130,.95))} }
   .hay { position:absolute; z-index:1; pointer-events:none; }
   .hay svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
-  .gate { position:absolute; z-index:6; pointer-events:none; }
-  .gate svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
-  .gfoot { max-width:440px; margin:12px auto 0; text-align:center; font-size:13.5px; color:#4a5d23;
+  #plazabar { display:flex; align-items:center; gap:8px; max-width:440px; margin:12px auto 0;
+    background:rgba(255,250,240,.9); border-radius:12px; padding:7px 12px; box-shadow:0 2px 4px rgba(0,0,0,.10); }
+  #plazabar .plabel { font-size:13px; font-weight:bold; color:#7a5a34; white-space:nowrap; }
+  #plazaslots { display:flex; gap:6px; }
+  .pslot { width:40px; height:40px; border-radius:10px; background:rgba(0,0,0,.05);
+    border:2px dashed #cbbfa8; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .pslot.filled { border:2px solid #e0cfa5; background:#fff; animation:slotpop .25s ease-out; }
+  .pslot svg { width:36px; height:36px; display:block; }
+  @keyframes slotpop { from{transform:scale(.6)} to{transform:scale(1)} }
+  #plazabar .pfull { margin-left:auto; font-size:12px; font-weight:bold; color:#c0453e; display:none; }
+  #houses { display:flex; gap:8px; max-width:440px; margin:8px auto 0; }
+  .house { flex:1; background:rgba(255,255,255,.88); border-radius:12px; padding:6px 4px 5px; text-align:center;
+    box-shadow:0 2px 4px rgba(0,0,0,.10); border:3px solid transparent; position:relative; }
+  .house svg { width:42px; height:42px; display:block; margin:0 auto; }
+  .house .hcount { font-size:13px; font-weight:bold; color:#5b4632; }
+  .house .hname { font-size:10.5px; color:#9a8f7d; }
+  .house.next { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.35), 0 2px 4px rgba(0,0,0,.10); }
+  .house.next::after { content:'つぎ！'; position:absolute; top:-9px; right:-4px; background:#f5a623; color:#fff;
+    font-size:10px; font-weight:bold; border-radius:999px; padding:1px 7px; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .house.bounce { animation:hbounce .4s ease-out; }
+  @keyframes hbounce { 0%{transform:scale(1)} 35%{transform:scale(1.13)} 100%{transform:scale(1)} }
+  .gfoot { max-width:440px; margin:10px auto 0; text-align:center; font-size:13.5px; color:#4a5d23;
     background:rgba(255,255,255,.75); border-radius:12px; padding:8px 10px; line-height:1.6; }
   #msg { min-height:20px; font-weight:bold; color:#c0453e; }
   #note { color:#4a5d23; }
@@ -99,7 +120,7 @@
   .card { background:#fffaf0; border-radius:22px; padding:26px 30px 22px; text-align:center; width:84%; max-width:340px;
     box-shadow:0 10px 30px rgba(0,0,0,.3); animation:pop .25s ease-out; }
   @keyframes pop { from{transform:scale(.85); opacity:0} to{transform:scale(1); opacity:1} }
-  .card h2 { font-size:27px; color:#e2703a; margin-bottom:4px; }
+  .card h2 { font-size:26px; color:#e2703a; margin-bottom:4px; }
   .card .bigstars { font-size:38px; color:#f5a623; letter-spacing:4px; margin:6px 0 2px; }
   .card .bigstars .off { color:#e3d9c8; }
   .card p { font-size:14px; color:#7a6a55; margin-bottom:14px; }
@@ -113,7 +134,7 @@
   <div id="screen-title">
     <div class="barn">ミ ズ ー 牧 場</div>
     <h1 class="title">ぶた脱出！</h1>
-    <div class="subtitle">〜 にげだせ！ぶたちゃん 〜</div>
+    <div class="subtitle">〜 おうちへ かえろう！ぶたちゃん 〜</div>
     <div class="scene">
       <svg class="mizu" viewBox="0 0 100 118">
         <rect x="8" y="52" width="16" height="30" rx="7" fill="#f2b035"/>
@@ -157,10 +178,9 @@
       <div class="fence"></div>
     </div>
     <div class="howto">
-      🐷 ぶたをタップすると、むいている方向にまっすぐ走るよ。前があいていれば牧場の外へ脱出！<br>
-      🏠 小屋のある面では、じぶんの色の小屋からしか出られないよ。<br>
-      💤 ねむりぶたは、ほかのぶたがぶつかると目をさますよ。<br>
-      🎀 人気者ぶたが出ると、となりのぶたも ついて出ようとするよ。
+      🐷 ぶたをタップすると、むいている方向にまっすぐ走るよ。前がぜんぶ あいていれば お外へ出られる！（とちゅうでは止まれないよ）<br>
+      🏠 出たぶたは「まちあい広場」で待って、じぶんの色が呼ばれたら 小屋に帰るよ。<br>
+      🖐 広場は5匹まで。出す色の順番を考えるのがコツ。詰まったら「もどす」で1手もどせるよ。
     </div>
     <button class="btn" id="btn-play">あそぶ</button>
     <div class="lvgrid" id="lvgrid"></div>
@@ -173,22 +193,34 @@
       <div class="chip" id="chip-level">1面</div>
       <div class="spacer"></div>
       <div class="chip">🐷 のこり <span id="chip-left">0</span></div>
+      <button class="iconbtn" id="btn-undo" title="1手もどす">↩ もどす</button>
       <button class="iconbtn" id="btn-reset" title="やりなおし">↺</button>
+    </div>
+    <div id="queuebar">
+      <span class="qlabel">つぎの小屋</span>
+      <span class="qicons" id="qicons"></span>
+      <span class="qrest" id="qrest"></span>
     </div>
     <div id="boardwrap">
       <div id="board"></div>
       <div id="fence"></div>
     </div>
+    <div id="plazabar">
+      <span class="plabel">まちあい広場</span>
+      <span id="plazaslots"></span>
+      <span class="pfull" id="pfull">いっぱい！</span>
+    </div>
+    <div id="houses"></div>
     <div class="gfoot">
       <div id="msg"></div>
-      <div id="note">みどりの矢印のぶたは動けるよ。タップで走らせる！</div>
+      <div id="note"></div>
     </div>
   </div>
 
   <!-- ======= CLEAR ======= -->
   <div id="overlay">
     <div class="card">
-      <h2>全員 脱出！🎉</h2>
+      <h2>全員 おうちに帰った！🎉</h2>
       <div class="bigstars" id="clear-stars">★★★</div>
       <p id="clear-text"></p>
       <div class="row">
@@ -202,11 +234,12 @@
 
 <script>
 'use strict';
-const LEVELS = [{"w":6,"h":6,"pigs":[{"x":5,"y":4,"d":"R"},{"x":4,"y":4,"d":"U"},{"x":5,"y":3,"d":"D"},{"x":1,"y":2,"d":"U"}],"obstacles":[],"gates":null,"par":4,"note":""},{"w":6,"h":6,"pigs":[{"x":1,"y":4,"d":"L"},{"x":5,"y":2,"d":"D"},{"x":1,"y":2,"d":"L"},{"x":4,"y":5,"d":"L"},{"x":0,"y":2,"d":"D"}],"obstacles":[{"x":3,"y":0}],"gates":null,"par":5,"note":""},{"w":6,"h":6,"pigs":[{"x":5,"y":0,"d":"D"},{"x":0,"y":5,"d":"R"},{"x":0,"y":4,"d":"D"},{"x":1,"y":3,"d":"L"},{"x":0,"y":3,"d":"D"},{"x":1,"y":5,"d":"U"}],"obstacles":[{"x":3,"y":4},{"x":3,"y":2}],"gates":null,"par":7,"note":"干し草は 通れないよ"},{"w":6,"h":6,"pigs":[{"x":5,"y":0,"d":"L"},{"x":0,"y":4,"d":"U"},{"x":5,"y":4,"d":"U"},{"x":2,"y":4,"d":"R"},{"x":2,"y":0,"d":"D"},{"x":4,"y":0,"d":"L"},{"x":3,"y":0,"d":"D"}],"obstacles":[{"x":5,"y":5},{"x":1,"y":5}],"gates":null,"par":8,"note":""},{"w":7,"h":7,"pigs":[{"x":0,"y":5,"d":"D"},{"x":5,"y":5,"d":"L"},{"x":1,"y":0,"d":"L"},{"x":1,"y":3,"d":"D"},{"x":4,"y":6,"d":"R"},{"x":0,"y":6,"d":"R"},{"x":6,"y":4,"d":"R"},{"x":1,"y":2,"d":"D"},{"x":5,"y":6,"d":"U"}],"obstacles":[{"x":6,"y":5},{"x":0,"y":4},{"x":4,"y":4}],"gates":null,"par":10,"note":""},{"w":7,"h":7,"pigs":[{"x":2,"y":6,"d":"U"},{"x":5,"y":5,"d":"D","type":1},{"x":3,"y":1,"d":"U"},{"x":6,"y":5,"d":"D"},{"x":6,"y":6,"d":"D"},{"x":1,"y":4,"d":"R"},{"x":1,"y":5,"d":"R"},{"x":0,"y":1,"d":"D"},{"x":0,"y":2,"d":"D"},{"x":5,"y":6,"d":"R"}],"obstacles":[{"x":1,"y":6},{"x":3,"y":6}],"gates":null,"par":11,"note":"ねむりぶたは、ほかのぶたが ぶつかると おきるよ"},{"w":7,"h":7,"pigs":[{"x":6,"y":3,"d":"R"},{"x":5,"y":1,"d":"U","type":1},{"x":5,"y":0,"d":"L"},{"x":3,"y":5,"d":"R"},{"x":1,"y":0,"d":"L"},{"x":5,"y":2,"d":"U"},{"x":4,"y":1,"d":"R"},{"x":3,"y":4,"d":"L"},{"x":0,"y":2,"d":"D","type":1},{"x":1,"y":2,"d":"L"},{"x":2,"y":6,"d":"U"}],"obstacles":[{"x":4,"y":6},{"x":6,"y":2},{"x":6,"y":4}],"gates":null,"par":13,"note":""},{"w":7,"h":7,"pigs":[{"x":4,"y":6,"d":"D"},{"x":2,"y":5,"d":"L"},{"x":5,"y":3,"d":"R"},{"x":6,"y":5,"d":"D"},{"x":4,"y":0,"d":"U","type":1},{"x":6,"y":0,"d":"U"},{"x":2,"y":3,"d":"R"},{"x":4,"y":5,"d":"D","type":1},{"x":4,"y":3,"d":"U"},{"x":4,"y":4,"d":"D"},{"x":3,"y":5,"d":"R"},{"x":1,"y":4,"d":"L"}],"obstacles":[{"x":0,"y":1},{"x":5,"y":1},{"x":5,"y":0}],"gates":null,"par":14,"note":""},{"w":7,"h":7,"pigs":[{"x":1,"y":2,"d":"L"},{"x":5,"y":3,"d":"U"},{"x":6,"y":2,"d":"U"},{"x":0,"y":4,"d":"L","type":2},{"x":0,"y":0,"d":"D"},{"x":3,"y":4,"d":"R"},{"x":5,"y":1,"d":"U"},{"x":2,"y":6,"d":"D"},{"x":3,"y":2,"d":"D"},{"x":2,"y":4,"d":"R"},{"x":0,"y":3,"d":"D"},{"x":4,"y":6,"d":"D"}],"obstacles":[{"x":2,"y":1},{"x":1,"y":4}],"gates":null,"par":11,"note":"🎀の人気者ぶたが出ると、となりのぶたも ついて出ようとするよ"},{"w":8,"h":7,"pigs":[{"x":7,"y":2,"d":"R"},{"x":6,"y":5,"d":"D"},{"x":3,"y":6,"d":"L"},{"x":2,"y":3,"d":"U"},{"x":6,"y":2,"d":"R"},{"x":0,"y":2,"d":"U"},{"x":7,"y":5,"d":"L"},{"x":5,"y":4,"d":"L","type":2},{"x":3,"y":1,"d":"R"},{"x":1,"y":0,"d":"D"},{"x":6,"y":0,"d":"U"},{"x":5,"y":5,"d":"L"},{"x":1,"y":5,"d":"D"},{"x":6,"y":1,"d":"D","type":1}],"obstacles":[{"x":4,"y":3},{"x":4,"y":6},{"x":7,"y":6}],"gates":null,"par":14,"note":""},{"w":8,"h":8,"pigs":[{"x":6,"y":4,"d":"L","type":2},{"x":0,"y":6,"d":"D"},{"x":3,"y":6,"d":"L"},{"x":1,"y":2,"d":"R"},{"x":1,"y":1,"d":"R"},{"x":3,"y":2,"d":"D","type":1},{"x":3,"y":7,"d":"L"},{"x":0,"y":7,"d":"D"},{"x":7,"y":5,"d":"D"},{"x":4,"y":4,"d":"U"},{"x":7,"y":4,"d":"U"},{"x":0,"y":3,"d":"L"},{"x":2,"y":1,"d":"U"},{"x":7,"y":1,"d":"R","type":1},{"x":2,"y":6,"d":"D"},{"x":1,"y":4,"d":"D"}],"obstacles":[{"x":6,"y":0},{"x":5,"y":3},{"x":5,"y":6},{"x":0,"y":1}],"gates":null,"par":17,"note":""},{"w":8,"h":8,"pigs":[{"x":5,"y":7,"d":"U","color":1},{"x":2,"y":5,"d":"U","color":0},{"x":2,"y":1,"d":"U","color":0},{"x":2,"y":4,"d":"L","color":0},{"x":2,"y":0,"d":"U","color":0},{"x":1,"y":4,"d":"L","color":0},{"x":0,"y":4,"d":"L","color":0},{"x":6,"y":2,"d":"D","color":0},{"x":3,"y":4,"d":"D","color":1},{"x":6,"y":3,"d":"D","color":0},{"x":3,"y":5,"d":"D","color":1},{"x":3,"y":6,"d":"D","color":1},{"x":5,"y":2,"d":"U","color":1},{"x":5,"y":1,"d":"U","color":1},{"x":5,"y":0,"d":"U","color":1},{"x":3,"y":7,"d":"D","color":1}],"obstacles":[{"x":0,"y":0},{"x":7,"y":3}],"gates":[{"side":"U","idx":2,"color":0},{"side":"U","idx":5,"color":1},{"side":"D","idx":3,"color":1},{"side":"D","idx":6,"color":0},{"side":"L","idx":4,"color":0},{"side":"R","idx":3,"color":1}],"par":16,"note":"ぶたは じぶんの色の小屋からしか 出られないよ"},{"w":8,"h":8,"pigs":[{"x":6,"y":3,"d":"R","color":1},{"x":3,"y":3,"d":"D","color":1},{"x":3,"y":6,"d":"D","color":1},{"x":3,"y":4,"d":"L","color":0},{"x":7,"y":3,"d":"R","color":1,"type":2},{"x":2,"y":4,"d":"L","color":0},{"x":1,"y":4,"d":"L","color":0},{"x":0,"y":4,"d":"L","color":0},{"x":6,"y":6,"d":"D","color":0},{"x":1,"y":1,"d":"L","color":1},{"x":3,"y":7,"d":"D","color":1},{"x":7,"y":6,"d":"R","color":0},{"x":6,"y":7,"d":"D","color":0},{"x":0,"y":1,"d":"L","color":1},{"x":2,"y":2,"d":"U","color":0},{"x":2,"y":1,"d":"U","color":0},{"x":2,"y":0,"d":"U","color":0},{"x":5,"y":5,"d":"U","color":1},{"x":5,"y":1,"d":"U","color":1,"type":1},{"x":5,"y":4,"d":"U","color":1}],"obstacles":[{"x":7,"y":5},{"x":0,"y":6}],"gates":[{"side":"U","idx":2,"color":0},{"side":"U","idx":5,"color":1},{"side":"D","idx":3,"color":1},{"side":"D","idx":6,"color":0},{"side":"L","idx":4,"color":0},{"side":"R","idx":3,"color":1},{"side":"R","idx":6,"color":0},{"side":"L","idx":1,"color":1}],"par":20,"note":""},{"w":8,"h":8,"pigs":[{"x":2,"y":2,"d":"D","color":2},{"x":2,"y":3,"d":"L","color":1},{"x":2,"y":6,"d":"L","color":2},{"x":1,"y":6,"d":"L","color":2},{"x":0,"y":3,"d":"L","color":1},{"x":0,"y":6,"d":"L","color":2},{"x":6,"y":4,"d":"R","color":0},{"x":2,"y":7,"d":"D","color":2},{"x":1,"y":3,"d":"U","color":0},{"x":6,"y":7,"d":"R","color":1},{"x":4,"y":4,"d":"U","color":1},{"x":1,"y":2,"d":"U","color":0},{"x":1,"y":1,"d":"U","color":0},{"x":5,"y":6,"d":"D","color":0},{"x":1,"y":0,"d":"U","color":0,"type":2},{"x":5,"y":7,"d":"D","color":0},{"x":7,"y":4,"d":"U","color":2},{"x":7,"y":7,"d":"R","color":1},{"x":7,"y":2,"d":"U","color":2},{"x":7,"y":1,"d":"U","color":2},{"x":7,"y":0,"d":"U","color":2},{"x":4,"y":3,"d":"U","color":1},{"x":4,"y":0,"d":"U","color":1,"type":1},{"x":4,"y":2,"d":"U","color":1}],"obstacles":[{"x":6,"y":3},{"x":3,"y":4},{"x":4,"y":7}],"gates":[{"side":"U","idx":1,"color":0},{"side":"U","idx":4,"color":1},{"side":"U","idx":7,"color":2},{"side":"D","idx":2,"color":2},{"side":"D","idx":5,"color":0},{"side":"L","idx":3,"color":1},{"side":"L","idx":6,"color":2},{"side":"R","idx":4,"color":0},{"side":"R","idx":7,"color":1}],"par":24,"note":""},{"w":9,"h":8,"pigs":[{"x":8,"y":6,"d":"U","color":2},{"x":6,"y":7,"d":"U","color":1},{"x":6,"y":2,"d":"U","color":1},{"x":8,"y":2,"d":"U","color":2},{"x":6,"y":0,"d":"U","color":1},{"x":4,"y":2,"d":"L","color":1},{"x":8,"y":5,"d":"L","color":2},{"x":8,"y":1,"d":"U","color":2},{"x":8,"y":0,"d":"U","color":2},{"x":6,"y":3,"d":"R","color":0},{"x":3,"y":2,"d":"L","color":1},{"x":0,"y":5,"d":"L","color":2},{"x":7,"y":3,"d":"R","color":0},{"x":2,"y":2,"d":"L","color":1},{"x":1,"y":2,"d":"L","color":1},{"x":4,"y":3,"d":"D","color":2},{"x":0,"y":2,"d":"L","color":1},{"x":8,"y":3,"d":"R","color":0},{"x":4,"y":4,"d":"D","color":2},{"x":7,"y":4,"d":"D","color":0},{"x":4,"y":5,"d":"D","color":2},{"x":4,"y":6,"d":"D","color":2},{"x":4,"y":7,"d":"D","color":2},{"x":7,"y":5,"d":"D","color":0},{"x":7,"y":6,"d":"D","color":0},{"x":7,"y":7,"d":"D","color":0,"type":2},{"x":2,"y":0,"d":"U","color":0,"type":1},{"x":2,"y":1,"d":"U","color":0}],"obstacles":[{"x":3,"y":3},{"x":2,"y":4},{"x":0,"y":6}],"gates":[{"side":"U","idx":2,"color":0},{"side":"U","idx":6,"color":1},{"side":"U","idx":8,"color":2},{"side":"D","idx":4,"color":2},{"side":"D","idx":7,"color":0},{"side":"L","idx":2,"color":1},{"side":"L","idx":5,"color":2},{"side":"R","idx":3,"color":0},{"side":"R","idx":6,"color":1}],"par":28,"note":""},{"w":9,"h":9,"pigs":[{"x":6,"y":2,"d":"R","color":0,"type":1},{"x":1,"y":2,"d":"R","color":0},{"x":5,"y":7,"d":"L","color":2},{"x":3,"y":2,"d":"D","color":2},{"x":7,"y":5,"d":"R","color":1},{"x":3,"y":3,"d":"D","color":2},{"x":4,"y":7,"d":"L","color":2},{"x":1,"y":1,"d":"U","color":0},{"x":3,"y":6,"d":"D","color":2,"type":2},{"x":3,"y":7,"d":"L","color":2,"type":2},{"x":1,"y":0,"d":"U","color":0},{"x":8,"y":5,"d":"U","color":2},{"x":3,"y":4,"d":"L","color":1},{"x":8,"y":4,"d":"U","color":2},{"x":2,"y":4,"d":"L","color":1},{"x":5,"y":6,"d":"U","color":1},{"x":8,"y":3,"d":"U","color":2},{"x":0,"y":7,"d":"L","color":2},{"x":8,"y":2,"d":"R","color":0},{"x":3,"y":8,"d":"D","color":2},{"x":8,"y":1,"d":"U","color":2},{"x":5,"y":5,"d":"U","color":1},{"x":8,"y":0,"d":"U","color":2},{"x":5,"y":4,"d":"U","color":1},{"x":1,"y":4,"d":"L","color":1},{"x":5,"y":1,"d":"U","color":1},{"x":5,"y":0,"d":"U","color":1},{"x":6,"y":3,"d":"D","color":0},{"x":6,"y":4,"d":"D","color":0},{"x":0,"y":4,"d":"L","color":1},{"x":6,"y":5,"d":"D","color":0},{"x":6,"y":6,"d":"D","color":0},{"x":6,"y":7,"d":"D","color":0},{"x":6,"y":8,"d":"D","color":0}],"obstacles":[{"x":8,"y":7},{"x":7,"y":0},{"x":1,"y":3}],"gates":[{"side":"U","idx":1,"color":0},{"side":"U","idx":5,"color":1},{"side":"U","idx":8,"color":2},{"side":"D","idx":3,"color":2},{"side":"D","idx":6,"color":0},{"side":"D","idx":8,"color":1},{"side":"L","idx":4,"color":1},{"side":"L","idx":7,"color":2},{"side":"R","idx":2,"color":0},{"side":"R","idx":5,"color":1}],"par":33,"note":""},{"w":9,"h":9,"pigs":[{"x":8,"y":1,"d":"R","color":0,"type":1},{"x":0,"y":1,"d":"R","color":0},{"x":3,"y":4,"d":"D","color":1,"type":1},{"x":3,"y":2,"d":"D","color":1},{"x":1,"y":7,"d":"U","color":1},{"x":5,"y":5,"d":"D","color":3},{"x":5,"y":7,"d":"R","color":2},{"x":1,"y":6,"d":"U","color":1},{"x":6,"y":7,"d":"R","color":2},{"x":2,"y":2,"d":"U","color":2},{"x":6,"y":8,"d":"L","color":1},{"x":5,"y":6,"d":"R","color":1},{"x":1,"y":5,"d":"U","color":1},{"x":7,"y":4,"d":"U","color":3},{"x":1,"y":3,"d":"U","color":1},{"x":1,"y":1,"d":"U","color":1},{"x":5,"y":8,"d":"L","color":1},{"x":2,"y":1,"d":"U","color":2},{"x":4,"y":8,"d":"L","color":1},{"x":6,"y":6,"d":"R","color":1},{"x":3,"y":8,"d":"L","color":1},{"x":7,"y":6,"d":"D","color":1},{"x":7,"y":7,"d":"D","color":1},{"x":7,"y":3,"d":"U","color":3},{"x":7,"y":0,"d":"U","color":3},{"x":3,"y":0,"d":"L","color":1},{"x":0,"y":0,"d":"L","color":1},{"x":7,"y":8,"d":"R","color":3},{"x":4,"y":4,"d":"U","color":0},{"x":8,"y":8,"d":"D","color":2},{"x":2,"y":5,"d":"D","color":0},{"x":4,"y":2,"d":"R","color":1},{"x":5,"y":2,"d":"R","color":1,"type":2},{"x":2,"y":6,"d":"D","color":0,"type":2},{"x":1,"y":2,"d":"L","color":3},{"x":2,"y":8,"d":"L","color":1},{"x":6,"y":2,"d":"R","color":1},{"x":1,"y":8,"d":"L","color":1},{"x":1,"y":4,"d":"L","color":1},{"x":7,"y":2,"d":"R","color":1}],"obstacles":[{"x":6,"y":0},{"x":8,"y":5},{"x":4,"y":5},{"x":0,"y":5}],"gates":[{"side":"U","idx":0,"color":0},{"side":"U","idx":1,"color":1},{"side":"U","idx":2,"color":2},{"side":"U","idx":3,"color":3},{"side":"U","idx":4,"color":0},{"side":"U","idx":5,"color":1},{"side":"U","idx":6,"color":2},{"side":"U","idx":7,"color":3},{"side":"U","idx":8,"color":0},{"side":"D","idx":0,"color":2},{"side":"D","idx":1,"color":3},{"side":"D","idx":2,"color":0},{"side":"D","idx":3,"color":1},{"side":"D","idx":4,"color":2},{"side":"D","idx":5,"color":3},{"side":"D","idx":6,"color":0},{"side":"D","idx":7,"color":1},{"side":"D","idx":8,"color":2},{"side":"L","idx":0,"color":1},{"side":"L","idx":1,"color":2},{"side":"L","idx":2,"color":3},{"side":"L","idx":3,"color":0},{"side":"L","idx":4,"color":1},{"side":"L","idx":5,"color":2},{"side":"L","idx":6,"color":3},{"side":"L","idx":7,"color":0},{"side":"L","idx":8,"color":1},{"side":"R","idx":0,"color":3},{"side":"R","idx":1,"color":0},{"side":"R","idx":2,"color":1},{"side":"R","idx":3,"color":2},{"side":"R","idx":4,"color":3},{"side":"R","idx":5,"color":0},{"side":"R","idx":6,"color":1},{"side":"R","idx":7,"color":2},{"side":"R","idx":8,"color":3}],"par":40,"note":""},{"w":10,"h":8,"pigs":[{"x":7,"y":0,"d":"U","color":3,"type":1},{"x":7,"y":4,"d":"U","color":3},{"x":9,"y":3,"d":"U","color":1,"type":1},{"x":9,"y":4,"d":"U","color":1},{"x":1,"y":7,"d":"R","color":2},{"x":6,"y":6,"d":"R","color":1},{"x":8,"y":5,"d":"U","color":0},{"x":2,"y":7,"d":"R","color":2},{"x":4,"y":7,"d":"R","color":2},{"x":8,"y":0,"d":"R","color":3},{"x":7,"y":6,"d":"D","color":1},{"x":5,"y":7,"d":"R","color":2},{"x":8,"y":2,"d":"L","color":3},{"x":1,"y":2,"d":"U","color":1},{"x":5,"y":1,"d":"L","color":2},{"x":3,"y":1,"d":"L","color":2},{"x":9,"y":6,"d":"D","color":3},{"x":2,"y":3,"d":"L","color":0},{"x":9,"y":1,"d":"U","color":1},{"x":6,"y":7,"d":"R","color":2},{"x":6,"y":1,"d":"U","color":2},{"x":8,"y":6,"d":"D","color":2},{"x":2,"y":1,"d":"L","color":2},{"x":8,"y":7,"d":"R","color":2},{"x":0,"y":3,"d":"U","color":0},{"x":1,"y":0,"d":"L","color":1,"type":2},{"x":9,"y":7,"d":"R","color":2},{"x":5,"y":6,"d":"L","color":3},{"x":2,"y":6,"d":"L","color":3},{"x":2,"y":4,"d":"L","color":1},{"x":9,"y":0,"d":"R","color":3},{"x":1,"y":4,"d":"L","color":1},{"x":0,"y":2,"d":"U","color":0},{"x":3,"y":7,"d":"D","color":1},{"x":0,"y":4,"d":"L","color":1},{"x":1,"y":1,"d":"L","color":2,"type":2},{"x":1,"y":6,"d":"L","color":3},{"x":0,"y":6,"d":"L","color":3},{"x":0,"y":1,"d":"U","color":0},{"x":7,"y":7,"d":"D","color":1},{"x":0,"y":0,"d":"L","color":1},{"x":6,"y":0,"d":"U","color":2}],"obstacles":[{"x":4,"y":4},{"x":4,"y":0},{"x":0,"y":5},{"x":3,"y":3}],"gates":[{"side":"U","idx":0,"color":0},{"side":"U","idx":1,"color":1},{"side":"U","idx":2,"color":2},{"side":"U","idx":3,"color":3},{"side":"U","idx":4,"color":0},{"side":"U","idx":5,"color":1},{"side":"U","idx":6,"color":2},{"side":"U","idx":7,"color":3},{"side":"U","idx":8,"color":0},{"side":"U","idx":9,"color":1},{"side":"D","idx":0,"color":2},{"side":"D","idx":1,"color":3},{"side":"D","idx":2,"color":0},{"side":"D","idx":3,"color":1},{"side":"D","idx":4,"color":2},{"side":"D","idx":5,"color":3},{"side":"D","idx":6,"color":0},{"side":"D","idx":7,"color":1},{"side":"D","idx":8,"color":2},{"side":"D","idx":9,"color":3},{"side":"L","idx":0,"color":1},{"side":"L","idx":1,"color":2},{"side":"L","idx":2,"color":3},{"side":"L","idx":3,"color":0},{"side":"L","idx":4,"color":1},{"side":"L","idx":5,"color":2},{"side":"L","idx":6,"color":3},{"side":"L","idx":7,"color":0},{"side":"R","idx":0,"color":3},{"side":"R","idx":1,"color":0},{"side":"R","idx":2,"color":1},{"side":"R","idx":3,"color":2},{"side":"R","idx":4,"color":3},{"side":"R","idx":5,"color":0},{"side":"R","idx":6,"color":1},{"side":"R","idx":7,"color":2}],"par":42,"note":""},{"w":10,"h":8,"pigs":[{"x":6,"y":3,"d":"R","color":2,"type":1},{"x":1,"y":3,"d":"R","color":2},{"x":4,"y":1,"d":"R","color":0},{"x":5,"y":1,"d":"R","color":0},{"x":2,"y":6,"d":"R","color":1},{"x":0,"y":4,"d":"U","color":0},{"x":3,"y":6,"d":"R","color":1},{"x":3,"y":0,"d":"L","color":1},{"x":0,"y":3,"d":"L","color":0},{"x":2,"y":0,"d":"L","color":1},{"x":7,"y":3,"d":"D","color":1},{"x":3,"y":2,"d":"L","color":3},{"x":2,"y":2,"d":"L","color":3,"type":2},{"x":7,"y":5,"d":"D","color":1},{"x":6,"y":1,"d":"R","color":0},{"x":6,"y":6,"d":"D","color":0},{"x":8,"y":1,"d":"R","color":0},{"x":7,"y":6,"d":"D","color":1},{"x":8,"y":3,"d":"D","color":2},{"x":7,"y":4,"d":"R","color":3},{"x":8,"y":4,"d":"R","color":3},{"x":1,"y":2,"d":"L","color":3},{"x":9,"y":4,"d":"D","color":3},{"x":8,"y":5,"d":"D","color":2},{"x":1,"y":7,"d":"L","color":0},{"x":0,"y":5,"d":"D","color":2,"type":2},{"x":2,"y":1,"d":"L","color":2},{"x":9,"y":6,"d":"D","color":3},{"x":0,"y":2,"d":"U","color":0},{"x":7,"y":1,"d":"U","color":3},{"x":4,"y":0,"d":"U","color":0},{"x":6,"y":7,"d":"R","color":2,"type":2},{"x":7,"y":0,"d":"R","color":3},{"x":9,"y":1,"d":"R","color":0},{"x":1,"y":0,"d":"L","color":1},{"x":8,"y":0,"d":"R","color":3},{"x":0,"y":1,"d":"U","color":0},{"x":0,"y":7,"d":"L","color":0},{"x":8,"y":7,"d":"R","color":2},{"x":9,"y":5,"d":"R","color":0},{"x":4,"y":6,"d":"D","color":2},{"x":9,"y":7,"d":"D","color":3},{"x":7,"y":7,"d":"D","color":1},{"x":0,"y":0,"d":"U","color":0},{"x":3,"y":7,"d":"D","color":1},{"x":4,"y":7,"d":"D","color":2}],"obstacles":[{"x":5,"y":7},{"x":9,"y":2},{"x":4,"y":5},{"x":7,"y":2}],"gates":[{"side":"U","idx":0,"color":0},{"side":"U","idx":1,"color":1},{"side":"U","idx":2,"color":2},{"side":"U","idx":3,"color":3},{"side":"U","idx":4,"color":0},{"side":"U","idx":5,"color":1},{"side":"U","idx":6,"color":2},{"side":"U","idx":7,"color":3},{"side":"U","idx":8,"color":0},{"side":"U","idx":9,"color":1},{"side":"D","idx":0,"color":2},{"side":"D","idx":1,"color":3},{"side":"D","idx":2,"color":0},{"side":"D","idx":3,"color":1},{"side":"D","idx":4,"color":2},{"side":"D","idx":5,"color":3},{"side":"D","idx":6,"color":0},{"side":"D","idx":7,"color":1},{"side":"D","idx":8,"color":2},{"side":"D","idx":9,"color":3},{"side":"L","idx":0,"color":1},{"side":"L","idx":1,"color":2},{"side":"L","idx":2,"color":3},{"side":"L","idx":3,"color":0},{"side":"L","idx":4,"color":1},{"side":"L","idx":5,"color":2},{"side":"L","idx":6,"color":3},{"side":"L","idx":7,"color":0},{"side":"R","idx":0,"color":3},{"side":"R","idx":1,"color":0},{"side":"R","idx":2,"color":1},{"side":"R","idx":3,"color":2},{"side":"R","idx":4,"color":3},{"side":"R","idx":5,"color":0},{"side":"R","idx":6,"color":1},{"side":"R","idx":7,"color":2}],"par":45,"note":""},{"w":9,"h":9,"pigs":[{"x":6,"y":4,"d":"D","color":0,"type":1},{"x":6,"y":0,"d":"D","color":0},{"x":0,"y":8,"d":"L","color":1,"type":1},{"x":7,"y":8,"d":"L","color":1},{"x":7,"y":3,"d":"R","color":2},{"x":8,"y":3,"d":"U","color":0},{"x":4,"y":6,"d":"U","color":0,"type":2},{"x":8,"y":2,"d":"L","color":3},{"x":7,"y":2,"d":"U","color":3},{"x":4,"y":1,"d":"R","color":0},{"x":0,"y":2,"d":"U","color":0},{"x":7,"y":5,"d":"L","color":2},{"x":1,"y":5,"d":"L","color":2},{"x":7,"y":0,"d":"U","color":3},{"x":7,"y":7,"d":"L","color":0},{"x":6,"y":6,"d":"D","color":0},{"x":3,"y":0,"d":"L","color":1},{"x":5,"y":7,"d":"L","color":0},{"x":2,"y":0,"d":"L","color":1},{"x":4,"y":4,"d":"L","color":1},{"x":4,"y":7,"d":"L","color":0},{"x":2,"y":1,"d":"L","color":2},{"x":6,"y":1,"d":"R","color":0},{"x":7,"y":1,"d":"R","color":0},{"x":1,"y":7,"d":"D","color":3},{"x":5,"y":5,"d":"U","color":1},{"x":1,"y":1,"d":"L","color":2},{"x":0,"y":1,"d":"L","color":2},{"x":5,"y":4,"d":"U","color":1},{"x":1,"y":0,"d":"L","color":1,"type":2},{"x":2,"y":7,"d":"D","color":0},{"x":3,"y":4,"d":"D","color":1},{"x":8,"y":8,"d":"R","color":3},{"x":5,"y":1,"d":"U","color":1},{"x":0,"y":7,"d":"L","color":0,"type":2},{"x":1,"y":4,"d":"L","color":1},{"x":6,"y":7,"d":"D","color":0},{"x":3,"y":5,"d":"D","color":1},{"x":3,"y":6,"d":"D","color":1},{"x":0,"y":0,"d":"L","color":1},{"x":0,"y":5,"d":"L","color":2},{"x":8,"y":1,"d":"U","color":0},{"x":3,"y":7,"d":"D","color":1},{"x":8,"y":0,"d":"R","color":3},{"x":3,"y":8,"d":"D","color":1},{"x":2,"y":8,"d":"D","color":0},{"x":6,"y":8,"d":"D","color":0},{"x":5,"y":0,"d":"U","color":1},{"x":8,"y":5,"d":"R","color":0},{"x":1,"y":8,"d":"D","color":3}],"obstacles":[{"x":5,"y":6},{"x":3,"y":3},{"x":2,"y":6},{"x":1,"y":3}],"gates":[{"side":"U","idx":0,"color":0},{"side":"U","idx":1,"color":1},{"side":"U","idx":2,"color":2},{"side":"U","idx":3,"color":3},{"side":"U","idx":4,"color":0},{"side":"U","idx":5,"color":1},{"side":"U","idx":6,"color":2},{"side":"U","idx":7,"color":3},{"side":"U","idx":8,"color":0},{"side":"D","idx":0,"color":2},{"side":"D","idx":1,"color":3},{"side":"D","idx":2,"color":0},{"side":"D","idx":3,"color":1},{"side":"D","idx":4,"color":2},{"side":"D","idx":5,"color":3},{"side":"D","idx":6,"color":0},{"side":"D","idx":7,"color":1},{"side":"D","idx":8,"color":2},{"side":"L","idx":0,"color":1},{"side":"L","idx":1,"color":2},{"side":"L","idx":2,"color":3},{"side":"L","idx":3,"color":0},{"side":"L","idx":4,"color":1},{"side":"L","idx":5,"color":2},{"side":"L","idx":6,"color":3},{"side":"L","idx":7,"color":0},{"side":"L","idx":8,"color":1},{"side":"R","idx":0,"color":3},{"side":"R","idx":1,"color":0},{"side":"R","idx":2,"color":1},{"side":"R","idx":3,"color":2},{"side":"R","idx":4,"color":3},{"side":"R","idx":5,"color":0},{"side":"R","idx":6,"color":1},{"side":"R","idx":7,"color":2},{"side":"R","idx":8,"color":3}],"par":50,"note":""}];
+const LEVELS = [{"w":6,"h":6,"mask":["######","######","######","######","######","######"],"pigs":[{"x":2,"y":5,"d":"R","c":1},{"x":5,"y":2,"d":"U","c":1},{"x":5,"y":4,"d":"D","c":0},{"x":0,"y":1,"d":"U","c":0},{"x":1,"y":4,"d":"L","c":0},{"x":4,"y":3,"d":"L","c":1},{"x":3,"y":5,"d":"D","c":0},{"x":0,"y":0,"d":"U","c":1},{"x":2,"y":0,"d":"U","c":1},{"x":4,"y":0,"d":"L","c":0}],"obstacles":[],"queue":[1,0,0,0,1,0,1,1,1,0],"note":"タップで お外へ！出たぶたは 広場でまって、色が呼ばれたら おうちに帰るよ"},{"w":7,"h":6,"mask":["#######","#######","#######","#######","#######","#######"],"pigs":[{"x":0,"y":0,"d":"D","c":0},{"x":4,"y":4,"d":"U","c":1},{"x":2,"y":4,"d":"L","c":0},{"x":4,"y":0,"d":"U","c":1},{"x":3,"y":0,"d":"U","c":0},{"x":5,"y":3,"d":"R","c":1},{"x":4,"y":2,"d":"R","c":0},{"x":5,"y":0,"d":"U","c":1},{"x":3,"y":5,"d":"U","c":0},{"x":5,"y":2,"d":"R","c":1},{"x":0,"y":4,"d":"D","c":0},{"x":1,"y":2,"d":"D","c":1}],"obstacles":[],"queue":[0,1,1,1,0,1,1,0,1,0,0,0],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":7,"h":7,"mask":["#######","#######","#######","#######","#######","#######","#######"],"pigs":[{"x":2,"y":1,"d":"U","c":1},{"x":4,"y":4,"d":"L","c":1},{"x":3,"y":2,"d":"L","c":0},{"x":5,"y":1,"d":"L","c":1},{"x":3,"y":6,"d":"L","c":0},{"x":3,"y":3,"d":"R","c":1},{"x":0,"y":1,"d":"L","c":1},{"x":4,"y":1,"d":"U","c":1},{"x":2,"y":3,"d":"D","c":1},{"x":6,"y":4,"d":"R","c":0},{"x":0,"y":5,"d":"L","c":0},{"x":1,"y":5,"d":"U","c":0},{"x":6,"y":5,"d":"D","c":0},{"x":5,"y":0,"d":"U","c":0}],"obstacles":[{"x":4,"y":2},{"x":5,"y":4}],"queue":[1,0,1,1,1,1,0,0,0,1,0,1,0,0],"note":"干し草は じゃまな障害物。前がぜんぶ あいていないと 出られないよ"},{"w":7,"h":7,"mask":["..###..",".#####.","#######","#######","#######",".#####.","..###.."],"pigs":[{"x":1,"y":1,"d":"R","c":2},{"x":3,"y":6,"d":"L","c":2},{"x":3,"y":2,"d":"U","c":0},{"x":3,"y":3,"d":"D","c":1},{"x":1,"y":5,"d":"L","c":2},{"x":0,"y":4,"d":"D","c":1},{"x":5,"y":3,"d":"U","c":0},{"x":0,"y":3,"d":"U","c":2},{"x":1,"y":4,"d":"U","c":0},{"x":5,"y":4,"d":"D","c":2},{"x":4,"y":3,"d":"R","c":2},{"x":4,"y":6,"d":"D","c":0},{"x":5,"y":1,"d":"R","c":1},{"x":6,"y":3,"d":"U","c":0},{"x":2,"y":4,"d":"D","c":1},{"x":3,"y":1,"d":"U","c":1}],"obstacles":[],"queue":[1,2,2,2,1,0,1,2,2,1,0,1,0,2,0,0],"note":"色が3つに ふえたよ。「つぎの色」を 見てから 出す順番を考えよう"},{"w":8,"h":7,"mask":["########","########","########","########","########","########","########"],"pigs":[{"x":7,"y":0,"d":"R","c":1},{"x":0,"y":6,"d":"L","c":2},{"x":7,"y":6,"d":"R","c":0},{"x":2,"y":5,"d":"L","c":2},{"x":5,"y":5,"d":"D","c":0},{"x":2,"y":0,"d":"L","c":0},{"x":7,"y":1,"d":"R","c":0},{"x":3,"y":5,"d":"R","c":1},{"x":1,"y":2,"d":"D","c":2},{"x":0,"y":4,"d":"L","c":2},{"x":4,"y":0,"d":"U","c":1},{"x":3,"y":4,"d":"R","c":1},{"x":3,"y":3,"d":"D","c":1},{"x":0,"y":2,"d":"R","c":0},{"x":3,"y":0,"d":"U","c":1},{"x":3,"y":2,"d":"R","c":2},{"x":5,"y":0,"d":"D","c":0},{"x":6,"y":6,"d":"R","c":2}],"obstacles":[{"x":4,"y":6},{"x":6,"y":1}],"queue":[1,2,2,1,0,0,0,0,2,1,1,0,2,2,2,1,1,0],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":8,"h":8,"mask":["...##...","..####..",".######.","########","########",".######.","..####..","...##..."],"pigs":[{"x":5,"y":4,"d":"R","c":2},{"x":6,"y":5,"d":"U","c":0},{"x":1,"y":5,"d":"L","c":2},{"x":1,"y":4,"d":"U","c":1},{"x":2,"y":6,"d":"R","c":1},{"x":4,"y":1,"d":"U","c":1},{"x":7,"y":4,"d":"U","c":0},{"x":0,"y":4,"d":"L","c":0},{"x":5,"y":6,"d":"D","c":1},{"x":5,"y":1,"d":"R","c":2},{"x":3,"y":6,"d":"U","c":2},{"x":2,"y":1,"d":"R","c":1},{"x":5,"y":3,"d":"U","c":0},{"x":5,"y":2,"d":"R","c":2},{"x":0,"y":3,"d":"U","c":0},{"x":2,"y":2,"d":"L","c":2},{"x":4,"y":7,"d":"R","c":2},{"x":1,"y":2,"d":"U","c":0},{"x":4,"y":2,"d":"R","c":0},{"x":3,"y":2,"d":"U","c":1}],"obstacles":[{"x":5,"y":5},{"x":2,"y":4}],"queue":[2,0,0,2,2,0,1,1,0,2,2,1,1,1,0,0,2,1,0,2],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":8,"h":8,"mask":[".##..##.","########","########","########",".######.","..####..","...##...","........"],"pigs":[{"x":6,"y":2,"d":"D","c":0},{"x":2,"y":0,"d":"U","c":1},{"x":4,"y":1,"d":"U","c":2},{"x":5,"y":2,"d":"D","c":2},{"x":0,"y":2,"d":"L","c":2},{"x":3,"y":3,"d":"L","c":0},{"x":4,"y":5,"d":"R","c":0},{"x":7,"y":2,"d":"U","c":0},{"x":6,"y":4,"d":"D","c":0},{"x":1,"y":1,"d":"U","c":2},{"x":0,"y":1,"d":"L","c":0},{"x":3,"y":2,"d":"D","c":1},{"x":7,"y":3,"d":"R","c":1},{"x":1,"y":2,"d":"R","c":0},{"x":3,"y":5,"d":"L","c":1},{"x":4,"y":2,"d":"U","c":1},{"x":5,"y":1,"d":"D","c":2},{"x":4,"y":4,"d":"L","c":2},{"x":3,"y":1,"d":"U","c":1},{"x":2,"y":1,"d":"L","c":2},{"x":2,"y":2,"d":"D","c":1},{"x":4,"y":3,"d":"R","c":1}],"obstacles":[{"x":5,"y":0},{"x":6,"y":1}],"queue":[2,1,1,1,0,0,1,0,2,0,2,2,2,1,0,1,2,1,1,2,0,0],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":8,"h":8,"mask":["########","########","########","########","########","########","########","########"],"pigs":[{"x":4,"y":7,"d":"R","c":1},{"x":0,"y":2,"d":"L","c":0},{"x":7,"y":0,"d":"U","c":0},{"x":5,"y":2,"d":"L","c":0},{"x":6,"y":6,"d":"L","c":1},{"x":0,"y":4,"d":"L","c":2},{"x":6,"y":0,"d":"R","c":0},{"x":6,"y":5,"d":"R","c":2},{"x":1,"y":6,"d":"L","c":0},{"x":2,"y":0,"d":"U","c":2},{"x":3,"y":3,"d":"R","c":1},{"x":7,"y":1,"d":"R","c":2},{"x":4,"y":0,"d":"U","c":0},{"x":5,"y":3,"d":"R","c":0},{"x":6,"y":4,"d":"R","c":2},{"x":7,"y":7,"d":"D","c":2},{"x":1,"y":7,"d":"L","c":1},{"x":0,"y":5,"d":"D","c":1},{"x":3,"y":0,"d":"U","c":1},{"x":3,"y":1,"d":"U","c":1},{"x":5,"y":0,"d":"U","c":0},{"x":1,"y":0,"d":"L","c":2},{"x":2,"y":1,"d":"D","c":1},{"x":6,"y":3,"d":"R","c":2}],"obstacles":[{"x":3,"y":7},{"x":7,"y":2},{"x":5,"y":4}],"queue":[0,0,1,2,0,2,2,2,1,0,1,2,1,0,0,2,0,2,1,0,1,2,1,1],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":9,"h":9,"mask":["...###...",".#######.",".##...##.","##.....##","##.....##","##.....##",".##...##.",".#######.","...###..."],"pigs":[{"x":6,"y":1,"d":"L","c":0},{"x":4,"y":8,"d":"U","c":1},{"x":5,"y":0,"d":"R","c":3},{"x":5,"y":8,"d":"D","c":1},{"x":2,"y":6,"d":"R","c":1},{"x":7,"y":4,"d":"R","c":2},{"x":1,"y":6,"d":"D","c":0},{"x":0,"y":4,"d":"D","c":3},{"x":8,"y":3,"d":"U","c":0},{"x":2,"y":2,"d":"D","c":1},{"x":6,"y":6,"d":"R","c":3},{"x":7,"y":5,"d":"R","c":2},{"x":3,"y":0,"d":"D","c":1},{"x":4,"y":0,"d":"R","c":3},{"x":0,"y":3,"d":"L","c":1},{"x":2,"y":1,"d":"U","c":3},{"x":3,"y":8,"d":"L","c":2},{"x":0,"y":5,"d":"L","c":0},{"x":6,"y":2,"d":"R","c":0},{"x":7,"y":1,"d":"R","c":2},{"x":1,"y":3,"d":"D","c":3},{"x":1,"y":2,"d":"L","c":0},{"x":1,"y":5,"d":"L","c":2},{"x":2,"y":7,"d":"D","c":2},{"x":7,"y":7,"d":"R","c":3},{"x":6,"y":7,"d":"L","c":1}],"obstacles":[],"queue":[1,0,3,2,2,3,2,0,3,3,2,1,0,0,0,3,2,0,1,1,1,2,1,3,1,3],"note":"4色そろった！広場は5匹まで。どの色から出すかが 大事だよ"},{"w":9,"h":9,"mask":["...###...",".#######.",".#######.","#########","#########","#########",".#######.",".#######.","...###..."],"pigs":[{"x":8,"y":4,"d":"U","c":0},{"x":1,"y":3,"d":"D","c":1},{"x":1,"y":6,"d":"D","c":0},{"x":3,"y":8,"d":"R","c":0},{"x":5,"y":8,"d":"R","c":2},{"x":6,"y":2,"d":"L","c":0},{"x":2,"y":3,"d":"D","c":1},{"x":4,"y":8,"d":"D","c":2},{"x":3,"y":7,"d":"L","c":0},{"x":6,"y":6,"d":"R","c":3},{"x":1,"y":1,"d":"D","c":1},{"x":7,"y":2,"d":"R","c":1},{"x":5,"y":4,"d":"R","c":3},{"x":4,"y":3,"d":"R","c":3},{"x":4,"y":1,"d":"R","c":1},{"x":6,"y":1,"d":"U","c":1},{"x":7,"y":1,"d":"U","c":2},{"x":4,"y":2,"d":"L","c":1},{"x":5,"y":6,"d":"R","c":3},{"x":5,"y":3,"d":"R","c":2},{"x":3,"y":3,"d":"U","c":0},{"x":0,"y":4,"d":"L","c":3},{"x":2,"y":5,"d":"L","c":3},{"x":3,"y":6,"d":"R","c":2},{"x":3,"y":4,"d":"L","c":2},{"x":5,"y":0,"d":"L","c":2},{"x":6,"y":5,"d":"D","c":0},{"x":7,"y":3,"d":"R","c":3}],"obstacles":[{"x":8,"y":5},{"x":7,"y":7},{"x":5,"y":5}],"queue":[3,3,1,2,3,0,0,2,0,1,1,3,0,1,2,2,3,3,1,3,2,0,0,1,2,0,1,2],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":9,"h":8,"mask":["#########","#########","#########","#########","#########","#########","#########","#########"],"pigs":[{"x":7,"y":5,"d":"D","c":3},{"x":0,"y":2,"d":"D","c":2},{"x":8,"y":0,"d":"R","c":1},{"x":1,"y":0,"d":"L","c":2},{"x":7,"y":1,"d":"U","c":3},{"x":2,"y":7,"d":"D","c":0},{"x":4,"y":1,"d":"L","c":2},{"x":0,"y":5,"d":"L","c":0},{"x":7,"y":4,"d":"R","c":2},{"x":7,"y":7,"d":"D","c":3},{"x":5,"y":4,"d":"D","c":3},{"x":2,"y":5,"d":"U","c":3},{"x":1,"y":7,"d":"D","c":3},{"x":5,"y":2,"d":"R","c":0},{"x":2,"y":3,"d":"L","c":1},{"x":1,"y":2,"d":"R","c":0},{"x":3,"y":1,"d":"L","c":1},{"x":8,"y":7,"d":"D","c":2},{"x":4,"y":0,"d":"L","c":1},{"x":6,"y":6,"d":"R","c":3},{"x":3,"y":5,"d":"L","c":0},{"x":1,"y":3,"d":"L","c":0},{"x":7,"y":6,"d":"D","c":2},{"x":3,"y":7,"d":"D","c":1},{"x":5,"y":7,"d":"D","c":1},{"x":3,"y":4,"d":"L","c":2},{"x":4,"y":7,"d":"D","c":0},{"x":8,"y":1,"d":"U","c":0},{"x":7,"y":2,"d":"R","c":1},{"x":6,"y":4,"d":"L","c":1}],"obstacles":[{"x":8,"y":3},{"x":2,"y":6},{"x":6,"y":0}],"queue":[1,2,0,1,0,3,3,2,2,1,1,2,2,3,0,1,2,1,3,3,1,2,3,0,0,3,0,0,0,1],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":9,"h":9,"mask":[".###.###.","####.####","#########","#########",".#######.","..#####..","...###...","....#....","....#...."],"pigs":[{"x":7,"y":2,"d":"D","c":3},{"x":4,"y":7,"d":"L","c":3},{"x":5,"y":4,"d":"D","c":3},{"x":4,"y":8,"d":"L","c":0},{"x":1,"y":0,"d":"L","c":1},{"x":6,"y":1,"d":"R","c":0},{"x":6,"y":0,"d":"U","c":1},{"x":7,"y":4,"d":"D","c":3},{"x":1,"y":1,"d":"D","c":2},{"x":3,"y":2,"d":"U","c":0},{"x":4,"y":3,"d":"U","c":2},{"x":8,"y":1,"d":"U","c":0},{"x":1,"y":3,"d":"D","c":2},{"x":8,"y":3,"d":"R","c":1},{"x":0,"y":3,"d":"L","c":3},{"x":5,"y":0,"d":"L","c":2},{"x":7,"y":1,"d":"D","c":2},{"x":2,"y":4,"d":"U","c":1},{"x":2,"y":1,"d":"U","c":1},{"x":8,"y":2,"d":"D","c":0},{"x":6,"y":4,"d":"R","c":2},{"x":2,"y":5,"d":"L","c":2},{"x":1,"y":4,"d":"D","c":0},{"x":3,"y":0,"d":"U","c":1},{"x":5,"y":3,"d":"D","c":1},{"x":3,"y":5,"d":"D","c":1},{"x":4,"y":2,"d":"U","c":0},{"x":6,"y":5,"d":"D","c":3},{"x":3,"y":6,"d":"D","c":2},{"x":0,"y":2,"d":"L","c":3},{"x":0,"y":1,"d":"L","c":0},{"x":5,"y":6,"d":"D","c":3}],"obstacles":[{"x":4,"y":6},{"x":4,"y":5}],"queue":[1,1,0,0,1,0,2,2,3,3,3,0,3,3,3,2,2,0,0,3,1,2,3,2,1,2,1,1,0,0,2,1],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":10,"h":9,"mask":["...####...","...####...","...####...","##########","##########","##########","...####...","...####...","...####..."],"pigs":[{"x":6,"y":5,"d":"R","c":0},{"x":6,"y":1,"d":"R","c":1},{"x":3,"y":1,"d":"U","c":3},{"x":6,"y":0,"d":"R","c":2},{"x":8,"y":3,"d":"U","c":0},{"x":6,"y":8,"d":"D","c":2},{"x":3,"y":8,"d":"D","c":0},{"x":7,"y":3,"d":"U","c":0},{"x":3,"y":4,"d":"L","c":1},{"x":4,"y":8,"d":"L","c":2},{"x":2,"y":3,"d":"U","c":3},{"x":5,"y":6,"d":"R","c":3},{"x":5,"y":2,"d":"U","c":0},{"x":2,"y":5,"d":"U","c":1},{"x":4,"y":6,"d":"U","c":3},{"x":0,"y":4,"d":"D","c":3},{"x":9,"y":5,"d":"R","c":0},{"x":6,"y":2,"d":"R","c":1},{"x":8,"y":5,"d":"R","c":2},{"x":8,"y":4,"d":"U","c":2},{"x":4,"y":7,"d":"D","c":1},{"x":9,"y":3,"d":"U","c":2},{"x":1,"y":5,"d":"L","c":0},{"x":5,"y":3,"d":"U","c":3},{"x":7,"y":5,"d":"D","c":1},{"x":9,"y":4,"d":"R","c":1},{"x":5,"y":4,"d":"L","c":2},{"x":4,"y":3,"d":"U","c":1},{"x":3,"y":7,"d":"D","c":3},{"x":5,"y":0,"d":"U","c":1},{"x":6,"y":6,"d":"R","c":3},{"x":5,"y":8,"d":"R","c":0},{"x":3,"y":6,"d":"L","c":2},{"x":3,"y":2,"d":"D","c":2}],"obstacles":[{"x":1,"y":3},{"x":6,"y":7}],"queue":[0,1,0,3,0,1,0,3,2,2,1,1,0,3,2,0,2,1,1,1,2,3,3,3,2,1,2,2,3,0,3,1,0,2],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":10,"h":9,"mask":["##########","##########","##########","##########","##########","##########","##########","##########","##########"],"pigs":[{"x":2,"y":0,"d":"L","c":1},{"x":8,"y":8,"d":"D","c":3},{"x":9,"y":3,"d":"R","c":1},{"x":3,"y":7,"d":"D","c":0},{"x":5,"y":5,"d":"L","c":0},{"x":7,"y":1,"d":"R","c":2},{"x":9,"y":0,"d":"R","c":3},{"x":7,"y":0,"d":"U","c":1},{"x":1,"y":5,"d":"L","c":0},{"x":6,"y":0,"d":"U","c":2},{"x":8,"y":4,"d":"R","c":3},{"x":0,"y":6,"d":"D","c":3},{"x":9,"y":8,"d":"D","c":1},{"x":2,"y":2,"d":"U","c":1},{"x":0,"y":7,"d":"L","c":2},{"x":2,"y":4,"d":"D","c":2},{"x":3,"y":2,"d":"U","c":3},{"x":7,"y":7,"d":"D","c":2},{"x":6,"y":3,"d":"R","c":2},{"x":2,"y":8,"d":"L","c":0},{"x":4,"y":0,"d":"U","c":1},{"x":9,"y":5,"d":"R","c":3},{"x":4,"y":7,"d":"U","c":3},{"x":9,"y":7,"d":"R","c":0},{"x":4,"y":2,"d":"U","c":0},{"x":8,"y":3,"d":"U","c":3},{"x":5,"y":6,"d":"R","c":2},{"x":5,"y":0,"d":"D","c":0},{"x":8,"y":5,"d":"U","c":2},{"x":2,"y":6,"d":"R","c":2},{"x":4,"y":3,"d":"U","c":0},{"x":6,"y":1,"d":"R","c":0},{"x":7,"y":5,"d":"U","c":1},{"x":4,"y":6,"d":"U","c":2},{"x":1,"y":2,"d":"L","c":1},{"x":9,"y":6,"d":"R","c":3},{"x":1,"y":6,"d":"L","c":1},{"x":8,"y":7,"d":"L","c":1}],"obstacles":[{"x":6,"y":8},{"x":1,"y":1},{"x":0,"y":3},{"x":9,"y":2}],"queue":[0,1,0,1,3,1,0,2,2,3,0,3,0,3,1,3,3,1,2,1,0,3,0,3,2,1,2,2,2,2,1,0,2,3,0,2,1,1],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"},{"w":10,"h":10,"mask":["...####...","..######..",".###..###.","###....###","##......##","##......##","###....###",".###..###.","..######..","...####..."],"pigs":[{"x":4,"y":1,"d":"L","c":0},{"x":0,"y":3,"d":"L","c":1},{"x":2,"y":6,"d":"L","c":2},{"x":9,"y":6,"d":"D","c":2},{"x":1,"y":5,"d":"U","c":1},{"x":8,"y":2,"d":"R","c":2},{"x":8,"y":3,"d":"R","c":3},{"x":6,"y":0,"d":"R","c":1},{"x":4,"y":8,"d":"D","c":1},{"x":9,"y":3,"d":"R","c":0},{"x":3,"y":1,"d":"L","c":1},{"x":7,"y":8,"d":"R","c":0},{"x":5,"y":8,"d":"D","c":0},{"x":2,"y":8,"d":"U","c":0},{"x":2,"y":2,"d":"L","c":3},{"x":8,"y":7,"d":"D","c":1},{"x":3,"y":8,"d":"L","c":2},{"x":8,"y":6,"d":"D","c":3},{"x":3,"y":7,"d":"R","c":0},{"x":1,"y":6,"d":"D","c":1},{"x":7,"y":7,"d":"R","c":2},{"x":7,"y":2,"d":"D","c":2},{"x":6,"y":9,"d":"R","c":2},{"x":1,"y":3,"d":"U","c":0},{"x":5,"y":9,"d":"R","c":3},{"x":6,"y":2,"d":"D","c":3},{"x":7,"y":3,"d":"R","c":3},{"x":3,"y":9,"d":"D","c":2},{"x":9,"y":4,"d":"R","c":0},{"x":8,"y":5,"d":"R","c":1},{"x":2,"y":1,"d":"L","c":0},{"x":6,"y":7,"d":"D","c":1},{"x":6,"y":1,"d":"R","c":3},{"x":4,"y":0,"d":"U","c":2},{"x":5,"y":1,"d":"R","c":3},{"x":5,"y":0,"d":"L","c":3}],"obstacles":[{"x":0,"y":5},{"x":8,"y":4}],"queue":[1,1,0,3,3,1,2,2,3,0,3,0,2,1,3,1,1,2,2,3,0,0,3,1,0,2,2,3,3,0,1,0,0,2,1,2],"note":"みどりの矢印のぶたは 出られるよ。タップで走らせる！"},{"w":10,"h":10,"mask":["...####...","..######..",".########.","##########","##########","##########","##########",".########.","..######..","...####..."],"pigs":[{"x":2,"y":1,"d":"L","c":3},{"x":5,"y":8,"d":"D","c":1},{"x":4,"y":5,"d":"L","c":0},{"x":2,"y":8,"d":"D","c":3},{"x":6,"y":0,"d":"U","c":3},{"x":0,"y":5,"d":"L","c":0},{"x":2,"y":6,"d":"D","c":0},{"x":1,"y":7,"d":"L","c":2},{"x":8,"y":4,"d":"U","c":0},{"x":5,"y":6,"d":"R","c":3},{"x":9,"y":6,"d":"R","c":3},{"x":6,"y":1,"d":"U","c":2},{"x":6,"y":9,"d":"R","c":1},{"x":7,"y":1,"d":"R","c":2},{"x":4,"y":0,"d":"L","c":1},{"x":3,"y":4,"d":"L","c":0},{"x":7,"y":7,"d":"L","c":0},{"x":4,"y":6,"d":"R","c":0},{"x":5,"y":0,"d":"L","c":3},{"x":4,"y":1,"d":"R","c":0},{"x":8,"y":2,"d":"U","c":3},{"x":0,"y":3,"d":"L","c":3},{"x":2,"y":2,"d":"L","c":2},{"x":9,"y":3,"d":"D","c":2},{"x":7,"y":8,"d":"R","c":1},{"x":5,"y":4,"d":"L","c":1},{"x":2,"y":7,"d":"D","c":1},{"x":7,"y":3,"d":"R","c":2},{"x":0,"y":4,"d":"L","c":3},{"x":2,"y":5,"d":"D","c":0},{"x":1,"y":2,"d":"U","c":1},{"x":5,"y":9,"d":"D","c":1},{"x":8,"y":6,"d":"R","c":2},{"x":6,"y":3,"d":"U","c":2},{"x":5,"y":7,"d":"D","c":2},{"x":8,"y":7,"d":"D","c":2},{"x":1,"y":4,"d":"L","c":3},{"x":0,"y":6,"d":"U","c":2},{"x":1,"y":5,"d":"L","c":1},{"x":4,"y":9,"d":"D","c":0},{"x":3,"y":0,"d":"U","c":0},{"x":5,"y":2,"d":"L","c":1},{"x":6,"y":2,"d":"L","c":3},{"x":3,"y":9,"d":"D","c":1}],"obstacles":[{"x":4,"y":8},{"x":8,"y":5},{"x":2,"y":3},{"x":7,"y":2}],"queue":[1,3,3,2,1,1,2,0,3,2,3,1,1,2,1,3,3,2,2,0,2,0,0,3,1,2,2,0,0,3,0,0,1,0,2,2,3,1,3,3,0,1,0,1],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"},{"w":11,"h":10,"mask":["###########","###########","###########","###########","###########","###########","###########","###########","###########","###########"],"pigs":[{"x":4,"y":3,"d":"L","c":3},{"x":6,"y":5,"d":"L","c":0},{"x":10,"y":4,"d":"R","c":0},{"x":3,"y":6,"d":"R","c":0},{"x":9,"y":2,"d":"U","c":2},{"x":9,"y":5,"d":"R","c":2},{"x":7,"y":9,"d":"D","c":0},{"x":7,"y":0,"d":"U","c":2},{"x":2,"y":1,"d":"U","c":3},{"x":6,"y":8,"d":"D","c":0},{"x":0,"y":5,"d":"D","c":3},{"x":2,"y":6,"d":"U","c":3},{"x":8,"y":0,"d":"R","c":2},{"x":3,"y":5,"d":"L","c":2},{"x":10,"y":2,"d":"R","c":2},{"x":0,"y":6,"d":"L","c":3},{"x":3,"y":3,"d":"L","c":2},{"x":5,"y":6,"d":"R","c":0},{"x":9,"y":9,"d":"D","c":0},{"x":10,"y":8,"d":"R","c":2},{"x":1,"y":8,"d":"D","c":1},{"x":6,"y":7,"d":"D","c":3},{"x":5,"y":2,"d":"U","c":2},{"x":6,"y":0,"d":"U","c":1},{"x":10,"y":7,"d":"R","c":1},{"x":10,"y":1,"d":"U","c":0},{"x":3,"y":0,"d":"L","c":1},{"x":0,"y":4,"d":"L","c":0},{"x":6,"y":1,"d":"D","c":0},{"x":1,"y":4,"d":"L","c":3},{"x":9,"y":4,"d":"U","c":0},{"x":0,"y":3,"d":"L","c":1},{"x":8,"y":7,"d":"R","c":1},{"x":8,"y":3,"d":"R","c":3},{"x":4,"y":1,"d":"U","c":1},{"x":10,"y":6,"d":"R","c":1},{"x":9,"y":7,"d":"R","c":1},{"x":1,"y":0,"d":"L","c":2},{"x":0,"y":2,"d":"U","c":3},{"x":4,"y":2,"d":"U","c":3},{"x":1,"y":7,"d":"D","c":1},{"x":8,"y":8,"d":"R","c":3},{"x":5,"y":7,"d":"D","c":2},{"x":3,"y":1,"d":"R","c":1},{"x":4,"y":7,"d":"D","c":2},{"x":2,"y":8,"d":"L","c":0},{"x":10,"y":9,"d":"D","c":1},{"x":2,"y":9,"d":"L","c":3}],"obstacles":[{"x":3,"y":9},{"x":1,"y":6},{"x":7,"y":3},{"x":3,"y":7}],"queue":[1,2,3,1,2,2,3,3,1,3,3,3,2,3,0,1,1,0,1,0,0,3,2,1,2,0,1,0,2,1,3,2,3,1,0,0,0,2,0,3,2,3,1,2,0,2,1,0],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"},{"w":11,"h":10,"mask":[".###...###.","#####.#####","###########","###########",".#########.",".#########.","..#######..","....###....",".....#.....",".....#....."],"pigs":[{"x":6,"y":7,"d":"R","c":1},{"x":8,"y":6,"d":"R","c":2},{"x":1,"y":3,"d":"L","c":1},{"x":5,"y":6,"d":"L","c":1},{"x":7,"y":0,"d":"R","c":0},{"x":1,"y":1,"d":"D","c":2},{"x":3,"y":1,"d":"U","c":3},{"x":0,"y":1,"d":"D","c":3},{"x":6,"y":6,"d":"D","c":3},{"x":3,"y":3,"d":"U","c":0},{"x":3,"y":0,"d":"U","c":3},{"x":9,"y":4,"d":"R","c":0},{"x":5,"y":2,"d":"U","c":0},{"x":10,"y":2,"d":"R","c":2},{"x":10,"y":1,"d":"R","c":0},{"x":7,"y":2,"d":"R","c":2},{"x":9,"y":0,"d":"R","c":2},{"x":7,"y":5,"d":"D","c":0},{"x":4,"y":6,"d":"D","c":1},{"x":2,"y":5,"d":"L","c":3},{"x":8,"y":5,"d":"U","c":1},{"x":9,"y":3,"d":"D","c":3},{"x":9,"y":1,"d":"R","c":0},{"x":6,"y":3,"d":"U","c":1},{"x":8,"y":2,"d":"U","c":3},{"x":1,"y":4,"d":"D","c":3},{"x":5,"y":7,"d":"R","c":0},{"x":9,"y":5,"d":"D","c":0},{"x":3,"y":6,"d":"D","c":1},{"x":8,"y":0,"d":"U","c":2},{"x":7,"y":1,"d":"R","c":3},{"x":2,"y":2,"d":"R","c":2},{"x":8,"y":4,"d":"R","c":3},{"x":0,"y":3,"d":"D","c":1},{"x":4,"y":1,"d":"U","c":2},{"x":3,"y":2,"d":"U","c":2},{"x":1,"y":2,"d":"L","c":1},{"x":7,"y":4,"d":"D","c":2},{"x":1,"y":5,"d":"D","c":1},{"x":2,"y":4,"d":"L","c":0},{"x":4,"y":7,"d":"D","c":1},{"x":5,"y":5,"d":"U","c":3},{"x":8,"y":1,"d":"U","c":0},{"x":5,"y":8,"d":"L","c":1},{"x":5,"y":4,"d":"U","c":3},{"x":5,"y":9,"d":"L","c":0},{"x":4,"y":5,"d":"D","c":2},{"x":6,"y":1,"d":"U","c":2}],"obstacles":[{"x":10,"y":3},{"x":1,"y":0},{"x":2,"y":0}],"queue":[0,0,0,1,3,3,1,3,0,1,0,1,2,0,2,3,1,2,3,0,3,1,2,1,3,2,1,2,3,0,1,3,0,2,3,2,2,2,0,2,3,1,1,0,2,0,3,1],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"},{"w":12,"h":10,"mask":["############","############","############","############","############","############","############","############","############","############"],"pigs":[{"x":2,"y":2,"d":"L","c":0},{"x":6,"y":6,"d":"R","c":3},{"x":10,"y":2,"d":"R","c":2},{"x":9,"y":0,"d":"R","c":1},{"x":8,"y":2,"d":"U","c":3},{"x":0,"y":5,"d":"L","c":1},{"x":6,"y":9,"d":"R","c":1},{"x":11,"y":3,"d":"R","c":2},{"x":0,"y":9,"d":"L","c":0},{"x":0,"y":2,"d":"U","c":2},{"x":5,"y":1,"d":"L","c":2},{"x":6,"y":1,"d":"U","c":1},{"x":3,"y":0,"d":"U","c":1},{"x":2,"y":0,"d":"U","c":3},{"x":4,"y":1,"d":"L","c":1},{"x":9,"y":2,"d":"U","c":0},{"x":10,"y":7,"d":"R","c":2},{"x":3,"y":7,"d":"D","c":0},{"x":0,"y":4,"d":"U","c":2},{"x":11,"y":6,"d":"D","c":0},{"x":5,"y":4,"d":"R","c":2},{"x":11,"y":9,"d":"R","c":0},{"x":5,"y":2,"d":"L","c":3},{"x":11,"y":8,"d":"R","c":0},{"x":1,"y":4,"d":"D","c":2},{"x":4,"y":7,"d":"D","c":3},{"x":6,"y":2,"d":"L","c":0},{"x":1,"y":0,"d":"U","c":3},{"x":5,"y":9,"d":"D","c":0},{"x":0,"y":8,"d":"L","c":1},{"x":2,"y":1,"d":"U","c":1},{"x":3,"y":3,"d":"U","c":1},{"x":7,"y":7,"d":"U","c":2},{"x":4,"y":0,"d":"R","c":1},{"x":7,"y":2,"d":"U","c":0},{"x":8,"y":1,"d":"R","c":2},{"x":10,"y":0,"d":"U","c":3},{"x":1,"y":1,"d":"L","c":2},{"x":3,"y":5,"d":"R","c":3},{"x":2,"y":3,"d":"R","c":3},{"x":6,"y":0,"d":"U","c":3},{"x":3,"y":1,"d":"U","c":0},{"x":9,"y":6,"d":"R","c":3},{"x":8,"y":7,"d":"R","c":0},{"x":0,"y":6,"d":"L","c":0},{"x":3,"y":4,"d":"L","c":2},{"x":2,"y":9,"d":"D","c":1},{"x":0,"y":3,"d":"U","c":0},{"x":7,"y":4,"d":"U","c":2},{"x":8,"y":5,"d":"R","c":1},{"x":1,"y":3,"d":"L","c":3},{"x":8,"y":0,"d":"U","c":3},{"x":4,"y":9,"d":"D","c":1},{"x":0,"y":0,"d":"U","c":1}],"obstacles":[{"x":5,"y":8},{"x":3,"y":6},{"x":0,"y":7},{"x":5,"y":6},{"x":6,"y":8}],"queue":[2,2,1,1,0,1,2,1,0,3,0,0,3,3,1,1,2,0,3,1,0,1,3,0,2,1,0,3,3,0,0,0,1,3,2,0,0,3,2,2,2,1,2,3,3,3,2,2,1,1,0,2,3,1],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"},{"w":12,"h":11,"mask":["....####....","..########..",".##########.",".##########.","############","############","############",".##########.",".##########.","..########..","....####...."],"pigs":[{"x":10,"y":7,"d":"R","c":2},{"x":8,"y":2,"d":"R","c":3},{"x":7,"y":5,"d":"U","c":3},{"x":5,"y":2,"d":"L","c":3},{"x":3,"y":4,"d":"R","c":2},{"x":5,"y":7,"d":"L","c":3},{"x":7,"y":6,"d":"D","c":2},{"x":4,"y":8,"d":"L","c":0},{"x":5,"y":3,"d":"U","c":0},{"x":4,"y":1,"d":"U","c":1},{"x":9,"y":4,"d":"R","c":0},{"x":1,"y":2,"d":"U","c":2},{"x":6,"y":5,"d":"D","c":1},{"x":8,"y":4,"d":"R","c":2},{"x":6,"y":10,"d":"D","c":3},{"x":7,"y":0,"d":"R","c":2},{"x":11,"y":5,"d":"D","c":3},{"x":8,"y":9,"d":"D","c":1},{"x":9,"y":7,"d":"R","c":3},{"x":3,"y":9,"d":"D","c":2},{"x":3,"y":3,"d":"L","c":3},{"x":2,"y":4,"d":"U","c":1},{"x":8,"y":7,"d":"R","c":2},{"x":7,"y":10,"d":"R","c":1},{"x":10,"y":3,"d":"R","c":1},{"x":4,"y":10,"d":"L","c":0},{"x":4,"y":6,"d":"L","c":2},{"x":5,"y":9,"d":"D","c":1},{"x":9,"y":8,"d":"R","c":1},{"x":3,"y":1,"d":"U","c":3},{"x":2,"y":6,"d":"L","c":1},{"x":7,"y":2,"d":"U","c":1},{"x":10,"y":4,"d":"D","c":0},{"x":1,"y":5,"d":"U","c":1},{"x":5,"y":0,"d":"L","c":3},{"x":2,"y":1,"d":"L","c":1},{"x":1,"y":4,"d":"U","c":2},{"x":0,"y":4,"d":"D","c":0},{"x":8,"y":1,"d":"U","c":0},{"x":1,"y":7,"d":"U","c":0},{"x":3,"y":7,"d":"D","c":1},{"x":6,"y":2,"d":"L","c":1},{"x":3,"y":6,"d":"L","c":2},{"x":1,"y":8,"d":"U","c":0},{"x":2,"y":7,"d":"L","c":0},{"x":11,"y":4,"d":"R","c":2},{"x":2,"y":2,"d":"U","c":0},{"x":11,"y":6,"d":"D","c":3},{"x":2,"y":9,"d":"U","c":0},{"x":6,"y":8,"d":"L","c":2},{"x":10,"y":8,"d":"R","c":0},{"x":9,"y":2,"d":"R","c":2},{"x":9,"y":5,"d":"R","c":3},{"x":4,"y":3,"d":"U","c":3},{"x":9,"y":3,"d":"U","c":3},{"x":8,"y":6,"d":"R","c":0}],"obstacles":[{"x":9,"y":9},{"x":8,"y":8},{"x":6,"y":0},{"x":3,"y":5}],"queue":[2,2,2,3,1,0,1,2,2,1,2,1,3,3,2,0,1,2,0,3,1,3,0,1,0,3,1,0,2,1,3,3,3,3,0,0,3,0,3,0,1,2,0,0,1,2,0,3,1,1,0,2,2,2,1,3],"note":"ぎっしり！落ち着いて 順番を考えよう。詰まったら「もどす」だよ"}];
 const DIRS = { U:[0,-1], D:[0,1], L:[-1,0], R:[1,0] };
 const ROT = { R:0, D:90, L:180, U:270 };
-const SAVE_KEY = 'pig-escape-save-v2';
+const SAVE_KEY = 'pig-escape-save-v3';
 const HINT_IDLE_MS = 20000;
+const PLAZA_MAX = 5;
 
 /* pig colors: 0 pink, 1 white, 2 brown, 3 black-spotted */
 const PALETTES = [
@@ -215,17 +248,20 @@ const PALETTES = [
   { body:'#c68a58', light:'#dcab7d', dark:'#a96f3e', line:'#a96f3e', nostril:'#7d4f26', eye:'#3d2716', spots:null },
   { body:'#f6f0e4', light:'#fffaf0', dark:'#e8dcc4', line:'#d9cbb2', nostril:'#c9808e', eye:'#59303a', spots:'#3a3230' },
 ];
-const GATE_COLORS = ['#f28ba0', '#e8dcc4', '#a96f3e', '#3a3230'];
+const HOUSE_COLORS = ['#f28ba0', '#e8dcc4', '#a96f3e', '#3a3230'];
+const COLOR_NAMES = ['ピンク', 'しろ', 'ちゃ', 'ぶち'];
 
 let save = loadSave();
 let cur = 0;
-let L = null;            // level ctx: {w,h,pigs,obstacles:Set,gates:Map,gateMode}
-let pos = [], awake = []; // live state (pos=-1 means out)
+let L = null;   // {w,h,pigs,hay:Set,queue,colorsPresent:[],totals:{}}
+let S = null;   // {onBoard:[bool], plaza:[pigIdx], qi, home:Set}
+let undoStack = [];
 let pigEls = [];
 let busy = false;
-let taps = 0, stuck = 0;
+let stuck = 0, undos = 0;
 let lastAct = Date.now();
-window.__busy = false; window.__remaining = 0;
+window.__busy = false; window.__remaining = 0; window.__home = 0;
+window.__state = () => S ? { onBoard: S.onBoard.slice(), plaza: S.plaza.slice(), qi: S.qi, home: [...S.home] } : null;
 
 function loadSave() {
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.stars) return s; } catch (e) {}
@@ -247,32 +283,25 @@ function beep(freq, dur, type, vol, when) {
     o.start(t); o.stop(t + dur);
   } catch (e) {}
 }
-const sndMove = () => beep(520, 0.09, 'triangle', 0.10);
 const sndOut  = () => { beep(660, 0.09, 'triangle', 0.11); beep(880, 0.12, 'triangle', 0.11, 0.07); };
+const sndHome = () => { beep(784, 0.09, 'triangle', 0.11); beep(1047, 0.14, 'triangle', 0.11, 0.07); };
 const sndStuck= () => beep(150, 0.12, 'square', 0.05);
-const sndWake = () => { beep(980, 0.08, 'triangle', 0.11); beep(1240, 0.12, 'triangle', 0.11, 0.07); };
+const sndUndo = () => beep(330, 0.1, 'triangle', 0.09);
 const sndClear= () => { [523,659,784,1047].forEach((f,i)=>beep(f,0.16,'triangle',0.12,i*0.09)); };
 
-/* ----- pig svg (faces right) ----- */
-function pigSVG(color, popular) {
+/* ----- svgs ----- */
+function pigSVG(color) {
   const c = PALETTES[color || 0];
   const spots = c.spots ? `
     <ellipse cx="38" cy="42" rx="9" ry="6" fill="${c.spots}" opacity=".85"/>
     <ellipse cx="52" cy="66" rx="7" ry="5" fill="${c.spots}" opacity=".85"/>
     <ellipse cx="26" cy="60" rx="5" ry="4" fill="${c.spots}" opacity=".85"/>` : '';
-  const bow = popular ? `
-    <g>
-      <ellipse cx="63" cy="17" rx="8" ry="5.4" fill="#e0453a" transform="rotate(-24 63 17)"/>
-      <ellipse cx="79" cy="17" rx="8" ry="5.4" fill="#e0453a" transform="rotate(24 79 17)"/>
-      <circle cx="71" cy="19" r="3.6" fill="#b92e25"/>
-    </g>` : '';
   return `<svg viewBox="0 0 100 100">
     <ellipse cx="47" cy="54" rx="33" ry="25" fill="${c.body}"/>
     ${spots}
     <path d="M16 44 q-9 -7 -4 -13 q3 -4 8 0" fill="none" stroke="${c.line}" stroke-width="3.4" stroke-linecap="round"/>
     <circle cx="62" cy="30" r="5.4" fill="${c.body}" stroke="${c.line}" stroke-width="2.2"/>
     <circle cx="76" cy="34" r="5.4" fill="${c.body}" stroke="${c.line}" stroke-width="2.2"/>
-    ${bow}
     <circle cx="72" cy="52" r="15" fill="${c.light}"/>
     <ellipse cx="76" cy="53" rx="8.6" ry="6.8" fill="${c.dark}"/>
     <circle cx="73" cy="53" r="1.8" fill="${c.nostril}"/>
@@ -291,8 +320,8 @@ function haySVG() {
     <path d="M20 30 q6 -6 12 0 M68 30 q6 -6 12 0 M20 74 q6 -6 12 0 M68 74 q6 -6 12 0" stroke="#d9b544" stroke-width="3.4" fill="none" stroke-linecap="round"/>
   </svg>`;
 }
-function gateSVG(color) {
-  const c = GATE_COLORS[color || 0];
+function houseSVG(color) {
+  const c = HOUSE_COLORS[color || 0];
   const door = (color === 1) ? '#c9a86a' : c;
   return `<svg viewBox="0 0 100 100">
     <path d="M6 46 L50 12 L94 46 z" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
@@ -302,77 +331,43 @@ function gateSVG(color) {
   </svg>`;
 }
 
-/* ----- core model (identical rules to the solver) ----- */
-function slideResult(posArr, i) {
+/* ----- core model (v3 bus-style; same rules as the generator/verifier) ----- */
+function rayClear(i) {
   const p = L.pigs[i];
   const dx = DIRS[p.d][0], dy = DIRS[p.d][1];
-  let cx = posArr[i] % L.w, cy = Math.floor(posArr[i] / L.w);
-  const occ = new Map();
-  for (let j = 0; j < posArr.length; j++) if (j !== i && posArr[j] >= 0) occ.set(posArr[j], j);
+  let cx = p.x, cy = p.y;
+  const occ = new Set();
+  for (let j = 0; j < L.pigs.length; j++) if (j !== i && S.onBoard[j]) occ.add(L.pigs[j].y * L.w + L.pigs[j].x);
   for (;;) {
-    const nx = cx + dx, ny = cy + dy;
-    if (nx < 0 || ny < 0 || nx >= L.w || ny >= L.h) {
-      if (!L.gateMode) return { dest: -1, blocker: null };
-      const idx = (p.d === 'U' || p.d === 'D') ? cx : cy;
-      const gc = L.gates.get(p.d + ',' + idx);
-      if (gc === (p.color || 0)) return { dest: -1, blocker: null };
-      return { dest: cy * L.w + cx, blocker: 'wall' };
-    }
-    const cell = ny * L.w + nx;
-    if (L.obstacles.has(cell)) return { dest: cy * L.w + cx, blocker: 'obs' };
-    if (occ.has(cell)) return { dest: cy * L.w + cx, blocker: occ.get(cell) };
-    cx = nx; cy = ny;
+    cx += dx; cy += dy;
+    if (cx < 0 || cy < 0 || cx >= L.w || cy >= L.h) return true;
+    const cell = cy * L.w + cx;
+    if (L.hay.has(cell) || occ.has(cell)) return false;
   }
 }
-function neighborsOf(posArr, cell) {
-  const x = cell % L.w, y = Math.floor(cell / L.w);
-  const res = [];
-  for (let j = 0; j < posArr.length; j++) {
-    if (posArr[j] < 0) continue;
-    const px = posArr[j] % L.w, py = Math.floor(posArr[j] / L.w);
-    if (Math.abs(px - x) + Math.abs(py - y) === 1) res.push(j);
-  }
-  return res.sort((a, b) => a - b);
+function canExit(i) {
+  return S.onBoard[i] && S.plaza.length < PLAZA_MAX && rayClear(i);
 }
-function runChain(posArr, awakeArr, srcCell) {
-  const queue = neighborsOf(posArr, srcCell);
-  const seen = new Set(queue);
-  const exited = [];
-  while (queue.length) {
-    const j = queue.shift();
-    if (posArr[j] < 0) continue;
-    if (L.pigs[j].type === 1 && !awakeArr[j]) continue;
-    const cell = posArr[j];
-    const r = slideResult(posArr, j);
-    if (r.dest === -1) {
-      posArr[j] = -1;
-      exited.push(j);
-      if (L.pigs[j].type === 2) {
-        for (const nb of neighborsOf(posArr, cell)) {
-          if (!seen.has(nb)) { seen.add(nb); queue.push(nb); }
-        }
-      }
-    }
+// apply an exit to the model; returns list of pigs that went home (drain)
+function applyExit(i) {
+  S.onBoard[i] = false;
+  S.plaza.push(i);
+  const drained = [];
+  while (S.qi < L.queue.length) {
+    const k = S.plaza.findIndex(j => L.pigs[j].c === L.queue[S.qi]);
+    if (k === -1) break;
+    const [pig] = S.plaza.splice(k, 1);
+    S.home.add(pig);
+    S.qi++;
+    drained.push(pig);
   }
-  return exited;
+  return drained;
 }
-// returns {pos, awake, woke, chain} or null when the tap has no effect
-function applyTap(posArr, awakeArr, i) {
-  if (posArr[i] < 0) return null;
-  if (L.pigs[i].type === 1 && !awakeArr[i]) return null;
-  const start = posArr[i];
-  const r = slideResult(posArr, i);
-  const npos = posArr.slice(), naw = awakeArr.slice();
-  let effect = false, woke = -1;
-  if (r.dest === -1) { npos[i] = -1; effect = true; }
-  else if (r.dest !== start) { npos[i] = r.dest; effect = true; }
-  if (typeof r.blocker === 'number' && L.pigs[r.blocker].type === 1 && !naw[r.blocker]) {
-    naw[r.blocker] = true; woke = r.blocker; effect = true;
-  }
-  if (!effect) return null;
-  let chain = [];
-  if (npos[i] === -1 && L.pigs[i].type === 2) chain = runChain(npos, naw, start);
-  return { pos: npos, awake: naw, woke, chain };
+function snapshot() {
+  return { onBoard: S.onBoard.slice(), plaza: S.plaza.slice(), qi: S.qi, home: [...S.home] };
+}
+function restore(snap) {
+  S = { onBoard: snap.onBoard.slice(), plaza: snap.plaza.slice(), qi: snap.qi, home: new Set(snap.home) };
 }
 
 /* ----- screens ----- */
@@ -400,26 +395,39 @@ function renderLvGrid() {
 function startLevel(idx) {
   cur = idx;
   const lv = LEVELS[idx];
-  const gateMap = new Map();
-  if (lv.gates) for (const g of lv.gates) gateMap.set(g.side + ',' + g.idx, g.color || 0);
+  const totals = {};
+  lv.pigs.forEach(p => { totals[p.c] = (totals[p.c] || 0) + 1; });
   L = {
-    w: lv.w, h: lv.h, pigs: lv.pigs,
-    obstacles: new Set((lv.obstacles || []).map(o => o.y * lv.w + o.x)),
-    gates: gateMap, gateMode: !!lv.gates,
+    w: lv.w, h: lv.h, pigs: lv.pigs, queue: lv.queue,
+    hay: new Set((lv.obstacles || []).map(o => o.y * lv.w + o.x)),
+    colorsPresent: Object.keys(totals).map(Number).sort((a, b) => a - b),
+    totals,
   };
-  taps = 0; stuck = 0; busy = false; window.__busy = false;
+  S = { onBoard: lv.pigs.map(() => true), plaza: [], qi: 0, home: new Set() };
+  undoStack = [];
+  stuck = 0; undos = 0; busy = false; window.__busy = false;
   lastAct = Date.now();
   $('screen-title').style.display = 'none';
   $('screen-game').style.display = 'block';
   $('overlay').classList.remove('show');
   $('chip-level').textContent = (idx + 1) + '面';
   $('msg').textContent = '';
-  $('note').textContent = lv.note || 'みどりの矢印のぶたは動けるよ。タップで走らせる！';
+  $('note').textContent = lv.note || 'みどりの矢印のぶたは 出られるよ。タップで走らせる！';
   const board = $('board');
   board.style.aspectRatio = lv.w + ' / ' + lv.h;
-  board.style.backgroundSize = `${100 / lv.w}% ${100 / lv.h}%`;
   board.innerHTML = '';
-  // obstacles
+  // shape tiles
+  lv.mask.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (ch !== '#') return;
+      const el = document.createElement('div');
+      el.className = 'tile' + (((x + y) % 2) ? ' alt' : '');
+      el.style.width = (100 / lv.w) + '%'; el.style.height = (100 / lv.h) + '%';
+      el.style.left = (x * 100 / lv.w) + '%'; el.style.top = (y * 100 / lv.h) + '%';
+      board.appendChild(el);
+    });
+  });
+  // hay
   (lv.obstacles || []).forEach(o => {
     const el = document.createElement('div');
     el.className = 'hay';
@@ -428,45 +436,25 @@ function startLevel(idx) {
     el.style.left = (o.x * 100 / lv.w) + '%'; el.style.top = (o.y * 100 / lv.h) + '%';
     board.appendChild(el);
   });
-  // gates
-  (lv.gates || []).forEach(g => {
-    const el = document.createElement('div');
-    el.className = 'gate';
-    el.innerHTML = gateSVG(g.color || 0);
-    el.style.width = (100 / lv.w * 0.8) + '%'; el.style.height = (100 / lv.h * 0.8) + '%';
-    if (g.side === 'U') { el.style.left = ((g.idx + 0.5) * 100 / lv.w) + '%'; el.style.top = '0'; el.style.transform = 'translate(-50%,-64%)'; }
-    if (g.side === 'D') { el.style.left = ((g.idx + 0.5) * 100 / lv.w) + '%'; el.style.top = '100%'; el.style.transform = 'translate(-50%,-36%)'; }
-    if (g.side === 'L') { el.style.left = '0'; el.style.top = ((g.idx + 0.5) * 100 / lv.h) + '%'; el.style.transform = 'translate(-64%,-50%)'; }
-    if (g.side === 'R') { el.style.left = '100%'; el.style.top = ((g.idx + 0.5) * 100 / lv.h) + '%'; el.style.transform = 'translate(-36%,-50%)'; }
-    board.appendChild(el);
-  });
   // pigs
-  pos = lv.pigs.map(p => p.y * lv.w + p.x);
-  awake = lv.pigs.map(p => (p.type || 0) !== 1);
   pigEls = lv.pigs.map((p, i) => {
     const el = document.createElement('div');
     el.className = 'pig'; el.dataset.i = i;
-    el.innerHTML = pigSVG(p.color || 0, p.type === 2) + '<div class="arrow"></div>' +
-      ((p.type === 1) ? '<div class="zzz">Zzz</div>' : '');
+    el.innerHTML = pigSVG(p.c) + '<div class="arrow"></div>';
     el.addEventListener('click', () => tapPig(i));
     board.appendChild(el);
     return el;
   });
-  layoutAll();
-  refreshHints();
-  updateLeft();
+  renderAll();
 }
 function placeEl(i) {
   const p = L.pigs[i], el = pigEls[i];
   const cw = 100 / L.w, ch = 100 / L.h;
   el.style.width = cw + '%'; el.style.height = ch + '%';
-  el.style.left = ((pos[i] % L.w) * cw) + '%';
-  el.style.top = (Math.floor(pos[i] / L.w) * ch) + '%';
+  el.style.left = (p.x * cw) + '%';
+  el.style.top = (p.y * ch) + '%';
   const inner = el.querySelector('svg');
   inner.style.transform = `rotate(${ROT[p.d]}deg)`;
-  el.classList.toggle('sleeping', p.type === 1 && !awake[i]);
-  const zzz = el.querySelector('.zzz');
-  if (zzz) zzz.style.display = (p.type === 1 && !awake[i]) ? '' : 'none';
   const ar = el.querySelector('.arrow');
   const s = Math.max(8, cw * 0.85);
   ar.style.borderLeft = (s * 0.55) + 'px solid transparent';
@@ -474,117 +462,150 @@ function placeEl(i) {
   ar.style.borderBottom = s + 'px solid ' + (el.classList.contains('movable') ? '#2fbf4f' : '#c3cbd1');
   ar.style.transform = `translate(-50%,-50%) rotate(${(ROT[p.d] + 90) % 360}deg) translateY(-${cw * 1.9}px)`;
 }
-function layoutAll() { for (let i = 0; i < pos.length; i++) if (pos[i] >= 0) placeEl(i); }
-function refreshHints() {
-  for (let i = 0; i < pos.length; i++) {
-    if (pos[i] < 0) continue;
-    pigEls[i].classList.toggle('movable', applyTap(pos, awake, i) !== null);
+function renderAll() {
+  for (let i = 0; i < L.pigs.length; i++) {
+    const el = pigEls[i];
+    if (S.onBoard[i]) {
+      el.style.display = '';
+      el.classList.remove('gone');
+      el.classList.toggle('movable', canExit(i));
+      placeEl(i);
+    } else {
+      el.style.display = 'none';
+      el.classList.remove('hint');
+    }
   }
-  layoutAll();
-}
-function updateLeft() {
-  const n = pos.filter(v => v >= 0).length;
-  $('chip-left').textContent = n;
-  window.__remaining = n;
+  // queue bar: next 3 colors
+  const q = $('qicons'); q.innerHTML = '';
+  for (let k = 0; k < 3 && S.qi + k < L.queue.length; k++) {
+    if (k > 0) { const a = document.createElement('span'); a.className = 'qarrow'; a.textContent = '→'; q.appendChild(a); }
+    const d = document.createElement('span');
+    d.className = 'qhouse' + (k === 0 ? ' first' : '');
+    d.innerHTML = houseSVG(L.queue[S.qi + k]);
+    q.appendChild(d);
+  }
+  $('qrest').textContent = 'あと ' + (L.queue.length - S.qi) + ' 回';
+  // plaza
+  const ps = $('plazaslots'); ps.innerHTML = '';
+  for (let k = 0; k < PLAZA_MAX; k++) {
+    const d = document.createElement('span');
+    if (k < S.plaza.length) {
+      d.className = 'pslot filled';
+      d.innerHTML = pigSVG(L.pigs[S.plaza[k]].c);
+    } else {
+      d.className = 'pslot';
+    }
+    ps.appendChild(d);
+  }
+  $('pfull').style.display = (S.plaza.length >= PLAZA_MAX) ? '' : 'none';
+  // houses
+  const hs = $('houses'); hs.innerHTML = '';
+  const headColor = S.qi < L.queue.length ? L.queue[S.qi] : -1;
+  for (const c of L.colorsPresent) {
+    const homeN = [...S.home].filter(j => L.pigs[j].c === c).length;
+    const d = document.createElement('div');
+    d.className = 'house' + (c === headColor ? ' next' : '');
+    d.dataset.color = c;
+    d.innerHTML = houseSVG(c) +
+      `<div class="hcount">${homeN} / ${L.totals[c]}</div><div class="hname">${COLOR_NAMES[c]}の小屋</div>`;
+    hs.appendChild(d);
+  }
+  // chips & buttons & test hooks
+  const left = L.pigs.length - S.home.size;
+  $('chip-left').textContent = left;
+  $('btn-undo').disabled = busy || undoStack.length === 0;
+  window.__remaining = left;
+  window.__home = S.home.size;
 }
 function clearHintGlow() { pigEls.forEach(el => el.classList.remove('hint')); }
-
-function animateExit(i, delay) {
-  const p = L.pigs[i], el = pigEls[i];
-  const cw = 100 / L.w, ch = 100 / L.h;
-  const dx = DIRS[p.d][0], dy = DIRS[p.d][1];
-  let ex = pos[i] === -1 ? null : null;
-  // start from the pig's last in-board cell: recompute from element's current style
-  const curX = parseFloat(el.style.left) / cw, curY = parseFloat(el.style.top) / ch;
-  let tx = curX, ty = curY;
-  while (tx >= 0 && ty >= 0 && tx < L.w && ty < L.h) { tx += dx; ty += dy; }
-  setTimeout(() => {
-    el.style.left = (tx * cw) + '%'; el.style.top = (ty * ch) + '%';
-    setTimeout(() => el.classList.add('gone'), 130);
-  }, delay || 0);
-}
 
 function tapPig(i) {
   if (busy) return;
   clearHintGlow();
   lastAct = Date.now();
-  if (pos[i] < 0) return;
-  const p = L.pigs[i];
-  taps++;
-  if (p.type === 1 && !awake[i]) {
+  if (!S.onBoard[i]) return;
+  const el = pigEls[i];
+  if (S.plaza.length >= PLAZA_MAX) {
     stuck++;
     sndStuck();
-    const el = pigEls[i];
     el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
-    $('msg').textContent = 'ねむってる… ほかのぶたが ぶつかると おきるよ';
-    taps--; // a tap on a sleeper is not counted as a move attempt
+    $('msg').textContent = 'まちあい広場が いっぱい！「もどす」で やりなおそう';
     return;
   }
-  const res = applyTap(pos, awake, i);
-  if (!res) {
+  if (!rayClear(i)) {
     stuck++;
     sndStuck();
-    const el = pigEls[i];
     el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
     $('msg').textContent = 'そのぶたは つかえてる！';
     return;
   }
   $('msg').textContent = '';
+  undoStack.push(snapshot());
   busy = true; window.__busy = true;
-  const mainOut = res.pos[i] === -1;
-  const oldPos = pos[i];
-  pos = res.pos; awake = res.awake;
-  if (mainOut) { sndOut(); animateExit(i, 0); }
-  else { sndMove(); placeEl(i); }
-  // chain exits, staggered
-  res.chain.forEach((j, k) => { setTimeout(() => sndOut(), 120 * (k + 1)); animateExit(j, 130 * (k + 1)); });
-  const totalMs = 260 + res.chain.length * 140;
-  if (res.woke >= 0) {
-    setTimeout(() => {
-      sndWake();
-      const el = pigEls[res.woke];
-      el.classList.remove('woke'); void el.offsetWidth; el.classList.add('woke');
-      $('msg').textContent = 'ぶつかって おきた！';
-      placeEl(res.woke);
-    }, 230);
-  }
+  sndOut();
+  // animate: run straight off the board
+  const p = L.pigs[i];
+  const cw = 100 / L.w, ch = 100 / L.h;
+  const dx = DIRS[p.d][0], dy = DIRS[p.d][1];
+  let tx = p.x, ty = p.y;
+  while (tx >= 0 && ty >= 0 && tx < L.w && ty < L.h) { tx += dx; ty += dy; }
+  el.style.left = (tx * cw) + '%'; el.style.top = (ty * ch) + '%';
+  setTimeout(() => el.classList.add('gone'), 180);
+  const drained = applyExit(i);
   setTimeout(() => {
     busy = false; window.__busy = false;
-    refreshHints(); updateLeft();
-    if (pos.every(v => v < 0)) onClear();
-  }, totalMs);
+    renderAll();
+    if (drained.length) {
+      sndHome();
+      drained.forEach(pig => {
+        const hEl = document.querySelector(`.house[data-color="${L.pigs[pig].c}"]`);
+        if (hEl) { hEl.classList.remove('bounce'); void hEl.offsetWidth; hEl.classList.add('bounce'); }
+      });
+    }
+    if (S.home.size === L.pigs.length) setTimeout(onClear, 250);
+  }, 330);
+}
+
+function doUndo() {
+  if (busy || !undoStack.length) return;
+  clearHintGlow();
+  lastAct = Date.now();
+  restore(undoStack.pop());
+  undos++;
+  sndUndo();
+  $('msg').textContent = '';
+  renderAll();
 }
 
 function onClear() {
-  const lv = LEVELS[cur];
   let stars = 3;
-  if (stuck >= 3 || taps > lv.par + 3) stars = 1;
-  else if (stuck >= 1 || taps > lv.par) stars = 2;
+  if (stuck + undos > 3) stars = 1;
+  else if (stuck + undos >= 1) stars = 2;
   if ((save.stars[cur] || 0) < stars) save.stars[cur] = stars;
   if (save.unlocked < cur + 1 && cur + 1 < LEVELS.length) save.unlocked = cur + 1;
   storeSave();
   sndClear();
   $('clear-stars').innerHTML = [1, 2, 3].map(s => `<span class="${s <= stars ? '' : 'off'}">★</span>`).join('');
-  $('clear-text').textContent = `${taps}タップで脱出（お手本は${lv.par}タップ）`;
+  $('clear-text').textContent = `つまったタップ ${stuck}回 ・ もどした ${undos}回`;
   $('btn-next').style.display = (cur + 1 < LEVELS.length) ? '' : 'none';
   $('overlay').classList.add('show');
 }
 
-/* ----- idle hint: gently glow one movable pig after a while ----- */
+/* ----- idle hint: gently glow one exitable pig after a while ----- */
 setInterval(() => {
   if ($('screen-game').style.display === 'none') return;
   if (busy || $('overlay').classList.contains('show')) return;
   if (Date.now() - lastAct < HINT_IDLE_MS) return;
   if (pigEls.some(el => el.classList.contains('hint'))) return;
-  for (let i = 0; i < pos.length; i++) {
-    if (pos[i] < 0) continue;
-    if (applyTap(pos, awake, i) !== null) { pigEls[i].classList.add('hint'); break; }
+  for (let i = 0; i < L.pigs.length; i++) {
+    if (canExit(i)) { pigEls[i].classList.add('hint'); break; }
   }
 }, 700);
 
 $('btn-play').onclick = () => startLevel(Math.min(save.unlocked, LEVELS.length - 1));
 $('btn-back').onclick = showTitle;
 $('btn-reset').onclick = () => startLevel(cur);
+$('btn-undo').onclick = doUndo;
 $('btn-tomap').onclick = showTitle;
 $('btn-next').onclick = () => startLevel(cur + 1);
 renderLvGrid();
