@@ -18,96 +18,162 @@
   #app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; }
 
   /* ---------- title screen ---------- */
-  #screen-title { padding:18px 16px 30px; text-align:center;
-    background:linear-gradient(#7ec3ec 0%, #a8d8f0 45%, #bfe3a8 45.2%, #a5d68f 100%); min-height:100vh; }
-  .barn { font-size:15px; color:#fff; background:#c0453e; display:inline-block; padding:3px 14px;
-    border-radius:12px; letter-spacing:.2em; box-shadow:0 2px 0 #93322d; }
-  h1.title { font-size:44px; color:#fff; margin:10px 0 2px; letter-spacing:.04em;
-    text-shadow:0 3px 0 #e2703a, 0 6px 12px rgba(0,0,0,.25); }
+  #screen-title { padding:18px 16px 30px; text-align:center; position:relative; overflow:hidden;
+    background:linear-gradient(#6fb9e8 0%, #a8d8f0 45%, #bfe3a8 45.2%, #a5d68f 100%); min-height:100vh; }
+  .sun { position:absolute; top:26px; right:30px; width:64px; height:64px; border-radius:50%;
+    background:radial-gradient(circle at 42% 38%, #fff3b0, #ffd94d 62%, #ffc93c);
+    box-shadow:0 0 0 10px rgba(255,217,77,.25), 0 0 34px rgba(255,201,60,.55); }
+  .cloud { position:absolute; background:#fff; border-radius:999px; opacity:.92;
+    box-shadow:22px 6px 0 -4px #fff, -20px 8px 0 -8px #fff; }
+  .cloud.c1 { top:44px; left:26px; width:56px; height:20px; }
+  .cloud.c2 { top:104px; right:64px; width:40px; height:15px; opacity:.8; }
+  .barn { font-size:15px; color:#fff; background:linear-gradient(#d1544c,#c0453e); display:inline-block; padding:4px 16px;
+    border-radius:12px; letter-spacing:.2em; box-shadow:0 3px 0 #93322d, 0 5px 10px rgba(0,0,0,.18); position:relative; z-index:1; }
+  h1.title { font-size:46px; color:#fff; margin:10px 0 2px; letter-spacing:.04em; position:relative; z-index:1;
+    text-shadow:0 3px 0 #e2703a, 0 6px 14px rgba(0,0,0,.25); }
   .subtitle { color:#5b4632; font-weight:bold; font-size:15px; margin-bottom:6px;
     text-shadow:0 1px 0 rgba(255,255,255,.6); }
   .scene { position:relative; margin:6px auto 4px; width:300px; height:170px; }
   .scene .mizu { position:absolute; left:8px; bottom:6px; width:104px; }
   .scene .pigbig { position:absolute; right:16px; bottom:14px; width:150px; }
   .scene .fence { position:absolute; left:0; right:0; bottom:0; height:26px;
-    background:repeating-linear-gradient(90deg,#b07a45 0 14px,#96622f 14px 28px);
-    border-top:6px solid #c98d54; border-radius:4px; }
-  .howto { background:rgba(255,255,255,.88); border-radius:14px; padding:10px 14px; margin:10px auto 14px;
-    font-size:13.5px; line-height:1.65; max-width:400px; text-align:left; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+    background:
+      linear-gradient(rgba(255,255,255,.20), rgba(255,255,255,0) 45%),
+      repeating-linear-gradient(90deg,#bd8450 0 14px,#9d6a35 14px 28px);
+    border-top:5px solid #d29a5f; border-radius:4px; box-shadow:0 -2px 5px rgba(0,0,0,.15); }
+  .howto { background:rgba(255,255,255,.92); border-radius:16px; padding:11px 15px; margin:10px auto 14px;
+    font-size:13.5px; line-height:1.65; max-width:400px; text-align:left;
+    border:2px solid rgba(255,255,255,.8); box-shadow:0 3px 8px rgba(0,0,0,.14); }
   .btn { display:inline-block; border:none; cursor:pointer; font-family:inherit; font-weight:bold;
-    background:#ff8c42; color:#fff; font-size:20px; padding:12px 42px; border-radius:999px;
-    box-shadow:0 4px 0 #d96f27; }
-  .btn:active { transform:translateY(3px); box-shadow:0 1px 0 #d96f27; }
-  .btn.sub { background:#fff; color:#e2703a; font-size:15px; padding:9px 22px; box-shadow:0 3px 0 #d8cfc4; }
+    background:linear-gradient(#ffa25e,#ff8c42); color:#fff; font-size:21px; padding:13px 44px; border-radius:999px;
+    box-shadow:0 5px 0 #d96f27, 0 9px 16px rgba(0,0,0,.18); text-shadow:0 1px 2px rgba(0,0,0,.15); }
+  .btn:active { transform:translateY(3px); box-shadow:0 2px 0 #d96f27, 0 4px 8px rgba(0,0,0,.15); }
+  .btn.sub { background:linear-gradient(#ffffff,#fdf3e3); color:#e2703a; font-size:15px; padding:10px 22px;
+    box-shadow:0 4px 0 #d8cfc4, 0 6px 10px rgba(0,0,0,.12); text-shadow:none; }
   .lvgrid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:400px; margin:14px auto 0; }
-  .lvbtn { position:relative; border:none; cursor:pointer; font-family:inherit; font-weight:bold; font-size:17px;
-    background:#fff; color:#5b4632; border-radius:12px; padding:9px 0 7px; box-shadow:0 3px 0 #cfc4b4; }
-  .lvbtn.locked { background:#d9d2c6; color:#9a8f7d; box-shadow:none; }
+  .lvbtn { position:relative; border:2px solid #f3e7cf; cursor:pointer; font-family:inherit; font-weight:bold; font-size:17px;
+    background:linear-gradient(#ffffff,#fdf6e7); color:#5b4632; border-radius:14px; padding:9px 0 7px;
+    box-shadow:0 3px 0 #cfc4b4, 0 5px 8px rgba(0,0,0,.10); }
+  .lvbtn.locked { background:#d9d2c6; color:#9a8f7d; box-shadow:none; border-color:transparent; }
   .lvbtn .stars { display:block; font-size:10px; color:#f5a623; height:13px; letter-spacing:1px; }
   .lvbtn .stars .off { color:#ddd3c2; }
 
   /* ---------- game screen ---------- */
   #screen-game { display:none; min-height:100vh; padding:10px 12px 22px;
-    background:linear-gradient(#8ec9e8,#cdeffd 30%,#bfe3a8 30.2%,#a5d68f); }
+    background:
+      radial-gradient(ellipse 130px 34px at 16% 52px, rgba(255,255,255,.75), rgba(255,255,255,0) 70%),
+      radial-gradient(ellipse 170px 40px at 84% 88px, rgba(255,255,255,.6), rgba(255,255,255,0) 70%),
+      linear-gradient(#79bde9,#cdeffd 30%,#bfe3a8 30.2%,#a5d68f); }
   .ghead { display:flex; align-items:center; gap:8px; max-width:440px; margin:2px auto 8px; }
   .ghead .spacer { flex:1; }
-  .chip { background:rgba(255,255,255,.92); border-radius:999px; padding:6px 13px; font-weight:bold; font-size:14px;
-    box-shadow:0 2px 4px rgba(0,0,0,.12); }
-  .iconbtn { border:none; cursor:pointer; background:rgba(255,255,255,.92); border-radius:999px;
-    min-width:38px; height:38px; padding:0 10px; font-size:15px; font-weight:bold; color:#5b4632;
-    box-shadow:0 2px 4px rgba(0,0,0,.12); }
+  .chip { background:linear-gradient(#ffffff,#fdf3e3); border:2px solid #f0e2c8; border-radius:999px; padding:6px 14px;
+    font-weight:bold; font-size:14.5px; box-shadow:0 3px 5px rgba(0,0,0,.13); }
+  .iconbtn { border:2px solid #f0e2c8; cursor:pointer; background:linear-gradient(#ffffff,#fdf3e3); border-radius:999px;
+    min-width:40px; height:40px; padding:0 11px; font-size:15px; font-weight:bold; color:#5b4632;
+    box-shadow:0 3px 5px rgba(0,0,0,.13); }
+  .iconbtn:active { transform:translateY(2px); box-shadow:0 1px 3px rgba(0,0,0,.13); }
   .iconbtn:disabled { opacity:.45; }
   #queuebar { display:flex; align-items:center; gap:7px; max-width:440px; margin:0 auto 8px;
-    background:rgba(255,255,255,.85); border-radius:12px; padding:6px 12px; box-shadow:0 2px 4px rgba(0,0,0,.10); }
+    background:linear-gradient(rgba(255,255,255,.95),rgba(255,250,238,.9)); border:2px solid rgba(255,255,255,.75);
+    border-radius:14px; padding:6px 12px; box-shadow:0 3px 6px rgba(0,0,0,.12); }
   #queuebar .qlabel { font-size:13px; font-weight:bold; color:#7a5a34; white-space:nowrap; }
   #queuebar .qicons { display:flex; align-items:center; gap:4px; }
-  #queuebar .qicons .qhouse { width:30px; height:30px; }
-  #queuebar .qicons .qhouse.first { width:38px; height:38px; filter:drop-shadow(0 0 4px rgba(245,166,35,.9)); }
-  #queuebar .qicons svg { width:100%; height:100%; display:block; }
+  #queuebar .qicons .qhouse { display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:32px; border-radius:999px; border:2px solid rgba(0,0,0,.07);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.10); }
+  #queuebar .qicons .qhouse.first { width:46px; height:38px;
+    box-shadow:0 0 0 3px rgba(245,166,35,.55), 0 0 10px rgba(245,166,35,.65), inset 0 -3px 0 rgba(0,0,0,.06); }
+  #queuebar .qicons svg { width:26px; height:26px; display:block; }
+  #queuebar .qicons .qhouse.first svg { width:32px; height:32px; }
   #queuebar .qarrow { color:#b09a76; font-weight:bold; font-size:12px; }
   #queuebar .qrest { margin-left:auto; font-size:12px; color:#9a8f7d; white-space:nowrap; }
   #boardwrap { position:relative; max-width:440px; margin:0 auto; }
-  #fence { position:absolute; inset:-13px; border-radius:16px; pointer-events:none; z-index:1;
-    border:13px solid #b07a45;
-    border-image:repeating-linear-gradient(90deg,#b07a45 0 26px,#96622f 26px 52px) 13;
-    box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 0 0 2px rgba(0,0,0,.08); }
-  #board { position:relative; width:100%; border-radius:6px; z-index:2;
-    background:radial-gradient(circle at 50% 40%, #d9b77c, #c39a5b 75%); background-color:#c39a5b; }
-  .tile { position:absolute; z-index:0; background:#8fc473; box-shadow:inset 0 0 0 1px rgba(255,255,255,.16); }
-  .tile.alt { background:#86bd63; }
+  #fence { position:absolute; inset:-14px; border-radius:18px; pointer-events:none; z-index:1;
+    background:
+      linear-gradient(rgba(255,255,255,.22), rgba(255,255,255,0) 30%, rgba(0,0,0,0) 72%, rgba(0,0,0,.16)),
+      repeating-linear-gradient(90deg,#c08a4e 0 24px,#a06c38 24px 27px,#bd8450 27px 48px);
+    box-shadow:0 10px 18px rgba(74,50,16,.45), 0 3px 0 #8a5a28, inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.22); }
+  #board { position:relative; width:100%; border-radius:8px; z-index:2; overflow:hidden;
+    background-color:#bb8f57;
+    background-image:
+      radial-gradient(rgba(90,60,25,.20) 1.6px, transparent 2.2px),
+      radial-gradient(rgba(255,235,190,.16) 1.4px, transparent 2px),
+      radial-gradient(circle at 50% 40%, #cda26a, #b0824c 78%);
+    background-size:26px 26px, 34px 34px, 100% 100%;
+    background-position:0 0, 9px 13px, 0 0;
+    box-shadow:inset 0 4px 10px rgba(70,45,12,.45), inset 0 0 0 3px rgba(96,64,26,.5); }
+  .tile { position:absolute; z-index:0; border-radius:24%; transform:scale(.93);
+    background:
+      radial-gradient(rgba(46,94,32,.20) 1.3px, transparent 1.9px),
+      radial-gradient(rgba(255,255,255,.14) 1.1px, transparent 1.7px),
+      linear-gradient(155deg,#a5da7e 0%, #8cc96a 55%, #79b957 100%);
+    background-size:15px 15px, 19px 19px, 100% 100%;
+    background-position:2px 3px, 7px 9px, 0 0;
+    box-shadow:inset 0 3px 4px rgba(255,255,255,.35), inset 0 -5px 7px rgba(43,84,26,.35), 0 2px 3px rgba(70,45,12,.35); }
+  .tile.alt {
+    background:
+      radial-gradient(rgba(46,94,32,.20) 1.3px, transparent 1.9px),
+      radial-gradient(rgba(255,255,255,.14) 1.1px, transparent 1.7px),
+      linear-gradient(155deg,#9bd173 0%, #83c25f 55%, #6fb34e 100%);
+    background-size:15px 15px, 19px 19px, 100% 100%;
+    background-position:2px 3px, 7px 9px, 0 0; }
   .pig { position:absolute; cursor:pointer; transition:left .3s ease-in, top .3s ease-in, opacity .25s;
     will-change:left,top; z-index:2; }
-  .pig svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
-  .pig .arrow { position:absolute; width:0; height:0; left:50%; top:50%; z-index:3; pointer-events:none; }
-  .pig.movable .arrow { filter:drop-shadow(0 0 3px rgba(255,255,255,.9)); }
+  .pig .pwrap { width:100%; height:100%; }
+  .pig svg { width:100%; height:100%; display:block; filter:drop-shadow(0 3px 3px rgba(50,32,8,.35)); }
+  .pig.running .pwrap { animation:runbounce .11s ease-in-out infinite alternate; }
+  @keyframes runbounce { from{transform:translateY(0) rotate(-1.6deg)} to{transform:translateY(-7%) rotate(1.6deg)} }
+  .pig .arrow { position:absolute; left:50%; top:50%; width:54%; height:54%; z-index:3; pointer-events:none;
+    color:#a7b0b6; opacity:.8; }
+  .pig .arrow svg { width:100%; height:100%; display:block; filter:none; }
+  .pig.movable .arrow { color:#2fbf4f; opacity:1; filter:drop-shadow(0 0 3px rgba(255,255,255,.95)); }
   .pig.shake { animation:shake .3s; }
   @keyframes shake { 0%,100%{margin-left:0} 25%{margin-left:-4px} 75%{margin-left:4px} }
   .pig.gone { opacity:0; pointer-events:none; }
   .pig.hint svg { animation:hintpulse 1.1s ease-in-out infinite; }
-  @keyframes hintpulse { 0%,100%{filter:drop-shadow(0 0 2px rgba(255,255,120,.0))} 50%{filter:drop-shadow(0 0 9px rgba(255,240,130,.95))} }
+  @keyframes hintpulse { 0%,100%{filter:drop-shadow(0 3px 3px rgba(50,32,8,.35))} 50%{filter:drop-shadow(0 0 10px rgba(255,240,130,.95))} }
+  .dust { position:absolute; z-index:1; pointer-events:none; border-radius:50%;
+    background:radial-gradient(circle, rgba(219,192,142,.95) 0%, rgba(219,192,142,.45) 55%, rgba(219,192,142,0) 72%);
+    animation:dustpuff .55s ease-out forwards; }
+  @keyframes dustpuff { from{transform:scale(.35); opacity:.95} to{transform:scale(1.6) translateY(-8px); opacity:0} }
   .hay { position:absolute; z-index:1; pointer-events:none; }
-  .hay svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
-  #plazabar { display:flex; align-items:center; gap:8px; max-width:440px; margin:12px auto 0;
-    background:rgba(255,250,240,.9); border-radius:12px; padding:7px 12px; box-shadow:0 2px 4px rgba(0,0,0,.10); }
+  .hay svg { width:100%; height:100%; display:block; filter:drop-shadow(0 3px 3px rgba(50,32,8,.3)); }
+  #plazabar { display:flex; align-items:center; gap:8px; max-width:440px; margin:14px auto 0;
+    background:linear-gradient(rgba(255,252,244,.95),rgba(255,246,228,.92)); border:2px solid rgba(255,255,255,.75);
+    border-radius:14px; padding:8px 12px; box-shadow:0 3px 6px rgba(0,0,0,.12); }
   #plazabar .plabel { font-size:13px; font-weight:bold; color:#7a5a34; white-space:nowrap; }
   #plazaslots { display:flex; gap:6px; }
-  .pslot { width:40px; height:40px; border-radius:10px; background:rgba(0,0,0,.05);
-    border:2px dashed #cbbfa8; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .pslot.filled { border:2px solid #e0cfa5; background:#fff; animation:slotpop .25s ease-out; }
-  .pslot svg { width:36px; height:36px; display:block; }
+  .pslot { width:42px; height:42px; border-radius:12px; position:relative;
+    background:
+      radial-gradient(rgba(90,60,25,.16) 1.4px, transparent 2px),
+      radial-gradient(circle at 50% 42%, #dec084, #c69f5e 80%);
+    background-size:13px 13px, 100% 100%;
+    border:2px dashed #a97e46;
+    box-shadow:inset 0 3px 6px rgba(70,45,12,.35), inset 0 -2px 3px rgba(255,240,200,.35);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .pslot.filled { border:2px solid #e0cfa5; background:linear-gradient(#fffdf6,#fff3da);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.05), 0 2px 4px rgba(0,0,0,.12); animation:slotpop .25s ease-out; }
+  .pslot svg { width:38px; height:38px; display:block; }
   @keyframes slotpop { from{transform:scale(.6)} to{transform:scale(1)} }
   #plazabar .pfull { margin-left:auto; font-size:12px; font-weight:bold; color:#c0453e; display:none; }
   #houses { display:flex; gap:8px; max-width:440px; margin:8px auto 0; }
-  .house { flex:1; background:rgba(255,255,255,.88); border-radius:12px; padding:6px 4px 5px; text-align:center;
-    box-shadow:0 2px 4px rgba(0,0,0,.10); border:3px solid transparent; position:relative; }
-  .house svg { width:42px; height:42px; display:block; margin:0 auto; }
-  .house .hcount { font-size:13px; font-weight:bold; color:#5b4632; }
-  .house .hname { font-size:10.5px; color:#9a8f7d; }
-  .house.next { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.35), 0 2px 4px rgba(0,0,0,.10); }
-  .house.next::after { content:'つぎ！'; position:absolute; top:-9px; right:-4px; background:#f5a623; color:#fff;
-    font-size:10px; font-weight:bold; border-radius:999px; padding:1px 7px; box-shadow:0 1px 3px rgba(0,0,0,.25); }
-  .house.bounce { animation:hbounce .4s ease-out; }
-  @keyframes hbounce { 0%{transform:scale(1)} 35%{transform:scale(1.13)} 100%{transform:scale(1)} }
+  .house { flex:1; background:linear-gradient(#ffffff,#fff8ea); border-radius:14px; padding:7px 4px 6px; text-align:center;
+    box-shadow:0 3px 6px rgba(0,0,0,.12); border:3px solid transparent; position:relative; }
+  .house svg { width:52px; height:52px; display:block; margin:0 auto; filter:drop-shadow(0 2px 2px rgba(50,32,8,.18)); }
+  .house .hcount { display:inline-block; font-size:13.5px; font-weight:bold; color:#5b4632; margin-top:2px;
+    background:#fff; border:2px solid #f0e2c8; border-radius:999px; padding:1px 10px;
+    box-shadow:0 1px 3px rgba(0,0,0,.10); }
+  .house .hname { font-size:10.5px; color:#9a8f7d; margin-top:2px; }
+  .house.next { border-color:#f5a623; box-shadow:0 0 0 3px rgba(245,166,35,.35), 0 3px 6px rgba(0,0,0,.12); }
+  .house.next::after { content:'つぎ！'; position:absolute; top:-10px; right:-4px; background:linear-gradient(#ffb84d,#f5a623); color:#fff;
+    font-size:10.5px; font-weight:bold; border-radius:999px; padding:2px 8px; box-shadow:0 2px 4px rgba(0,0,0,.25); }
+  .house.bounce { animation:hbounce .45s ease-out; }
+  @keyframes hbounce { 0%{transform:scale(1)} 35%{transform:scale(1.1) translateY(-4px)} 65%{transform:scale(1.03)} 100%{transform:scale(1)} }
+  .house .sparkle { position:absolute; left:50%; top:6px; transform:translateX(-50%); z-index:2;
+    font-size:19px; color:#f5a623; text-shadow:0 0 6px rgba(245,166,35,.8); pointer-events:none;
+    animation:sparkup .7s ease-out forwards; }
+  @keyframes sparkup { from{opacity:0; margin-top:6px; transform:translateX(-50%) scale(.5)}
+    30%{opacity:1} to{opacity:0; margin-top:-16px; transform:translateX(-50%) scale(1.25)} }
   .gfoot { max-width:440px; margin:10px auto 0; text-align:center; font-size:13.5px; color:#4a5d23;
     background:rgba(255,255,255,.75); border-radius:12px; padding:8px 10px; line-height:1.6; }
   #msg { min-height:20px; font-weight:bold; color:#c0453e; }
@@ -117,12 +183,21 @@
   #overlay { display:none; position:fixed; inset:0; background:rgba(60,40,20,.45); z-index:50;
     align-items:center; justify-content:center; }
   #overlay.show { display:flex; }
-  .card { background:#fffaf0; border-radius:22px; padding:26px 30px 22px; text-align:center; width:84%; max-width:340px;
-    box-shadow:0 10px 30px rgba(0,0,0,.3); animation:pop .25s ease-out; }
+  .card { background:linear-gradient(#fffdf6,#fff6e0); border-radius:24px; padding:26px 30px 22px; text-align:center; width:84%; max-width:340px;
+    border:3px solid #ffe1ae; box-shadow:0 14px 34px rgba(0,0,0,.32); animation:pop .25s ease-out; position:relative; z-index:1; }
   @keyframes pop { from{transform:scale(.85); opacity:0} to{transform:scale(1); opacity:1} }
   .card h2 { font-size:26px; color:#e2703a; margin-bottom:4px; }
-  .card .bigstars { font-size:38px; color:#f5a623; letter-spacing:4px; margin:6px 0 2px; }
-  .card .bigstars .off { color:#e3d9c8; }
+  .card .bigstars { font-size:40px; color:#f5a623; letter-spacing:4px; margin:6px 0 2px; text-shadow:0 2px 0 rgba(217,111,39,.35); }
+  .card .bigstars span { display:inline-block; animation:starpop .55s cubic-bezier(.2,1.6,.4,1) backwards; }
+  .card .bigstars span:nth-child(2) { animation-delay:.13s; }
+  .card .bigstars span:nth-child(3) { animation-delay:.26s; }
+  @keyframes starpop { from{transform:scale(0) rotate(-40deg); opacity:0} to{transform:scale(1) rotate(0); opacity:1} }
+  .card .bigstars .off { color:#e3d9c8; text-shadow:none; }
+  #confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  #confetti span { position:absolute; top:-5%; width:9px; height:14px; border-radius:2px; opacity:0;
+    animation-name:confall; animation-timing-function:ease-in; animation-fill-mode:forwards; }
+  @keyframes confall { 0%{opacity:0; transform:translateY(0) rotate(0deg)} 8%{opacity:1}
+    100%{opacity:.85; transform:translateY(110vh) rotate(680deg)} }
   .card p { font-size:14px; color:#7a6a55; margin-bottom:14px; }
   .card .row { display:flex; gap:10px; justify-content:center; }
 </style>
@@ -132,11 +207,15 @@
 
   <!-- ======= TITLE ======= -->
   <div id="screen-title">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
     <div class="barn">ミ ズ ー 牧 場</div>
     <h1 class="title">ぶた脱出！</h1>
     <div class="subtitle">〜 おうちへ かえろう！ぶたちゃん 〜</div>
     <div class="scene">
       <svg class="mizu" viewBox="0 0 100 118">
+        <ellipse cx="51" cy="112" rx="30" ry="5" fill="rgba(60,40,10,.20)"/>
         <rect x="8" y="52" width="16" height="30" rx="7" fill="#f2b035"/>
         <rect x="36" y="94" width="11" height="14" fill="#f6cfae"/>
         <rect x="55" y="94" width="11" height="14" fill="#f6cfae"/>
@@ -162,18 +241,31 @@
         <circle cx="65" cy="37" r="3.4" fill="#ffb3a0" opacity=".8"/>
       </svg>
       <svg class="pigbig" viewBox="0 0 120 90">
-        <ellipse cx="58" cy="52" rx="42" ry="30" fill="#f7a8b8"/>
-        <path d="M96 40 q12 -8 8 4 q-2 7 -10 5" fill="none" stroke="#e87f95" stroke-width="3.4" stroke-linecap="round"/>
-        <circle cx="26" cy="34" r="6" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
-        <circle cx="44" cy="28" r="6" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
-        <circle cx="34" cy="48" r="17" fill="#fbc2cd"/>
-        <ellipse cx="34" cy="50" rx="9.5" ry="7.5" fill="#f28ba0"/>
-        <circle cx="30.5" cy="50" r="1.9" fill="#c9506c"/>
-        <circle cx="37.5" cy="50" r="1.9" fill="#c9506c"/>
-        <circle cx="52" cy="42" r="2.6" fill="#59303a"/>
-        <path d="M48 56 q5 4 10 1" stroke="#c9506c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-        <rect x="34" y="76" width="8" height="9" rx="3" fill="#f28ba0"/>
-        <rect x="76" y="76" width="8" height="9" rx="3" fill="#f28ba0"/>
+        <defs>
+          <radialGradient id="bigpig" cx="38%" cy="30%" r="85%">
+            <stop offset="0%" stop-color="#ffd3dc"/>
+            <stop offset="55%" stop-color="#f7a8b8"/>
+            <stop offset="100%" stop-color="#ef8ba1"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="60" cy="84" rx="46" ry="6" fill="rgba(60,40,10,.20)"/>
+        <path d="M98 38 q13 -9 9 4 q-2 8 -11 6" fill="none" stroke="#e87f95" stroke-width="3.6" stroke-linecap="round"/>
+        <rect x="34" y="74" width="9" height="10" rx="3.5" fill="#ef8ba1"/>
+        <rect x="76" y="74" width="9" height="10" rx="3.5" fill="#ef8ba1"/>
+        <ellipse cx="58" cy="52" rx="43" ry="31" fill="url(#bigpig)"/>
+        <ellipse cx="42" cy="38" rx="17" ry="9" fill="#ffffff" opacity=".38" transform="rotate(-16 42 38)"/>
+        <circle cx="27" cy="32" r="6.5" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
+        <circle cx="27" cy="32" r="3" fill="#f28ba0"/>
+        <circle cx="45" cy="26" r="6.5" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
+        <circle cx="45" cy="26" r="3" fill="#f28ba0"/>
+        <circle cx="34" cy="48" r="17.5" fill="#fbc9d3"/>
+        <ellipse cx="34" cy="50" rx="10" ry="8" fill="#f28ba0"/>
+        <circle cx="30.5" cy="50" r="2" fill="#c9506c"/>
+        <circle cx="37.5" cy="50" r="2" fill="#c9506c"/>
+        <circle cx="53" cy="42" r="3" fill="#59303a"/>
+        <circle cx="54" cy="41" r="1.1" fill="#fff"/>
+        <path d="M48 57 q5 4 10 1" stroke="#c9506c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <circle cx="24" cy="56" r="3.6" fill="#ffb3a0" opacity=".75"/>
       </svg>
       <div class="fence"></div>
     </div>
@@ -219,6 +311,7 @@
 
   <!-- ======= CLEAR ======= -->
   <div id="overlay">
+    <div id="confetti"></div>
     <div class="card">
       <h2>全員 おうちに帰った！🎉</h2>
       <div class="bigstars" id="clear-stars">★★★</div>
@@ -243,12 +336,14 @@ const PLAZA_MAX = 5;
 
 /* pig colors: 0 pink, 1 white, 2 brown, 3 black-spotted */
 const PALETTES = [
-  { body:'#f7a8b8', light:'#fbc2cd', dark:'#f28ba0', line:'#e87f95', nostril:'#c9506c', eye:'#59303a', spots:null },
-  { body:'#f6f0e4', light:'#fffaf0', dark:'#e8dcc4', line:'#d9cbb2', nostril:'#c9808e', eye:'#59303a', spots:null },
-  { body:'#c68a58', light:'#dcab7d', dark:'#a96f3e', line:'#a96f3e', nostril:'#7d4f26', eye:'#3d2716', spots:null },
-  { body:'#f6f0e4', light:'#fffaf0', dark:'#e8dcc4', line:'#d9cbb2', nostril:'#c9808e', eye:'#59303a', spots:'#3a3230' },
+  { body:'#f7a8b8', light:'#ffd3dc', dark:'#f28ba0', line:'#e87f95', edge:'#d96b84', nostril:'#c9506c', eye:'#59303a', spots:null },
+  { body:'#f6f0e4', light:'#fffdf6', dark:'#e0cda6', line:'#d9cbb2', edge:'#a08c66', nostril:'#c9808e', eye:'#59303a', spots:null },
+  { body:'#c68a58', light:'#eec39a', dark:'#a96f3e', line:'#a96f3e', edge:'#8a5a2e', nostril:'#7d4f26', eye:'#3d2716', spots:null },
+  { body:'#f6f0e4', light:'#fffdf6', dark:'#e0cda6', line:'#d9cbb2', edge:'#a08c66', nostril:'#c9808e', eye:'#59303a', spots:'#3a3230' },
 ];
 const HOUSE_COLORS = ['#f28ba0', '#e8dcc4', '#a96f3e', '#3a3230'];
+const HOUSE_DARK = ['#d96b84', '#c9a86a', '#7d4f26', '#241f1e'];
+const HOUSE_TINT = ['#fdeef2', '#faf5e9', '#f7ecdd', '#eceae8'];
 const COLOR_NAMES = ['ピンク', 'しろ', 'ちゃ', 'ぶち'];
 
 let save = loadSave();
@@ -289,47 +384,81 @@ const sndStuck= () => beep(150, 0.12, 'square', 0.05);
 const sndUndo = () => beep(330, 0.1, 'triangle', 0.09);
 const sndClear= () => { [523,659,784,1047].forEach((f,i)=>beep(f,0.16,'triangle',0.12,i*0.09)); };
 
-/* ----- svgs ----- */
+/* ----- svgs (v3.1: top-down pig — head/snout forward, curly tail back) ----- */
 function pigSVG(color) {
   const c = PALETTES[color || 0];
+  const gid = 'pgb' + (color || 0);
   const spots = c.spots ? `
-    <ellipse cx="38" cy="42" rx="9" ry="6" fill="${c.spots}" opacity=".85"/>
-    <ellipse cx="52" cy="66" rx="7" ry="5" fill="${c.spots}" opacity=".85"/>
-    <ellipse cx="26" cy="60" rx="5" ry="4" fill="${c.spots}" opacity=".85"/>` : '';
+    <ellipse cx="34" cy="36" rx="10.5" ry="7" fill="${c.spots}" opacity=".88"/>
+    <ellipse cx="44" cy="66" rx="8.5" ry="6" fill="${c.spots}" opacity=".88"/>
+    <ellipse cx="22" cy="56" rx="6" ry="4.5" fill="${c.spots}" opacity=".88"/>` : '';
   return `<svg viewBox="0 0 100 100">
-    <ellipse cx="47" cy="54" rx="33" ry="25" fill="${c.body}"/>
+    <defs>
+      <radialGradient id="${gid}" cx="38%" cy="30%" r="85%">
+        <stop offset="0%" stop-color="${c.light}"/>
+        <stop offset="58%" stop-color="${c.body}"/>
+        <stop offset="100%" stop-color="${c.dark}"/>
+      </radialGradient>
+    </defs>
+    <circle cx="25" cy="26" r="5.5" fill="${c.dark}"/>
+    <circle cx="25" cy="74" r="5.5" fill="${c.dark}"/>
+    <circle cx="57" cy="24" r="5.5" fill="${c.dark}"/>
+    <circle cx="57" cy="76" r="5.5" fill="${c.dark}"/>
+    <path d="M13 50 q-9 -1 -8 -9 q1 -6 7 -5 q5 1 3.5 6 q-1.2 4 -5 3" fill="none" stroke="${c.edge}" stroke-width="3.6" stroke-linecap="round"/>
+    <ellipse cx="45" cy="50" rx="36" ry="29.5" fill="url(#${gid})" stroke="${c.edge}" stroke-width="2"/>
     ${spots}
-    <path d="M16 44 q-9 -7 -4 -13 q3 -4 8 0" fill="none" stroke="${c.line}" stroke-width="3.4" stroke-linecap="round"/>
-    <circle cx="62" cy="30" r="5.4" fill="${c.body}" stroke="${c.line}" stroke-width="2.2"/>
-    <circle cx="76" cy="34" r="5.4" fill="${c.body}" stroke="${c.line}" stroke-width="2.2"/>
-    <circle cx="72" cy="52" r="15" fill="${c.light}"/>
-    <ellipse cx="76" cy="53" rx="8.6" ry="6.8" fill="${c.dark}"/>
-    <circle cx="73" cy="53" r="1.8" fill="${c.nostril}"/>
-    <circle cx="79.4" cy="53" r="1.8" fill="${c.nostril}"/>
-    <circle cx="60" cy="45" r="2.4" fill="${c.eye}"/>
-    <rect x="30" y="72" width="7" height="8" rx="3" fill="${c.dark}"/>
-    <rect x="58" y="72" width="7" height="8" rx="3" fill="${c.dark}"/>
+    <ellipse cx="33" cy="36" rx="15" ry="8" fill="#ffffff" opacity=".38" transform="rotate(-18 33 36)"/>
+    <circle cx="63" cy="29" r="7.4" fill="${c.body}" stroke="${c.edge}" stroke-width="2.2"/>
+    <circle cx="63" cy="29" r="3.5" fill="${c.edge}"/>
+    <circle cx="63" cy="71" r="7.4" fill="${c.body}" stroke="${c.edge}" stroke-width="2.2"/>
+    <circle cx="63" cy="71" r="3.5" fill="${c.edge}"/>
+    <circle cx="71" cy="50" r="18" fill="${c.light}" stroke="${c.edge}" stroke-width="2.4"/>
+    <ellipse cx="72" cy="50" rx="12" ry="10" fill="#ffffff" opacity=".30"/>
+    <ellipse cx="84.5" cy="50" rx="8.2" ry="10.2" fill="${c.dark}" stroke="${c.edge}" stroke-width="1.6"/>
+    <circle cx="84.5" cy="45.2" r="1.9" fill="${c.nostril}"/>
+    <circle cx="84.5" cy="54.8" r="1.9" fill="${c.nostril}"/>
+    <circle cx="67" cy="39" r="2.8" fill="${c.eye}"/>
+    <circle cx="68" cy="38" r="1" fill="#fff"/>
+    <circle cx="67" cy="61" r="2.8" fill="${c.eye}"/>
+    <circle cx="68" cy="60" r="1" fill="#fff"/>
   </svg>`;
 }
 function haySVG() {
   return `<svg viewBox="0 0 100 100">
-    <rect x="8" y="22" width="84" height="58" rx="16" fill="#e8c85a"/>
-    <path d="M8 44 h84 M8 62 h84" stroke="#c9a437" stroke-width="4"/>
-    <circle cx="50" cy="51" r="13" fill="none" stroke="#c9a437" stroke-width="4"/>
-    <circle cx="50" cy="51" r="6" fill="none" stroke="#c9a437" stroke-width="3.4"/>
-    <path d="M20 30 q6 -6 12 0 M68 30 q6 -6 12 0 M20 74 q6 -6 12 0 M68 74 q6 -6 12 0" stroke="#d9b544" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+    <defs>
+      <radialGradient id="hayg" cx="40%" cy="32%" r="85%">
+        <stop offset="0%" stop-color="#f6dd7e"/>
+        <stop offset="60%" stop-color="#eac95c"/>
+        <stop offset="100%" stop-color="#d3ab3a"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="50" cy="86" rx="40" ry="6" fill="rgba(60,40,10,.22)"/>
+    <rect x="9" y="18" width="82" height="62" rx="17" fill="url(#hayg)" stroke="#bd942f" stroke-width="2.4"/>
+    <path d="M9 40 h82 M9 60 h82" stroke="#c9a437" stroke-width="4.4"/>
+    <circle cx="50" cy="50" r="13.5" fill="none" stroke="#c9a437" stroke-width="4.4"/>
+    <circle cx="50" cy="50" r="6.5" fill="none" stroke="#c9a437" stroke-width="3.6"/>
+    <path d="M18 27 q7 -7 13 -1 M69 26 q7 -6 13 1 M18 72 q7 -6 13 0 M69 73 q7 -6 13 -1" stroke="#dcbc52" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+    <path d="M14 14 q4 -5 9 -3 M84 12 q5 -3 8 2" stroke="#e8c85a" stroke-width="3.2" fill="none" stroke-linecap="round"/>
   </svg>`;
 }
 function houseSVG(color) {
   const c = HOUSE_COLORS[color || 0];
-  const door = (color === 1) ? '#c9a86a' : c;
+  const dk = HOUSE_DARK[color || 0];
   return `<svg viewBox="0 0 100 100">
-    <path d="M6 46 L50 12 L94 46 z" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
-    <rect x="16" y="44" width="68" height="48" rx="4" fill="#fff6e3" stroke="rgba(0,0,0,.15)" stroke-width="2"/>
-    <rect x="38" y="58" width="24" height="34" rx="9" fill="${door}"/>
-    <circle cx="50" cy="34" r="7" fill="${c}"/>
+    <ellipse cx="50" cy="93" rx="40" ry="5" fill="rgba(60,40,10,.20)"/>
+    <rect x="18" y="42" width="64" height="50" rx="5" fill="#fff3da" stroke="rgba(0,0,0,.16)" stroke-width="2"/>
+    <path d="M24 52 v34 M76 52 v34" stroke="rgba(169,111,62,.30)" stroke-width="2.4"/>
+    <path d="M4 46 L50 10 L96 46 L88 52 L50 21 L12 52 z" fill="${c}" stroke="${dk}" stroke-width="2.2" stroke-linejoin="round"/>
+    <rect x="39" y="60" width="22" height="32" rx="10" fill="${dk}"/>
+    <circle cx="56.5" cy="77" r="2" fill="#ffd94d"/>
+    <rect x="24" y="56" width="10" height="10" rx="2.5" fill="#bfe0f2" stroke="rgba(0,0,0,.18)" stroke-width="1.6"/>
+    <circle cx="50" cy="40" r="9.5" fill="#ffffff" stroke="${dk}" stroke-width="2.2"/>
+    <ellipse cx="50" cy="40.5" rx="5" ry="4" fill="${c}"/>
+    <circle cx="48.2" cy="40.5" r="1" fill="${dk}"/>
+    <circle cx="51.8" cy="40.5" r="1" fill="${dk}"/>
   </svg>`;
 }
+const CHEVRON = '<svg viewBox="0 0 100 100"><path d="M28 16 L64 50 L28 84 L42 50 Z" fill="currentColor" stroke="rgba(255,255,255,.65)" stroke-width="5" stroke-linejoin="round"/></svg>';
 
 /* ----- core model (v3 bus-style; same rules as the generator/verifier) ----- */
 function rayClear(i) {
@@ -440,7 +569,7 @@ function startLevel(idx) {
   pigEls = lv.pigs.map((p, i) => {
     const el = document.createElement('div');
     el.className = 'pig'; el.dataset.i = i;
-    el.innerHTML = pigSVG(p.c) + '<div class="arrow"></div>';
+    el.innerHTML = '<div class="pwrap">' + pigSVG(p.c) + '</div><div class="arrow">' + CHEVRON + '</div>';
     el.addEventListener('click', () => tapPig(i));
     board.appendChild(el);
     return el;
@@ -453,14 +582,10 @@ function placeEl(i) {
   el.style.width = cw + '%'; el.style.height = ch + '%';
   el.style.left = (p.x * cw) + '%';
   el.style.top = (p.y * ch) + '%';
-  const inner = el.querySelector('svg');
+  const inner = el.querySelector('.pwrap svg');
   inner.style.transform = `rotate(${ROT[p.d]}deg)`;
   const ar = el.querySelector('.arrow');
-  const s = Math.max(8, cw * 0.85);
-  ar.style.borderLeft = (s * 0.55) + 'px solid transparent';
-  ar.style.borderRight = (s * 0.55) + 'px solid transparent';
-  ar.style.borderBottom = s + 'px solid ' + (el.classList.contains('movable') ? '#2fbf4f' : '#c3cbd1');
-  ar.style.transform = `translate(-50%,-50%) rotate(${(ROT[p.d] + 90) % 360}deg) translateY(-${cw * 1.9}px)`;
+  ar.style.transform = `translate(-50%,-50%) rotate(${ROT[p.d]}deg) translateX(74%)`;
 }
 function renderAll() {
   for (let i = 0; i < L.pigs.length; i++) {
@@ -481,6 +606,7 @@ function renderAll() {
     if (k > 0) { const a = document.createElement('span'); a.className = 'qarrow'; a.textContent = '→'; q.appendChild(a); }
     const d = document.createElement('span');
     d.className = 'qhouse' + (k === 0 ? ' first' : '');
+    d.style.background = HOUSE_TINT[L.queue[S.qi + k]];
     d.innerHTML = houseSVG(L.queue[S.qi + k]);
     q.appendChild(d);
   }
@@ -491,6 +617,7 @@ function renderAll() {
     const d = document.createElement('span');
     if (k < S.plaza.length) {
       d.className = 'pslot filled';
+      d.style.borderColor = HOUSE_COLORS[L.pigs[S.plaza[k]].c];
       d.innerHTML = pigSVG(L.pigs[S.plaza[k]].c);
     } else {
       d.className = 'pslot';
@@ -518,6 +645,23 @@ function renderAll() {
   window.__home = S.home.size;
 }
 function clearHintGlow() { pigEls.forEach(el => el.classList.remove('hint')); }
+
+function spawnDust(p, tx, ty) {
+  const board = $('board');
+  const cw = 100 / L.w, ch = 100 / L.h;
+  for (let k = 1; k <= 3; k++) {
+    const f = k / 3.2;
+    const d = document.createElement('div');
+    d.className = 'dust';
+    d.style.width = (cw * 0.55) + '%';
+    d.style.height = (ch * 0.55) + '%';
+    d.style.left = ((p.x + (tx - p.x) * f) * cw + cw * 0.22) + '%';
+    d.style.top = ((p.y + (ty - p.y) * f) * ch + ch * 0.45) + '%';
+    d.style.animationDelay = (k * 0.06) + 's';
+    board.appendChild(d);
+    setTimeout(() => d.remove(), 1000);
+  }
+}
 
 function tapPig(i) {
   if (busy) return;
@@ -550,16 +694,25 @@ function tapPig(i) {
   let tx = p.x, ty = p.y;
   while (tx >= 0 && ty >= 0 && tx < L.w && ty < L.h) { tx += dx; ty += dy; }
   el.style.left = (tx * cw) + '%'; el.style.top = (ty * ch) + '%';
+  el.classList.add('running');
+  spawnDust(p, tx, ty);
   setTimeout(() => el.classList.add('gone'), 180);
   const drained = applyExit(i);
   setTimeout(() => {
     busy = false; window.__busy = false;
+    el.classList.remove('running');
     renderAll();
     if (drained.length) {
       sndHome();
       drained.forEach(pig => {
         const hEl = document.querySelector(`.house[data-color="${L.pigs[pig].c}"]`);
-        if (hEl) { hEl.classList.remove('bounce'); void hEl.offsetWidth; hEl.classList.add('bounce'); }
+        if (hEl) {
+          hEl.classList.remove('bounce'); void hEl.offsetWidth; hEl.classList.add('bounce');
+          const sp = document.createElement('span');
+          sp.className = 'sparkle'; sp.textContent = '★';
+          hEl.appendChild(sp);
+          setTimeout(() => sp.remove(), 750);
+        }
       });
     }
     if (S.home.size === L.pigs.length) setTimeout(onClear, 250);
@@ -588,6 +741,18 @@ function onClear() {
   $('clear-stars').innerHTML = [1, 2, 3].map(s => `<span class="${s <= stars ? '' : 'off'}">★</span>`).join('');
   $('clear-text').textContent = `つまったタップ ${stuck}回 ・ もどした ${undos}回`;
   $('btn-next').style.display = (cur + 1 < LEVELS.length) ? '' : 'none';
+  const cf = $('confetti');
+  cf.innerHTML = '';
+  const cols = ['#f28ba0', '#f5a623', '#2fbf4f', '#4aa3e0', '#e8dcc4', '#a96f3e'];
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement('span');
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.background = cols[i % cols.length];
+    s.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+    s.style.animationDelay = (Math.random() * 0.7) + 's';
+    if (i % 3 === 0) s.style.borderRadius = '50%';
+    cf.appendChild(s);
+  }
   $('overlay').classList.add('show');
 }
 
