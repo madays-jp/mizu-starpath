@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ぶた脱出！｜ミズー牧場</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    background:#8ec9e8;
+    color:#4a3520;
+    overflow-x:hidden;
+    user-select:none; -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  #app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; }
+
+  /* ---------- title screen ---------- */
+  #screen-title { padding:18px 16px 30px; text-align:center;
+    background:linear-gradient(#7ec3ec 0%, #a8d8f0 45%, #bfe3a8 45.2%, #a5d68f 100%); min-height:100vh; }
+  .barn { font-size:15px; color:#fff; background:#c0453e; display:inline-block; padding:3px 14px;
+    border-radius:12px; letter-spacing:.2em; box-shadow:0 2px 0 #93322d; }
+  h1.title { font-size:44px; color:#fff; margin:10px 0 2px; letter-spacing:.04em;
+    text-shadow:0 3px 0 #e2703a, 0 6px 12px rgba(0,0,0,.25); }
+  .subtitle { color:#5b4632; font-weight:bold; font-size:15px; margin-bottom:6px;
+    text-shadow:0 1px 0 rgba(255,255,255,.6); }
+  .scene { position:relative; margin:6px auto 4px; width:300px; height:170px; }
+  .scene .mizu { position:absolute; left:8px; bottom:6px; width:104px; }
+  .scene .pigbig { position:absolute; right:16px; bottom:14px; width:150px; }
+  .scene .fence { position:absolute; left:0; right:0; bottom:0; height:26px;
+    background:repeating-linear-gradient(90deg,#b07a45 0 14px,#96622f 14px 28px);
+    border-top:6px solid #c98d54; border-radius:4px; }
+  .howto { background:rgba(255,255,255,.88); border-radius:14px; padding:10px 14px; margin:10px auto 14px;
+    font-size:13.5px; line-height:1.65; max-width:400px; text-align:left; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  .btn { display:inline-block; border:none; cursor:pointer; font-family:inherit; font-weight:bold;
+    background:#ff8c42; color:#fff; font-size:20px; padding:12px 42px; border-radius:999px;
+    box-shadow:0 4px 0 #d96f27; }
+  .btn:active { transform:translateY(3px); box-shadow:0 1px 0 #d96f27; }
+  .btn.sub { background:#fff; color:#e2703a; font-size:15px; padding:9px 22px; box-shadow:0 3px 0 #d8cfc4; }
+  .lvgrid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:400px; margin:14px auto 0; }
+  .lvbtn { position:relative; border:none; cursor:pointer; font-family:inherit; font-weight:bold; font-size:17px;
+    background:#fff; color:#5b4632; border-radius:12px; padding:9px 0 7px; box-shadow:0 3px 0 #cfc4b4; }
+  .lvbtn.locked { background:#d9d2c6; color:#9a8f7d; box-shadow:none; }
+  .lvbtn .stars { display:block; font-size:10px; color:#f5a623; height:13px; letter-spacing:1px; }
+  .lvbtn .stars .off { color:#ddd3c2; }
+
+  /* ---------- game screen ---------- */
+  #screen-game { display:none; min-height:100vh; padding:10px 12px 22px;
+    background:linear-gradient(#8ec9e8,#cdeffd 30%,#bfe3a8 30.2%,#a5d68f); }
+  .ghead { display:flex; align-items:center; gap:8px; max-width:440px; margin:2px auto 8px; }
+  .ghead .spacer { flex:1; }
+  .chip { background:rgba(255,255,255,.92); border-radius:999px; padding:6px 13px; font-weight:bold; font-size:14px;
+    box-shadow:0 2px 4px rgba(0,0,0,.12); }
+  .iconbtn { border:none; cursor:pointer; background:rgba(255,255,255,.92); border-radius:999px;
+    width:38px; height:38px; font-size:18px; box-shadow:0 2px 4px rgba(0,0,0,.12); }
+  #boardwrap { position:relative; max-width:440px; margin:0 auto; }
+  #fence { position:absolute; inset:-13px; border-radius:16px; pointer-events:none;
+    border:13px solid #b07a45;
+    border-image:repeating-linear-gradient(90deg,#b07a45 0 26px,#96622f 26px 52px) 13;
+    box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 0 0 2px rgba(0,0,0,.08); }
+  #board { position:relative; width:100%; aspect-ratio:1/1; border-radius:6px; overflow:hidden;
+    background:
+      linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px),
+      radial-gradient(circle at 30% 20%, #9ccc7a, #86bd63 70%);
+    background-color:#8fc473; }
+  .pig { position:absolute; cursor:pointer; transition:left .22s ease-in, top .22s ease-in, opacity .25s;
+    will-change:left,top; z-index:2; }
+  .pig svg { width:100%; height:100%; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+  .pig .arrow { position:absolute; width:0; height:0; left:50%; top:50%; z-index:3; pointer-events:none;
+    transition:transform .22s ease-in; }
+  .pig.movable .arrow { filter:drop-shadow(0 0 3px rgba(255,255,255,.9)); }
+  .pig.shake { animation:shake .3s; }
+  @keyframes shake { 0%,100%{margin-left:0} 25%{margin-left:-4px} 75%{margin-left:4px} }
+  .pig.gone { opacity:0; pointer-events:none; }
+  .gfoot { max-width:440px; margin:12px auto 0; text-align:center; font-size:13.5px; color:#4a5d23;
+    background:rgba(255,255,255,.75); border-radius:12px; padding:8px 10px; line-height:1.6; }
+  #msg { min-height:20px; font-weight:bold; color:#c0453e; }
+
+  /* ---------- clear overlay ---------- */
+  #overlay { display:none; position:fixed; inset:0; background:rgba(60,40,20,.45); z-index:50;
+    align-items:center; justify-content:center; }
+  #overlay.show { display:flex; }
+  .card { background:#fffaf0; border-radius:22px; padding:26px 30px 22px; text-align:center; width:84%; max-width:340px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); animation:pop .25s ease-out; }
+  @keyframes pop { from{transform:scale(.85); opacity:0} to{transform:scale(1); opacity:1} }
+  .card h2 { font-size:27px; color:#e2703a; margin-bottom:4px; }
+  .card .bigstars { font-size:38px; color:#f5a623; letter-spacing:4px; margin:6px 0 2px; }
+  .card .bigstars .off { color:#e3d9c8; }
+  .card p { font-size:14px; color:#7a6a55; margin-bottom:14px; }
+  .card .row { display:flex; gap:10px; justify-content:center; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ======= TITLE ======= -->
+  <div id="screen-title">
+    <div class="barn">ミ ズ ー 牧 場</div>
+    <h1 class="title">ぶた脱出！</h1>
+    <div class="subtitle">〜 にげだせ！ぶたちゃん 〜</div>
+    <div class="scene">
+      <svg class="mizu" viewBox="0 0 100 118">
+        <!-- backpack -->
+        <rect x="8" y="52" width="16" height="30" rx="7" fill="#f2b035"/>
+        <!-- legs -->
+        <rect x="36" y="94" width="11" height="14" fill="#f6cfae"/>
+        <rect x="55" y="94" width="11" height="14" fill="#f6cfae"/>
+        <!-- shoes -->
+        <ellipse cx="40" cy="110" rx="9" ry="5" fill="#2f6fd0"/>
+        <ellipse cx="62" cy="110" rx="9" ry="5" fill="#2f6fd0"/>
+        <!-- striped shorts -->
+        <rect x="32" y="80" width="38" height="17" rx="4" fill="#3f7fd4"/>
+        <rect x="38" y="80" width="5" height="17" fill="#fff"/>
+        <rect x="50" y="80" width="5" height="17" fill="#fff"/>
+        <rect x="62" y="80" width="5" height="17" fill="#fff"/>
+        <!-- jacket -->
+        <rect x="28" y="48" width="46" height="36" rx="9" fill="#2f6fd0"/>
+        <rect x="44" y="48" width="14" height="36" fill="#ffffff"/>
+        <rect x="28" y="48" width="8" height="36" rx="4" fill="#f2b035" opacity=".85"/>
+        <rect x="66" y="48" width="8" height="36" rx="4" fill="#f2b035" opacity=".85"/>
+        <!-- head -->
+        <circle cx="51" cy="30" r="21" fill="#ffd9b8"/>
+        <!-- hair -->
+        <path d="M30 30 a21 21 0 0 1 42 0 l0 -4 a21 15 0 0 0 -42 0 z" fill="#2b2b2b"/>
+        <path d="M30 28 q4 -14 21 -14 q17 0 21 14 q-10 -7 -21 -7 q-11 0 -21 7z" fill="#2b2b2b"/>
+        <!-- face -->
+        <path d="M40 26 q3 -3 6 0" stroke="#2b2b2b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M56 26 q3 -3 6 0" stroke="#2b2b2b" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="43" cy="32" r="2.4" fill="#2b2b2b"/>
+        <circle cx="59" cy="32" r="2.4" fill="#2b2b2b"/>
+        <path d="M45 39 q6 5 12 0" stroke="#c96f4a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <circle cx="37" cy="37" r="3.4" fill="#ffb3a0" opacity=".8"/>
+        <circle cx="65" cy="37" r="3.4" fill="#ffb3a0" opacity=".8"/>
+      </svg>
+      <svg class="pigbig" viewBox="0 0 120 90">
+        <ellipse cx="58" cy="52" rx="42" ry="30" fill="#f7a8b8"/>
+        <path d="M96 40 q12 -8 8 4 q-2 7 -10 5" fill="none" stroke="#e87f95" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="26" cy="34" r="6" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
+        <circle cx="44" cy="28" r="6" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
+        <circle cx="34" cy="48" r="17" fill="#fbc2cd"/>
+        <ellipse cx="34" cy="50" rx="9.5" ry="7.5" fill="#f28ba0"/>
+        <circle cx="30.5" cy="50" r="1.9" fill="#c9506c"/>
+        <circle cx="37.5" cy="50" r="1.9" fill="#c9506c"/>
+        <circle cx="52" cy="42" r="2.6" fill="#59303a"/>
+        <path d="M48 56 q5 4 10 1" stroke="#c9506c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <rect x="34" y="76" width="8" height="9" rx="3" fill="#f28ba0"/>
+        <rect x="76" y="76" width="8" height="9" rx="3" fill="#f28ba0"/>
+      </svg>
+      <div class="fence"></div>
+    </div>
+    <div class="howto">
+      🐷 ぶたをタップすると、むいている方向にまっすぐ走るよ。<br>
+      前があいていれば、そのまま牧場の外へ脱出！<br>
+      前につかえているぶたは動けない。出す順番を考えるのがコツだよ。
+    </div>
+    <button class="btn" id="btn-play">あそぶ</button>
+    <div class="lvgrid" id="lvgrid"></div>
+  </div>
+
+  <!-- ======= GAME ======= -->
+  <div id="screen-game">
+    <div class="ghead">
+      <button class="iconbtn" id="btn-back">←</button>
+      <div class="chip" id="chip-level">1面</div>
+      <div class="spacer"></div>
+      <div class="chip">🐷 のこり <span id="chip-left">0</span></div>
+      <button class="iconbtn" id="btn-reset" title="やりなおし">↺</button>
+    </div>
+    <div id="boardwrap">
+      <div id="board"></div>
+      <div id="fence"></div>
+    </div>
+    <div class="gfoot">
+      <div id="msg"></div>
+      <div>みどりの矢印のぶたは動けるよ。タップで走らせる！</div>
+    </div>
+  </div>
+
+  <!-- ======= CLEAR ======= -->
+  <div id="overlay">
+    <div class="card">
+      <h2>全員 脱出！🎉</h2>
+      <div class="bigstars" id="clear-stars">★★★</div>
+      <p id="clear-text"></p>
+      <div class="row">
+        <button class="btn sub" id="btn-tomap">マップ</button>
+        <button class="btn" id="btn-next" style="font-size:17px; padding:11px 26px;">つぎの面</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+const LEVELS = /*__LEVELS__*/[{"w":6,"h":6,"pigs":[{"x":5,"y":0,"d":"U"},{"x":0,"y":4,"d":"L"},{"x":5,"y":2,"d":"U"},{"x":3,"y":4,"d":"U"}],"par":4},{"w":6,"h":6,"pigs":[{"x":1,"y":3,"d":"L"},{"x":3,"y":5,"d":"L"},{"x":3,"y":2,"d":"U"},{"x":5,"y":5,"d":"L"},{"x":2,"y":4,"d":"D"}],"par":5},{"w":6,"h":6,"pigs":[{"x":5,"y":2,"d":"R"},{"x":4,"y":2,"d":"L"},{"x":1,"y":4,"d":"R"},{"x":1,"y":2,"d":"U"},{"x":1,"y":3,"d":"D"}],"par":5},{"w":6,"h":6,"pigs":[{"x":3,"y":5,"d":"U"},{"x":1,"y":3,"d":"R"},{"x":0,"y":0,"d":"L"},{"x":4,"y":4,"d":"D"},{"x":1,"y":5,"d":"L"},{"x":0,"y":4,"d":"L"}],"par":6},{"w":6,"h":6,"pigs":[{"x":2,"y":5,"d":"U"},{"x":2,"y":3,"d":"R"},{"x":4,"y":3,"d":"U"},{"x":1,"y":5,"d":"R"},{"x":1,"y":1,"d":"D"},{"x":4,"y":1,"d":"L"}],"par":7},{"w":6,"h":6,"pigs":[{"x":4,"y":1,"d":"U"},{"x":3,"y":1,"d":"D"},{"x":5,"y":1,"d":"D"},{"x":4,"y":5,"d":"D"},{"x":2,"y":2,"d":"U"},{"x":0,"y":3,"d":"L"},{"x":0,"y":2,"d":"D"}],"par":7},{"w":6,"h":6,"pigs":[{"x":0,"y":1,"d":"R"},{"x":2,"y":1,"d":"D"},{"x":2,"y":3,"d":"R"},{"x":5,"y":0,"d":"L"},{"x":0,"y":0,"d":"D"},{"x":5,"y":3,"d":"U"},{"x":1,"y":3,"d":"R"},{"x":3,"y":5,"d":"D"}],"par":9},{"w":6,"h":6,"pigs":[{"x":3,"y":3,"d":"U"},{"x":3,"y":1,"d":"L"},{"x":1,"y":1,"d":"U"},{"x":5,"y":3,"d":"D"},{"x":0,"y":0,"d":"U"},{"x":0,"y":3,"d":"R"},{"x":0,"y":1,"d":"D"},{"x":3,"y":2,"d":"R"}],"par":9},{"w":6,"h":6,"pigs":[{"x":2,"y":4,"d":"U"},{"x":2,"y":2,"d":"L"},{"x":0,"y":2,"d":"U"},{"x":1,"y":2,"d":"D"},{"x":1,"y":1,"d":"L"},{"x":1,"y":5,"d":"L"},{"x":1,"y":4,"d":"R"},{"x":5,"y":4,"d":"R"},{"x":3,"y":5,"d":"R"}],"par":10},{"w":6,"h":6,"pigs":[{"x":1,"y":1,"d":"D"},{"x":1,"y":3,"d":"R"},{"x":3,"y":3,"d":"D"},{"x":5,"y":3,"d":"U"},{"x":0,"y":3,"d":"R"},{"x":3,"y":1,"d":"U"},{"x":5,"y":2,"d":"L"},{"x":1,"y":2,"d":"D"},{"x":5,"y":5,"d":"L"}],"par":10},{"w":7,"h":7,"pigs":[{"x":1,"y":4,"d":"R"},{"x":3,"y":4,"d":"U"},{"x":3,"y":2,"d":"R"},{"x":3,"y":0,"d":"L"},{"x":5,"y":1,"d":"U"},{"x":2,"y":0,"d":"U"},{"x":1,"y":0,"d":"D"},{"x":1,"y":3,"d":"R"},{"x":6,"y":1,"d":"L"},{"x":3,"y":1,"d":"L"}],"par":11},{"w":7,"h":7,"pigs":[{"x":4,"y":2,"d":"L"},{"x":2,"y":2,"d":"U"},{"x":2,"y":0,"d":"L"},{"x":5,"y":5,"d":"U"},{"x":2,"y":1,"d":"R"},{"x":4,"y":6,"d":"D"},{"x":0,"y":3,"d":"L"},{"x":3,"y":6,"d":"D"},{"x":6,"y":1,"d":"R"},{"x":4,"y":1,"d":"D"}],"par":11},{"w":7,"h":7,"pigs":[{"x":3,"y":3,"d":"L"},{"x":1,"y":3,"d":"U"},{"x":1,"y":1,"d":"L"},{"x":2,"y":6,"d":"D"},{"x":5,"y":1,"d":"D"},{"x":6,"y":0,"d":"R"},{"x":4,"y":2,"d":"D"},{"x":4,"y":3,"d":"L"},{"x":6,"y":2,"d":"D"},{"x":1,"y":2,"d":"R"},{"x":6,"y":5,"d":"L"}],"par":12},{"w":7,"h":7,"pigs":[{"x":3,"y":0,"d":"R"},{"x":6,"y":0,"d":"D"},{"x":6,"y":6,"d":"L"},{"x":3,"y":6,"d":"U"},{"x":1,"y":3,"d":"R"},{"x":4,"y":3,"d":"D"},{"x":4,"y":5,"d":"L"},{"x":1,"y":5,"d":"U"},{"x":5,"y":4,"d":"D"},{"x":2,"y":3,"d":"D"},{"x":4,"y":0,"d":"U"}],"par":13},{"w":7,"h":7,"pigs":[{"x":4,"y":1,"d":"D"},{"x":4,"y":4,"d":"R"},{"x":6,"y":4,"d":"U"},{"x":6,"y":1,"d":"L"},{"x":3,"y":2,"d":"R"},{"x":4,"y":2,"d":"D"},{"x":1,"y":0,"d":"R"},{"x":4,"y":3,"d":"D"},{"x":5,"y":0,"d":"D"},{"x":4,"y":0,"d":"D"},{"x":3,"y":6,"d":"R"},{"x":2,"y":6,"d":"R"}],"par":13},{"w":7,"h":7,"pigs":[{"x":1,"y":3,"d":"D"},{"x":1,"y":6,"d":"R"},{"x":6,"y":6,"d":"U"},{"x":6,"y":3,"d":"L"},{"x":1,"y":1,"d":"D"},{"x":1,"y":5,"d":"R"},{"x":4,"y":5,"d":"U"},{"x":4,"y":1,"d":"L"},{"x":0,"y":4,"d":"R"},{"x":3,"y":0,"d":"D"},{"x":6,"y":2,"d":"U"},{"x":5,"y":1,"d":"D"}],"par":14},{"w":7,"h":7,"pigs":[{"x":4,"y":0,"d":"R"},{"x":6,"y":0,"d":"D"},{"x":6,"y":2,"d":"L"},{"x":4,"y":2,"d":"U"},{"x":3,"y":3,"d":"R"},{"x":5,"y":3,"d":"D"},{"x":5,"y":5,"d":"L"},{"x":3,"y":5,"d":"U"},{"x":5,"y":0,"d":"U"},{"x":1,"y":3,"d":"L"},{"x":1,"y":2,"d":"D"},{"x":4,"y":4,"d":"D"},{"x":1,"y":5,"d":"L"}],"par":15},{"w":7,"h":7,"pigs":[{"x":0,"y":1,"d":"D"},{"x":0,"y":3,"d":"R"},{"x":6,"y":3,"d":"U"},{"x":6,"y":1,"d":"L"},{"x":1,"y":1,"d":"D"},{"x":1,"y":6,"d":"R"},{"x":5,"y":6,"d":"U"},{"x":5,"y":1,"d":"L"},{"x":0,"y":2,"d":"L"},{"x":3,"y":0,"d":"L"},{"x":2,"y":3,"d":"R"},{"x":3,"y":3,"d":"D"},{"x":6,"y":6,"d":"D"}],"par":15},{"w":7,"h":7,"pigs":[{"x":0,"y":4,"d":"D"},{"x":0,"y":6,"d":"R"},{"x":2,"y":6,"d":"U"},{"x":2,"y":4,"d":"L"},{"x":3,"y":4,"d":"D"},{"x":3,"y":6,"d":"R"},{"x":5,"y":6,"d":"U"},{"x":5,"y":4,"d":"L"},{"x":1,"y":3,"d":"D"},{"x":0,"y":5,"d":"D"},{"x":5,"y":1,"d":"R"},{"x":4,"y":2,"d":"U"},{"x":6,"y":2,"d":"R"},{"x":2,"y":0,"d":"R"}],"par":16},{"w":7,"h":7,"pigs":[{"x":0,"y":2,"d":"D"},{"x":0,"y":4,"d":"R"},{"x":6,"y":4,"d":"U"},{"x":6,"y":2,"d":"L"},{"x":3,"y":3,"d":"D"},{"x":3,"y":5,"d":"R"},{"x":6,"y":5,"d":"U"},{"x":6,"y":3,"d":"L"},{"x":5,"y":3,"d":"L"},{"x":0,"y":1,"d":"L"},{"x":0,"y":5,"d":"L"},{"x":3,"y":6,"d":"L"},{"x":0,"y":3,"d":"D"},{"x":6,"y":6,"d":"U"}],"par":16}];
+const DIRS = { U:[0,-1], D:[0,1], L:[-1,0], R:[1,0] };
+const ROT = { R:0, D:90, L:180, U:270 };
+const SAVE_KEY = 'pig-escape-save-v1';
+
+let save = loadSave();
+let cur = 0;           // current level index
+let pigs = [];         // live state: {x,y,d,out,el}
+let W = 6, H = 6;
+let busy = false;
+let taps = 0, stuck = 0;
+window.__busy = false; window.__remaining = 0;
+
+function loadSave() {
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.stars) return s; } catch (e) {}
+  return { unlocked: 0, stars: {} };
+}
+function storeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+/* ----- tiny sounds ----- */
+let AC = null;
+function beep(freq, dur, type, vol, when) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + (when || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t + dur);
+  } catch (e) {}
+}
+const sndMove = () => beep(520, 0.09, 'triangle', 0.10);
+const sndOut  = () => { beep(660, 0.09, 'triangle', 0.11); beep(880, 0.12, 'triangle', 0.11, 0.07); };
+const sndStuck= () => beep(150, 0.12, 'square', 0.05);
+const sndClear= () => { [523,659,784,1047].forEach((f,i)=>beep(f,0.16,'triangle',0.12,i*0.09)); };
+
+/* ----- pig svg (faces right) ----- */
+function pigSVG() {
+  return `<svg viewBox="0 0 100 100">
+    <ellipse cx="47" cy="54" rx="33" ry="25" fill="#f7a8b8"/>
+    <path d="M16 44 q-9 -7 -4 -13 q3 -4 8 0" fill="none" stroke="#e87f95" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="62" cy="30" r="5.4" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.2"/>
+    <circle cx="76" cy="34" r="5.4" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.2"/>
+    <circle cx="72" cy="52" r="15" fill="#fbc2cd"/>
+    <ellipse cx="76" cy="53" rx="8.6" ry="6.8" fill="#f28ba0"/>
+    <circle cx="73" cy="53" r="1.8" fill="#c9506c"/>
+    <circle cx="79.4" cy="53" r="1.8" fill="#c9506c"/>
+    <circle cx="60" cy="45" r="2.4" fill="#59303a"/>
+    <rect x="30" y="72" width="7" height="8" rx="3" fill="#f28ba0"/>
+    <rect x="58" y="72" width="7" height="8" rx="3" fill="#f28ba0"/>
+  </svg>`;
+}
+
+/* ----- core slide logic (same as solver) ----- */
+function slideDest(p, state) {
+  const [dx, dy] = DIRS[p.d];
+  const occ = new Set();
+  state.forEach((q, j) => { if (q !== p && !q.out) occ.add(q.y * W + q.x); });
+  let cx = p.x, cy = p.y;
+  for (;;) {
+    const nx = cx + dx, ny = cy + dy;
+    if (nx < 0 || ny < 0 || nx >= W || ny >= H) return { out: true, x: cx, y: cy };
+    if (occ.has(ny * W + nx)) break;
+    cx = nx; cy = ny;
+  }
+  if (cx === p.x && cy === p.y) return null;
+  return { out: false, x: cx, y: cy };
+}
+function canMove(p, state) { return slideDest(p, state) !== null; }
+
+/* ----- screens ----- */
+const $ = id => document.getElementById(id);
+function showTitle() {
+  $('screen-game').style.display = 'none';
+  $('screen-title').style.display = 'block';
+  $('overlay').classList.remove('show');
+  renderLvGrid();
+}
+function renderLvGrid() {
+  const g = $('lvgrid'); g.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const b = document.createElement('button');
+    const locked = i > save.unlocked;
+    b.className = 'lvbtn' + (locked ? ' locked' : '');
+    const st = save.stars[i] || 0;
+    b.innerHTML = (locked ? '🔒' : (i + 1)) +
+      `<span class="stars">${[1,2,3].map(s => `<span class="${s <= st ? '' : 'off'}">★</span>`).join('')}</span>`;
+    if (!locked) b.onclick = () => startLevel(i);
+    g.appendChild(b);
+  });
+}
+
+function startLevel(idx) {
+  cur = idx;
+  const lv = LEVELS[idx];
+  W = lv.w; H = lv.h;
+  taps = 0; stuck = 0; busy = false; window.__busy = false;
+  $('screen-title').style.display = 'none';
+  $('screen-game').style.display = 'block';
+  $('overlay').classList.remove('show');
+  $('chip-level').textContent = (idx + 1) + '面';
+  $('msg').textContent = '';
+  const board = $('board');
+  board.style.backgroundSize = `${100 / W}% ${100 / H}%`;
+  board.innerHTML = '';
+  pigs = lv.pigs.map((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'pig'; el.dataset.i = i;
+    el.innerHTML = pigSVG() + '<div class="arrow"></div>';
+    el.addEventListener('click', () => tapPig(i));
+    board.appendChild(el);
+    return { x: p.x, y: p.y, d: p.d, out: false, el };
+  });
+  layoutAll(false);
+  refreshHints();
+  updateLeft();
+}
+function cellPct() { return 100 / W; }
+function placeEl(p, animate) {
+  const c = cellPct();
+  p.el.style.width = c + '%'; p.el.style.height = c + '%';
+  p.el.style.left = (p.x * c) + '%'; p.el.style.top = (p.y * c) + '%';
+  const inner = p.el.querySelector('svg');
+  inner.style.transform = `rotate(${ROT[p.d]}deg)`;
+  const ar = p.el.querySelector('.arrow');
+  const s = Math.max(9, c * 0.9);
+  ar.style.borderLeft = (s * 0.55) + 'px solid transparent';
+  ar.style.borderRight = (s * 0.55) + 'px solid transparent';
+  ar.style.borderBottom = s + 'px solid ' + (p.el.classList.contains('movable') ? '#2fbf4f' : '#c3cbd1');
+  ar.style.transform = `translate(-50%,-50%) rotate(${(ROT[p.d] + 90) % 360}deg) translateY(-${c * 1.9}px)`;
+}
+function layoutAll() { pigs.forEach(p => { if (!p.out) placeEl(p); }); }
+function refreshHints() {
+  pigs.forEach(p => {
+    if (p.out) return;
+    p.el.classList.toggle('movable', canMove(p, pigs));
+  });
+  layoutAll();
+}
+function updateLeft() {
+  const n = pigs.filter(p => !p.out).length;
+  $('chip-left').textContent = n;
+  window.__remaining = n;
+}
+
+function tapPig(i) {
+  if (busy) return;
+  const p = pigs[i];
+  if (!p || p.out) return;
+  const dest = slideDest(p, pigs);
+  taps++;
+  if (!dest) {
+    stuck++;
+    sndStuck();
+    p.el.classList.remove('shake'); void p.el.offsetWidth; p.el.classList.add('shake');
+    $('msg').textContent = 'そのぶたは つかえてる！';
+    return;
+  }
+  $('msg').textContent = '';
+  busy = true; window.__busy = true;
+  const [dx, dy] = DIRS[p.d];
+  if (dest.out) {
+    sndOut();
+    // run one more cell beyond the edge, then fade
+    const c = cellPct();
+    let ex = p.x, ey = p.y;
+    while (ex >= 0 && ey >= 0 && ex < W && ey < H) { ex += dx; ey += dy; }
+    p.el.style.left = (ex * c) + '%'; p.el.style.top = (ey * c) + '%';
+    p.out = true;
+    setTimeout(() => { p.el.classList.add('gone'); }, 130);
+  } else {
+    sndMove();
+    p.x = dest.x; p.y = dest.y;
+    placeEl(p);
+  }
+  setTimeout(() => {
+    busy = false; window.__busy = false;
+    refreshHints(); updateLeft();
+    if (pigs.every(q => q.out)) onClear();
+  }, 240);
+}
+
+function onClear() {
+  const lv = LEVELS[cur];
+  let stars = 3;
+  if (stuck >= 3 || taps > lv.par + 3) stars = 1;
+  else if (stuck >= 1 || taps > lv.par) stars = 2;
+  if ((save.stars[cur] || 0) < stars) save.stars[cur] = stars;
+  if (save.unlocked < cur + 1 && cur + 1 < LEVELS.length) save.unlocked = cur + 1;
+  storeSave();
+  sndClear();
+  $('clear-stars').innerHTML = [1, 2, 3].map(s => `<span class="${s <= stars ? '' : 'off'}">★</span>`).join('');
+  $('clear-text').textContent = `${taps}タップで脱出（お手本は${lv.par}タップ）`;
+  $('btn-next').style.display = (cur + 1 < LEVELS.length) ? '' : 'none';
+  $('overlay').classList.add('show');
+}
+
+$('btn-play').onclick = () => startLevel(Math.min(save.unlocked, LEVELS.length - 1));
+$('btn-back').onclick = showTitle;
+$('btn-reset').onclick = () => startLevel(cur);
+$('btn-tomap').onclick = showTitle;
+$('btn-next').onclick = () => startLevel(cur + 1);
+renderLvGrid();
+</script>
+</body>
+</html>
