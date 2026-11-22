@@ -117,8 +117,12 @@
       linear-gradient(155deg,#9bd173 0%, #83c25f 55%, #6fb34e 100%);
     background-size:15px 15px, 19px 19px, 100% 100%;
     background-position:2px 3px, 7px 9px, 0 0; }
-  .pig { position:absolute; cursor:pointer; transition:left .3s ease-in, top .3s ease-in, opacity .25s;
+  .pig { position:absolute; cursor:pointer; transition:left .3s ease-in, top .3s ease-in;
     will-change:left,top; z-index:2; }
+  .pig.exiting { visibility:hidden; }
+  .pig.flight-pig { position:fixed; cursor:default; pointer-events:none; z-index:80; margin:0;
+    transition:none; will-change:transform; }
+  .pig.flight-pig .pwrap svg { transition:transform .28s ease-in-out .34s; }
   .pig .pwrap { width:100%; height:100%; }
   .pig svg { width:100%; height:100%; display:block; filter:drop-shadow(0 3px 3px rgba(50,32,8,.35)); }
   .pig.running .pwrap { animation:runbounce .11s ease-in-out infinite alternate; }
@@ -129,7 +133,6 @@
   .pig.movable .arrow { color:#2fbf4f; opacity:1; filter:drop-shadow(0 0 3px rgba(255,255,255,.95)); }
   .pig.shake { animation:shake .3s; }
   @keyframes shake { 0%,100%{margin-left:0} 25%{margin-left:-4px} 75%{margin-left:4px} }
-  .pig.gone { opacity:0; pointer-events:none; }
   .pig.hint svg { animation:hintpulse 1.1s ease-in-out infinite; }
   @keyframes hintpulse { 0%,100%{filter:drop-shadow(0 3px 3px rgba(50,32,8,.35))} 50%{filter:drop-shadow(0 0 10px rgba(255,240,130,.95))} }
   .dust { position:absolute; z-index:1; pointer-events:none; border-radius:50%;
@@ -592,7 +595,8 @@ function renderAll() {
     const el = pigEls[i];
     if (S.onBoard[i]) {
       el.style.display = '';
-      el.classList.remove('gone');
+      el.classList.remove('exiting');
+      el.style.visibility = '';
       el.classList.toggle('movable', canExit(i));
       placeEl(i);
     } else {
@@ -687,20 +691,73 @@ function tapPig(i) {
   undoStack.push(snapshot());
   busy = true; window.__busy = true;
   sndOut();
-  // animate: run straight off the board
+  // Animate without any fade: run off the board, then continue visibly to the
+  // pig's own plaza slot (or straight to its house when it drains at once).
   const p = L.pigs[i];
   const cw = 100 / L.w, ch = 100 / L.h;
   const dx = DIRS[p.d][0], dy = DIRS[p.d][1];
   let tx = p.x, ty = p.y;
   while (tx >= 0 && ty >= 0 && tx < L.w && ty < L.h) { tx += dx; ty += dy; }
-  el.style.left = (tx * cw) + '%'; el.style.top = (ty * ch) + '%';
-  el.classList.add('running');
   spawnDust(p, tx, ty);
-  setTimeout(() => el.classList.add('gone'), 180);
+
+  const sourceRect = el.getBoundingClientRect();
+  const boardRect = $('board').getBoundingClientRect();
+  const cellW = boardRect.width / L.w, cellH = boardRect.height / L.h;
+  const exitCenter = {
+    x: boardRect.left + (tx + 0.5) * cellW,
+    y: boardRect.top + (ty + 0.5) * cellH,
+  };
+  const slotRects = [...$('plazaslots').children].map(s => s.getBoundingClientRect());
+  const houseRect = document.querySelector(`.house[data-color="${p.c}"]`)?.getBoundingClientRect();
+
   const drained = applyExit(i);
-  setTimeout(() => {
+  let targetRect;
+  if (S.home.has(i) && houseRect) {
+    // Land on the house itself, at roughly the size used for a waiting pig.
+    targetRect = {
+      left: houseRect.left + houseRect.width / 2 - 23,
+      top: houseRect.top + 7,
+      width: 46,
+      height: 46,
+    };
+  } else {
+    const slot = slotRects[S.plaza.indexOf(i)] || slotRects[0];
+    targetRect = slot ? { left: slot.left, top: slot.top, width: slot.width, height: slot.height } : exitCenter;
+  }
+  const targetCenter = {
+    x: targetRect.left + targetRect.width / 2,
+    y: targetRect.top + targetRect.height / 2,
+  };
+  const sourceCenter = { x: sourceRect.left + sourceRect.width / 2, y: sourceRect.top + sourceRect.height / 2 };
+  const exitDx = exitCenter.x - sourceCenter.x, exitDy = exitCenter.y - sourceCenter.y;
+  const targetDx = targetCenter.x - sourceCenter.x, targetDy = targetCenter.y - sourceCenter.y;
+  const targetScale = Math.max(0.2, targetRect.width / sourceRect.width);
+
+  const flight = el.cloneNode(true);
+  flight.classList.remove('movable', 'hint', 'shake');
+  flight.classList.add('flight-pig', 'running');
+  flight.querySelector('.arrow')?.remove();
+  flight.style.left = sourceRect.left + 'px';
+  flight.style.top = sourceRect.top + 'px';
+  flight.style.width = sourceRect.width + 'px';
+  flight.style.height = sourceRect.height + 'px';
+  document.body.appendChild(flight);
+  el.classList.add('exiting');
+
+  // Turn toward the plaza/houses for the second leg of the run.
+  const travelDx = targetCenter.x - exitCenter.x, travelDy = targetCenter.y - exitCenter.y;
+  const travelDir = Math.abs(travelDx) > Math.abs(travelDy) ? (travelDx >= 0 ? 'R' : 'L') : (travelDy >= 0 ? 'D' : 'U');
+  const flightSvg = flight.querySelector('.pwrap svg');
+  if (flightSvg) requestAnimationFrame(() => { flightSvg.style.transform = `rotate(${ROT[travelDir]}deg)`; });
+
+  let finished = false;
+  const finishExit = () => {
+    if (finished) return;
+    finished = true;
+    flight.remove();
     busy = false; window.__busy = false;
-    el.classList.remove('running');
+    el.classList.remove('exiting');
+    el.style.visibility = '';
     renderAll();
     if (drained.length) {
       sndHome();
@@ -716,7 +773,18 @@ function tapPig(i) {
       });
     }
     if (S.home.size === L.pigs.length) setTimeout(onClear, 250);
-  }, 330);
+  };
+  const totalMs = 820;
+  if (flight.animate) {
+    const anim = flight.animate([
+      { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+      { transform: `translate(${exitDx}px, ${exitDy}px) scale(1)`, opacity: 1, offset: 0.46 },
+      { transform: `translate(${targetDx}px, ${targetDy}px) scale(${targetScale})`, opacity: 1 },
+    ], { duration: totalMs, easing: 'ease-in-out', fill: 'forwards' });
+    anim.onfinish = finishExit;
+    anim.oncancel = finishExit;
+  }
+  setTimeout(finishExit, totalMs + 120);
 }
 
 function doUndo() {
