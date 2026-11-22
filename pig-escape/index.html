@@ -33,14 +33,17 @@
     text-shadow:0 3px 0 #e2703a, 0 6px 14px rgba(0,0,0,.25); }
   .subtitle { color:#5b4632; font-weight:bold; font-size:15px; margin-bottom:6px;
     text-shadow:0 1px 0 rgba(255,255,255,.6); }
-  .scene { position:relative; margin:6px auto 4px; width:300px; height:170px; }
-  .scene .mizu { position:absolute; left:8px; bottom:6px; width:104px; }
-  .scene .pigbig { position:absolute; right:16px; bottom:14px; width:150px; }
-  .scene .fence { position:absolute; left:0; right:0; bottom:0; height:26px;
-    background:
-      linear-gradient(rgba(255,255,255,.20), rgba(255,255,255,0) 45%),
-      repeating-linear-gradient(90deg,#bd8450 0 14px,#9d6a35 14px 28px);
-    border-top:5px solid #d29a5f; border-radius:4px; box-shadow:0 -2px 5px rgba(0,0,0,.15); }
+  .scene { position:relative; margin:2px auto 2px; width:min(356px,96vw); animation:pop .45s ease-out; }
+  .scene svg { width:100%; height:auto; display:block; }
+  .scene .bob { animation:tbob 2.8s ease-in-out infinite alternate; }
+  .scene .bob2 { animation:tbob 3.5s ease-in-out .6s infinite alternate; }
+  .scene .bob3 { animation:tbob 3.1s ease-in-out 1.1s infinite alternate; }
+  @keyframes tbob { from{transform:translateY(0)} to{transform:translateY(-3.5px)} }
+  .scene .wave { transform-box:fill-box; transform-origin:18% 88%; animation:twave 2.8s ease-in-out infinite; }
+  @keyframes twave { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-10deg)} }
+  .scene .heart { animation:theart 3.4s ease-in-out infinite; }
+  .scene .heart.h2 { animation-delay:1.4s; }
+  @keyframes theart { 0%,100%{transform:translateY(0); opacity:.75} 50%{transform:translateY(-5px); opacity:1} }
   .howto { background:rgba(255,255,255,.92); border-radius:16px; padding:11px 15px; margin:10px auto 14px;
     font-size:13.5px; line-height:1.65; max-width:400px; text-align:left;
     border:2px solid rgba(255,255,255,.8); box-shadow:0 3px 8px rgba(0,0,0,.14); }
@@ -249,60 +252,294 @@
     <h1 class="title">ぶた脱出！</h1>
     <div class="subtitle">〜 おうちへ かえろう！ぶたちゃん 〜</div>
     <div class="scene">
-      <svg class="mizu" viewBox="0 0 100 118">
-        <ellipse cx="51" cy="112" rx="30" ry="5" fill="rgba(60,40,10,.20)"/>
-        <rect x="8" y="52" width="16" height="30" rx="7" fill="#f2b035"/>
-        <rect x="36" y="94" width="11" height="14" fill="#f6cfae"/>
-        <rect x="55" y="94" width="11" height="14" fill="#f6cfae"/>
-        <ellipse cx="40" cy="110" rx="9" ry="5" fill="#2f6fd0"/>
-        <ellipse cx="62" cy="110" rx="9" ry="5" fill="#2f6fd0"/>
-        <rect x="32" y="80" width="38" height="17" rx="4" fill="#3f7fd4"/>
-        <rect x="38" y="80" width="5" height="17" fill="#fff"/>
-        <rect x="50" y="80" width="5" height="17" fill="#fff"/>
-        <rect x="62" y="80" width="5" height="17" fill="#fff"/>
-        <rect x="28" y="48" width="46" height="36" rx="9" fill="#2f6fd0"/>
-        <rect x="44" y="48" width="14" height="36" fill="#ffffff"/>
-        <rect x="28" y="48" width="8" height="36" rx="4" fill="#f2b035" opacity=".85"/>
-        <rect x="66" y="48" width="8" height="36" rx="4" fill="#f2b035" opacity=".85"/>
-        <circle cx="51" cy="30" r="21" fill="#ffd9b8"/>
-        <path d="M30 30 a21 21 0 0 1 42 0 l0 -4 a21 15 0 0 0 -42 0 z" fill="#2b2b2b"/>
-        <path d="M30 28 q4 -14 21 -14 q17 0 21 14 q-10 -7 -21 -7 q-11 0 -21 7z" fill="#2b2b2b"/>
-        <path d="M40 26 q3 -3 6 0" stroke="#2b2b2b" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M56 26 q3 -3 6 0" stroke="#2b2b2b" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <circle cx="43" cy="32" r="2.4" fill="#2b2b2b"/>
-        <circle cx="59" cy="32" r="2.4" fill="#2b2b2b"/>
-        <path d="M45 39 q6 5 12 0" stroke="#c96f4a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-        <circle cx="37" cy="37" r="3.4" fill="#ffb3a0" opacity=".8"/>
-        <circle cx="65" cy="37" r="3.4" fill="#ffb3a0" opacity=".8"/>
-      </svg>
-      <svg class="pigbig" viewBox="0 0 120 90">
+      <svg viewBox="0 0 340 218" role="img" aria-label="ミズーとぶたちゃんたち">
         <defs>
-          <radialGradient id="bigpig" cx="38%" cy="30%" r="85%">
+          <radialGradient id="tsc-skin" cx="45%" cy="36%" r="78%">
+            <stop offset="0%" stop-color="#ffe9c9"/>
+            <stop offset="100%" stop-color="#ffd2a0"/>
+          </radialGradient>
+          <linearGradient id="tsc-jacket" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#64a5f2"/>
+            <stop offset="100%" stop-color="#2f6fd0"/>
+          </linearGradient>
+          <linearGradient id="tsc-hair" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4b4b55"/>
+            <stop offset="100%" stop-color="#22222a"/>
+          </linearGradient>
+          <linearGradient id="tsc-pack" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#eccf9f"/>
+            <stop offset="100%" stop-color="#cda468"/>
+          </linearGradient>
+          <linearGradient id="tsc-grass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a8e28c"/>
+            <stop offset="100%" stop-color="#7cbf58"/>
+          </linearGradient>
+          <linearGradient id="tsc-wood" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c99a5f"/>
+            <stop offset="100%" stop-color="#a8743c"/>
+          </linearGradient>
+          <radialGradient id="tsc-pig0" cx="38%" cy="30%" r="85%">
             <stop offset="0%" stop-color="#ffd3dc"/>
-            <stop offset="55%" stop-color="#f7a8b8"/>
+            <stop offset="58%" stop-color="#f7a8b8"/>
             <stop offset="100%" stop-color="#ef8ba1"/>
           </radialGradient>
+          <radialGradient id="tsc-pig1" cx="38%" cy="30%" r="85%">
+            <stop offset="0%" stop-color="#fffdf6"/>
+            <stop offset="58%" stop-color="#f6f0e4"/>
+            <stop offset="100%" stop-color="#e0cda6"/>
+          </radialGradient>
+          <radialGradient id="tsc-pig2" cx="38%" cy="30%" r="85%">
+            <stop offset="0%" stop-color="#eec39a"/>
+            <stop offset="58%" stop-color="#c68a58"/>
+            <stop offset="100%" stop-color="#a96f3e"/>
+          </radialGradient>
+          <radialGradient id="tsc-pig3" cx="38%" cy="30%" r="85%">
+            <stop offset="0%" stop-color="#fffdf6"/>
+            <stop offset="58%" stop-color="#f6f0e4"/>
+            <stop offset="100%" stop-color="#e0cda6"/>
+          </radialGradient>
+          <clipPath id="tsc-shorts"><rect x="94" y="144" width="50" height="26" rx="7"/></clipPath>
         </defs>
-        <ellipse cx="60" cy="84" rx="46" ry="6" fill="rgba(60,40,10,.20)"/>
-        <path d="M98 38 q13 -9 9 4 q-2 8 -11 6" fill="none" stroke="#e87f95" stroke-width="3.6" stroke-linecap="round"/>
-        <rect x="34" y="74" width="9" height="10" rx="3.5" fill="#ef8ba1"/>
-        <rect x="76" y="74" width="9" height="10" rx="3.5" fill="#ef8ba1"/>
-        <ellipse cx="58" cy="52" rx="43" ry="31" fill="url(#bigpig)"/>
-        <ellipse cx="42" cy="38" rx="17" ry="9" fill="#ffffff" opacity=".38" transform="rotate(-16 42 38)"/>
-        <circle cx="27" cy="32" r="6.5" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
-        <circle cx="27" cy="32" r="3" fill="#f28ba0"/>
-        <circle cx="45" cy="26" r="6.5" fill="#f7a8b8" stroke="#e87f95" stroke-width="2.4"/>
-        <circle cx="45" cy="26" r="3" fill="#f28ba0"/>
-        <circle cx="34" cy="48" r="17.5" fill="#fbc9d3"/>
-        <ellipse cx="34" cy="50" rx="10" ry="8" fill="#f28ba0"/>
-        <circle cx="30.5" cy="50" r="2" fill="#c9506c"/>
-        <circle cx="37.5" cy="50" r="2" fill="#c9506c"/>
-        <circle cx="53" cy="42" r="3" fill="#59303a"/>
-        <circle cx="54" cy="41" r="1.1" fill="#fff"/>
-        <path d="M48 57 q5 4 10 1" stroke="#c9506c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-        <circle cx="24" cy="56" r="3.6" fill="#ffb3a0" opacity=".75"/>
+
+        <!-- grass mound -->
+        <ellipse cx="170" cy="240" rx="208" ry="66" fill="url(#tsc-grass)"/>
+        <ellipse cx="118" cy="198" rx="96" ry="15" fill="#b5e69a" opacity=".5"/>
+
+        <!-- fence -->
+        <g>
+          <rect x="-4" y="110" width="348" height="9" rx="4" fill="url(#tsc-wood)"/>
+          <rect x="-4" y="127" width="348" height="9" rx="4" fill="url(#tsc-wood)"/>
+          <g fill="url(#tsc-wood)" stroke="#8a5a28" stroke-width="1.5">
+            <rect x="6" y="100" width="14" height="46" rx="5"/>
+            <rect x="70" y="100" width="14" height="46" rx="5"/>
+            <rect x="138" y="100" width="14" height="46" rx="5"/>
+            <rect x="206" y="100" width="14" height="46" rx="5"/>
+            <rect x="274" y="100" width="14" height="46" rx="5"/>
+            <rect x="322" y="100" width="14" height="46" rx="5"/>
+          </g>
+          <g fill="#d9ab6d">
+            <rect x="4" y="97" width="18" height="7" rx="3.5"/>
+            <rect x="68" y="97" width="18" height="7" rx="3.5"/>
+            <rect x="136" y="97" width="18" height="7" rx="3.5"/>
+            <rect x="204" y="97" width="18" height="7" rx="3.5"/>
+            <rect x="272" y="97" width="18" height="7" rx="3.5"/>
+            <rect x="320" y="97" width="18" height="7" rx="3.5"/>
+          </g>
+        </g>
+
+        <!-- hay bale -->
+        <g transform="translate(27,131)">
+          <rect x="-22" y="-14" width="44" height="28" rx="13" fill="#eac95c" stroke="#bd942f" stroke-width="2"/>
+          <path d="M-22 -4 h44 M-22 5 h44" stroke="#c9a437" stroke-width="3"/>
+          <circle cx="0" cy="0" r="7" fill="none" stroke="#c9a437" stroke-width="3"/>
+          <circle cx="0" cy="0" r="3" fill="none" stroke="#c9a437" stroke-width="2.2"/>
+        </g>
+
+        <!-- flowers and grass tufts -->
+        <g stroke="#5da244" stroke-width="2" fill="none" stroke-linecap="round">
+          <path d="M150 198 q2 -8 4 0 q3 -7 6 -1"/>
+          <path d="M252 206 q2 -8 4 0 q3 -7 6 -1"/>
+          <path d="M96 210 q2 -8 4 0 q3 -7 6 -1"/>
+          <path d="M302 192 q2 -8 4 0 q3 -7 6 -1"/>
+          <path d="M182 208 q2 -8 4 0 q3 -7 6 -1"/>
+        </g>
+        <g>
+          <g transform="translate(140,203)"><circle cx="0" cy="-3" r="2.4" fill="#fff"/><circle cx="3" cy="0" r="2.4" fill="#fff"/><circle cx="-3" cy="0" r="2.4" fill="#fff"/><circle cx="0" cy="3" r="2.4" fill="#fff"/><circle cx="0" cy="0" r="1.7" fill="#f5a623"/></g>
+          <g transform="translate(264,197)"><circle cx="0" cy="-3" r="2.4" fill="#ff9db0"/><circle cx="3" cy="0" r="2.4" fill="#ff9db0"/><circle cx="-3" cy="0" r="2.4" fill="#ff9db0"/><circle cx="0" cy="3" r="2.4" fill="#ff9db0"/><circle cx="0" cy="0" r="1.7" fill="#f5a623"/></g>
+          <g transform="translate(84,197)"><circle cx="0" cy="-3" r="2.4" fill="#ffd94d"/><circle cx="3" cy="0" r="2.4" fill="#ffd94d"/><circle cx="-3" cy="0" r="2.4" fill="#ffd94d"/><circle cx="0" cy="3" r="2.4" fill="#ffd94d"/><circle cx="0" cy="0" r="1.7" fill="#e2703a"/></g>
+          <g transform="translate(312,207)"><circle cx="0" cy="-3" r="2.4" fill="#fff"/><circle cx="3" cy="0" r="2.4" fill="#fff"/><circle cx="-3" cy="0" r="2.4" fill="#fff"/><circle cx="0" cy="3" r="2.4" fill="#fff"/><circle cx="0" cy="0" r="1.7" fill="#f5a623"/></g>
+          <g transform="translate(206,211)"><circle cx="0" cy="-3" r="2.4" fill="#ff9db0"/><circle cx="3" cy="0" r="2.4" fill="#ff9db0"/><circle cx="-3" cy="0" r="2.4" fill="#ff9db0"/><circle cx="0" cy="3" r="2.4" fill="#ff9db0"/><circle cx="0" cy="0" r="1.7" fill="#f5a623"/></g>
+        </g>
+
+        <!-- brown pig (back right) -->
+        <g transform="translate(293,124) scale(.86)"><g class="bob2">
+          <ellipse cx="0" cy="40" rx="40" ry="6" fill="rgba(60,40,10,.18)"/>
+          <rect x="-27" y="24" width="12" height="15" rx="5" fill="#a96f3e"/>
+          <rect x="15" y="24" width="12" height="15" rx="5" fill="#a96f3e"/>
+          <path d="M42 -4 q13 -9 10 3 q-2 8 -10 5" fill="none" stroke="#8a5a2e" stroke-width="3.4" stroke-linecap="round"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="#c68a58"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="url(#tsc-pig2)" stroke="#8a5a2e" stroke-width="2"/>
+          <ellipse cx="-15" cy="-11" rx="16" ry="8" fill="#fff" opacity=".35" transform="rotate(-16 -15 -11)"/>
+          <circle cx="-29" cy="-21" r="9.5" fill="#c68a58" stroke="#8a5a2e" stroke-width="2.2"/>
+          <circle cx="-29" cy="-21" r="4.6" fill="#a96f3e"/>
+          <circle cx="29" cy="-21" r="9.5" fill="#c68a58" stroke="#8a5a2e" stroke-width="2.2"/>
+          <circle cx="29" cy="-21" r="4.6" fill="#a96f3e"/>
+          <circle cx="-15" cy="-3" r="3.6" fill="#3d2716"/>
+          <circle cx="-13.8" cy="-4.2" r="1.2" fill="#fff"/>
+          <circle cx="15" cy="-3" r="3.6" fill="#3d2716"/>
+          <circle cx="16.2" cy="-4.2" r="1.2" fill="#fff"/>
+          <ellipse cx="-28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".45"/>
+          <ellipse cx="28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".45"/>
+          <ellipse cx="0" cy="10" rx="17" ry="12.5" fill="#eec39a" stroke="#8a5a2e" stroke-width="2"/>
+          <ellipse cx="-6" cy="10" rx="2.6" ry="3.6" fill="#7d4f26"/>
+          <ellipse cx="6" cy="10" rx="2.6" ry="3.6" fill="#7d4f26"/>
+          <path d="M-7 24 q7 5 14 0" stroke="#7d4f26" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </g></g>
+
+        <!-- white pig (left) -->
+        <g transform="translate(46,166) scale(.82)"><g class="bob3">
+          <ellipse cx="0" cy="40" rx="40" ry="6" fill="rgba(60,40,10,.18)"/>
+          <rect x="-27" y="24" width="12" height="15" rx="5" fill="#e0cda6"/>
+          <rect x="15" y="24" width="12" height="15" rx="5" fill="#e0cda6"/>
+          <path d="M42 -4 q13 -9 10 3 q-2 8 -10 5" fill="none" stroke="#a08c66" stroke-width="3.4" stroke-linecap="round"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="#f6f0e4"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="url(#tsc-pig1)" stroke="#a08c66" stroke-width="2"/>
+          <ellipse cx="-15" cy="-11" rx="16" ry="8" fill="#fff" opacity=".35" transform="rotate(-16 -15 -11)"/>
+          <circle cx="-29" cy="-21" r="9.5" fill="#f6f0e4" stroke="#a08c66" stroke-width="2.2"/>
+          <circle cx="-29" cy="-21" r="4.6" fill="#e0cda6"/>
+          <circle cx="29" cy="-21" r="9.5" fill="#f6f0e4" stroke="#a08c66" stroke-width="2.2"/>
+          <circle cx="29" cy="-21" r="4.6" fill="#e0cda6"/>
+          <circle cx="-15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="-13.8" cy="-4.2" r="1.2" fill="#fff"/>
+          <circle cx="15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="16.2" cy="-4.2" r="1.2" fill="#fff"/>
+          <ellipse cx="-28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".55"/>
+          <ellipse cx="28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".55"/>
+          <ellipse cx="0" cy="10" rx="17" ry="12.5" fill="#fffdf6" stroke="#a08c66" stroke-width="2"/>
+          <ellipse cx="-6" cy="10" rx="2.6" ry="3.6" fill="#c9808e"/>
+          <ellipse cx="6" cy="10" rx="2.6" ry="3.6" fill="#c9808e"/>
+          <path d="M-7 24 q7 5 14 0" stroke="#c9808e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </g></g>
+
+        <!-- ===== Mizu ===== -->
+        <g>
+          <ellipse cx="118" cy="206" rx="46" ry="6" fill="rgba(60,40,10,.18)"/>
+          <!-- backpack -->
+          <rect x="79" y="92" width="78" height="64" rx="17" fill="url(#tsc-pack)" stroke="#b18d4f" stroke-width="2"/>
+          <rect x="80" y="118" width="11" height="26" rx="5.5" fill="#c39a58"/>
+          <rect x="145" y="118" width="11" height="26" rx="5.5" fill="#c39a58"/>
+          <!-- legs -->
+          <rect x="101" y="164" width="12" height="24" fill="#ffd9b8"/>
+          <rect x="124" y="164" width="12" height="24" fill="#ffd9b8"/>
+          <rect x="101" y="182" width="12" height="8" fill="#e2483d"/>
+          <rect x="124" y="182" width="12" height="8" fill="#e2483d"/>
+          <!-- shoes -->
+          <ellipse cx="107" cy="197" rx="13" ry="7.5" fill="#2f6fd0"/>
+          <ellipse cx="130" cy="197" rx="13" ry="7.5" fill="#2f6fd0"/>
+          <rect x="94" y="200" width="26" height="5" rx="2.5" fill="#ffffff"/>
+          <rect x="117" y="200" width="26" height="5" rx="2.5" fill="#ffffff"/>
+          <ellipse cx="100" cy="193" rx="5.5" ry="3.6" fill="#ffffff" opacity=".9"/>
+          <ellipse cx="123" cy="193" rx="5.5" ry="3.6" fill="#ffffff" opacity=".9"/>
+          <!-- neck -->
+          <rect x="110" y="78" width="16" height="16" fill="#f6cfae"/>
+          <!-- hood -->
+          <ellipse cx="118" cy="94" rx="27" ry="12" fill="#ffffff" stroke="#ddd6c6" stroke-width="1.6"/>
+          <!-- hoodie chest -->
+          <rect x="104" y="92" width="28" height="58" rx="6" fill="#ffffff" stroke="#ddd6c6" stroke-width="1.4"/>
+          <!-- jacket panels -->
+          <path d="M104 92 L88 98 Q84 124 88 150 L106 150 Q102 120 104 92 Z" fill="url(#tsc-jacket)" stroke="#2456a0" stroke-width="2"/>
+          <path d="M132 92 L148 98 Q152 124 148 150 L130 150 Q134 120 132 92 Z" fill="url(#tsc-jacket)" stroke="#2456a0" stroke-width="2"/>
+          <!-- backpack straps -->
+          <polygon points="93,97 101,95 105,124 97,126" fill="#d9b678" stroke="#b18d4f" stroke-width="1.2" opacity=".95"/>
+          <polygon points="143,97 135,95 131,124 139,126" fill="#d9b678" stroke="#b18d4f" stroke-width="1.2" opacity=".95"/>
+          <!-- drawstrings -->
+          <path d="M113 103 l-1 9 M123 103 l1 9" stroke="#cfc8b8" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="112" cy="114" r="1.9" fill="#cfc8b8"/>
+          <circle cx="124" cy="114" r="1.9" fill="#cfc8b8"/>
+          <!-- left arm (down) -->
+          <path d="M92 100 Q78 112 74 132 L86 138 Q90 120 98 108 Z" fill="url(#tsc-jacket)" stroke="#2456a0" stroke-width="2"/>
+          <circle cx="79" cy="140" r="7.5" fill="#ffd9b8"/>
+          <!-- right arm (waving) -->
+          <g class="wave">
+            <path d="M144 98 Q160 84 168 64 L156 56 Q146 76 138 90 Z" fill="url(#tsc-jacket)" stroke="#2456a0" stroke-width="2"/>
+            <circle cx="163" cy="57" r="8.5" fill="#ffd9b8"/>
+            <circle cx="155" cy="63" r="3.6" fill="#ffd9b8"/>
+          </g>
+          <!-- shorts -->
+          <rect x="94" y="144" width="50" height="26" rx="7" fill="#fdfdf6"/>
+          <g clip-path="url(#tsc-shorts)">
+            <rect x="101" y="144" width="6" height="26" fill="#7fb2ec"/>
+            <rect x="111" y="144" width="5" height="26" fill="#f6cf6b"/>
+            <rect x="121" y="144" width="6" height="26" fill="#7fb2ec"/>
+            <rect x="131" y="144" width="5" height="26" fill="#f6cf6b"/>
+            <rect x="94" y="144" width="50" height="5" fill="#e8e4da"/>
+          </g>
+          <rect x="94" y="144" width="50" height="26" rx="7" fill="none" stroke="#d8d2c4" stroke-width="1.6"/>
+          <line x1="119" y1="157" x2="119" y2="169" stroke="#d8d2c4" stroke-width="1.6"/>
+          <!-- head -->
+          <circle cx="86" cy="60" r="8" fill="#ffd9b8"/>
+          <circle cx="86" cy="60" r="4" fill="#f0b489"/>
+          <circle cx="150" cy="60" r="8" fill="#ffd9b8"/>
+          <circle cx="150" cy="60" r="4" fill="#f0b489"/>
+          <circle cx="118" cy="57" r="31" fill="url(#tsc-skin)"/>
+          <path d="M86 60 C82 38 90 22 104 16 C106 10 114 8 118 12 C122 5 132 6 136 12 C146 10 154 20 153 30 C160 38 156 52 150 58 L146 47 C143 53 138 54 135 49 C133 55 127 56 124 50 C121 56 115 56 112 50 C109 55 103 54 100 48 C97 53 91 52 89 46 Z" fill="url(#tsc-hair)"/>
+          <path d="M100 22 q8 -6 18 -5 M126 15 q9 0 15 6" stroke="#5d5d68" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".55"/>
+          <path d="M100 54 q5 -3 10 -.5" stroke="#2e2a26" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+          <path d="M126 53.5 q5 -2.5 10 .5" stroke="#2e2a26" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+          <circle cx="107" cy="63" r="3.6" fill="#26221f"/>
+          <circle cx="108.2" cy="61.6" r="1.2" fill="#fff"/>
+          <circle cx="129" cy="63" r="3.6" fill="#26221f"/>
+          <circle cx="130.2" cy="61.6" r="1.2" fill="#fff"/>
+          <path d="M118 67 q2 2 0 4" stroke="#dd9f6d" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+          <path d="M108 71 Q118 81 128 71 Q126 80 118 80.5 Q110 80 108 71 Z" fill="#9c3a26"/>
+          <ellipse cx="118" cy="77.5" rx="4.6" ry="2.4" fill="#f28ba0"/>
+          <ellipse cx="94" cy="69" rx="5.5" ry="3" fill="#ff9d8a" opacity=".5"/>
+          <ellipse cx="142" cy="69" rx="5.5" ry="3" fill="#ff9d8a" opacity=".5"/>
+        </g>
+
+        <!-- pink pig (front right, hero) -->
+        <g transform="translate(240,160) scale(1.14)"><g class="bob">
+          <ellipse cx="0" cy="40" rx="40" ry="6" fill="rgba(60,40,10,.18)"/>
+          <rect x="-27" y="24" width="12" height="15" rx="5" fill="#ef8ba1"/>
+          <rect x="15" y="24" width="12" height="15" rx="5" fill="#ef8ba1"/>
+          <path d="M42 -4 q13 -9 10 3 q-2 8 -10 5" fill="none" stroke="#d96b84" stroke-width="3.4" stroke-linecap="round"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="#f7a8b8"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="url(#tsc-pig0)" stroke="#d96b84" stroke-width="2"/>
+          <ellipse cx="-15" cy="-11" rx="16" ry="8" fill="#fff" opacity=".38" transform="rotate(-16 -15 -11)"/>
+          <circle cx="-29" cy="-21" r="9.5" fill="#f7a8b8" stroke="#d96b84" stroke-width="2.2"/>
+          <circle cx="-29" cy="-21" r="4.6" fill="#ef8ba1"/>
+          <circle cx="29" cy="-21" r="9.5" fill="#f7a8b8" stroke="#d96b84" stroke-width="2.2"/>
+          <circle cx="29" cy="-21" r="4.6" fill="#ef8ba1"/>
+          <circle cx="-15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="-13.8" cy="-4.2" r="1.2" fill="#fff"/>
+          <circle cx="15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="16.2" cy="-4.2" r="1.2" fill="#fff"/>
+          <ellipse cx="-28" cy="11" rx="6" ry="4" fill="#ff9db0" opacity=".55"/>
+          <ellipse cx="28" cy="11" rx="6" ry="4" fill="#ff9db0" opacity=".55"/>
+          <ellipse cx="0" cy="10" rx="17" ry="12.5" fill="#ffd3dc" stroke="#d96b84" stroke-width="2"/>
+          <ellipse cx="-6" cy="10" rx="2.6" ry="3.6" fill="#c9506c"/>
+          <ellipse cx="6" cy="10" rx="2.6" ry="3.6" fill="#c9506c"/>
+          <path d="M-7 24 q7 5 14 0" stroke="#c9506c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </g></g>
+
+        <!-- spotted piglet (front center) -->
+        <g transform="translate(176,184) scale(.6)"><g class="bob2">
+          <ellipse cx="0" cy="40" rx="40" ry="6" fill="rgba(60,40,10,.18)"/>
+          <rect x="-27" y="24" width="12" height="15" rx="5" fill="#e0cda6"/>
+          <rect x="15" y="24" width="12" height="15" rx="5" fill="#e0cda6"/>
+          <path d="M42 -4 q13 -9 10 3 q-2 8 -10 5" fill="none" stroke="#a08c66" stroke-width="3.4" stroke-linecap="round"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="#f6f0e4"/>
+          <ellipse cx="0" cy="4" rx="44" ry="33" fill="url(#tsc-pig3)" stroke="#a08c66" stroke-width="2"/>
+          <ellipse cx="-24" cy="-12" rx="9" ry="6" fill="#3a3230" opacity=".88"/>
+          <ellipse cx="21" cy="17" rx="8" ry="5.5" fill="#3a3230" opacity=".88"/>
+          <ellipse cx="27" cy="-15" rx="6" ry="4.5" fill="#3a3230" opacity=".88"/>
+          <ellipse cx="-15" cy="-11" rx="16" ry="8" fill="#fff" opacity=".35" transform="rotate(-16 -15 -11)"/>
+          <circle cx="-29" cy="-21" r="9.5" fill="#f6f0e4" stroke="#a08c66" stroke-width="2.2"/>
+          <circle cx="-29" cy="-21" r="4.6" fill="#e0cda6"/>
+          <circle cx="29" cy="-21" r="9.5" fill="#f6f0e4" stroke="#a08c66" stroke-width="2.2"/>
+          <circle cx="29" cy="-21" r="4.6" fill="#e0cda6"/>
+          <circle cx="-15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="-13.8" cy="-4.2" r="1.2" fill="#fff"/>
+          <circle cx="15" cy="-3" r="3.6" fill="#59303a"/>
+          <circle cx="16.2" cy="-4.2" r="1.2" fill="#fff"/>
+          <ellipse cx="-28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".55"/>
+          <ellipse cx="28" cy="11" rx="6" ry="4" fill="#ffb3a0" opacity=".55"/>
+          <ellipse cx="0" cy="10" rx="17" ry="12.5" fill="#fffdf6" stroke="#a08c66" stroke-width="2"/>
+          <ellipse cx="-6" cy="10" rx="2.6" ry="3.6" fill="#c9808e"/>
+          <ellipse cx="6" cy="10" rx="2.6" ry="3.6" fill="#c9808e"/>
+          <path d="M-7 24 q7 5 14 0" stroke="#c9808e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </g></g>
+
+        <!-- floating hearts and sparkles -->
+        <g transform="translate(204,72) scale(.62)"><g class="heart">
+          <path d="M0 3 C-1 0 -4 -2 -7 -2 C-11 -2 -13 1 -13 4 C-13 8 -7 12 0 17 C7 12 13 8 13 4 C13 1 11 -2 7 -2 C4 -2 1 0 0 3 Z" fill="#ff8fab" stroke="#e56b8c" stroke-width="1"/>
+        </g></g>
+        <g transform="translate(62,82) scale(.45)"><g class="heart h2">
+          <path d="M0 3 C-1 0 -4 -2 -7 -2 C-11 -2 -13 1 -13 4 C-13 8 -7 12 0 17 C7 12 13 8 13 4 C13 1 11 -2 7 -2 C4 -2 1 0 0 3 Z" fill="#ff8fab" stroke="#e56b8c" stroke-width="1"/>
+        </g></g>
+        <g transform="translate(168,94)"><path class="heart" d="M0 -6 L1.8 -1.8 L6 0 L1.8 1.8 L0 6 L-1.8 1.8 L-6 0 L-1.8 -1.8 Z" fill="#ffd94d"/></g>
+        <g transform="translate(288,64) scale(.7)"><path class="heart h2" d="M0 -6 L1.8 -1.8 L6 0 L1.8 1.8 L0 6 L-1.8 1.8 L-6 0 L-1.8 -1.8 Z" fill="#ffd94d"/></g>
       </svg>
-      <div class="fence"></div>
     </div>
     <div class="howto">
       🐷 ぶたをタップすると、むいている方向にまっすぐ走るよ。前がぜんぶ あいていれば お外へ出られる！（とちゅうでは止まれないよ）<br>
