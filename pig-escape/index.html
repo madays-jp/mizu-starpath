@@ -388,9 +388,17 @@ const sndUndo = () => beep(330, 0.1, 'triangle', 0.09);
 const sndClear= () => { [523,659,784,1047].forEach((f,i)=>beep(f,0.16,'triangle',0.12,i*0.09)); };
 
 /* ----- svgs (v3.1: top-down pig — head/snout forward, curly tail back) ----- */
+/* v3.1.2: gradient ids must be unique per instance. Sharing one id per color
+   made every pig's body reference the first matching <defs> in the document;
+   with pigs constantly cloned (exit flight), hidden (display:none after exit)
+   and rebuilt (plaza), some browsers (Android Chrome) resolve that reference
+   unreliably and the body fill can vanish (seen with the brown pigs). Each
+   pigSVG/haySVG call now mints its own id, and the body also gets a solid
+   underlay ellipse so it can never render transparent. */
+let __svgUid = 0;
 function pigSVG(color) {
   const c = PALETTES[color || 0];
-  const gid = 'pgb' + (color || 0);
+  const gid = 'pgb' + (color || 0) + '_' + (++__svgUid);
   const spots = c.spots ? `
     <ellipse cx="34" cy="36" rx="10.5" ry="7" fill="${c.spots}" opacity=".88"/>
     <ellipse cx="44" cy="66" rx="8.5" ry="6" fill="${c.spots}" opacity=".88"/>
@@ -408,6 +416,7 @@ function pigSVG(color) {
     <circle cx="57" cy="24" r="5.5" fill="${c.dark}"/>
     <circle cx="57" cy="76" r="5.5" fill="${c.dark}"/>
     <path d="M13 50 q-9 -1 -8 -9 q1 -6 7 -5 q5 1 3.5 6 q-1.2 4 -5 3" fill="none" stroke="${c.edge}" stroke-width="3.6" stroke-linecap="round"/>
+    <ellipse cx="45" cy="50" rx="36" ry="29.5" fill="${c.body}"/>
     <ellipse cx="45" cy="50" rx="36" ry="29.5" fill="url(#${gid})" stroke="${c.edge}" stroke-width="2"/>
     ${spots}
     <ellipse cx="33" cy="36" rx="15" ry="8" fill="#ffffff" opacity=".38" transform="rotate(-18 33 36)"/>
@@ -427,16 +436,18 @@ function pigSVG(color) {
   </svg>`;
 }
 function haySVG() {
+  const gid = 'hayg_' + (++__svgUid);
   return `<svg viewBox="0 0 100 100">
     <defs>
-      <radialGradient id="hayg" cx="40%" cy="32%" r="85%">
+      <radialGradient id="${gid}" cx="40%" cy="32%" r="85%">
         <stop offset="0%" stop-color="#f6dd7e"/>
         <stop offset="60%" stop-color="#eac95c"/>
         <stop offset="100%" stop-color="#d3ab3a"/>
       </radialGradient>
     </defs>
     <ellipse cx="50" cy="86" rx="40" ry="6" fill="rgba(60,40,10,.22)"/>
-    <rect x="9" y="18" width="82" height="62" rx="17" fill="url(#hayg)" stroke="#bd942f" stroke-width="2.4"/>
+    <rect x="9" y="18" width="82" height="62" rx="17" fill="#eac95c"/>
+    <rect x="9" y="18" width="82" height="62" rx="17" fill="url(#${gid})" stroke="#bd942f" stroke-width="2.4"/>
     <path d="M9 40 h82 M9 60 h82" stroke="#c9a437" stroke-width="4.4"/>
     <circle cx="50" cy="50" r="13.5" fill="none" stroke="#c9a437" stroke-width="4.4"/>
     <circle cx="50" cy="50" r="6.5" fill="none" stroke="#c9a437" stroke-width="3.6"/>
