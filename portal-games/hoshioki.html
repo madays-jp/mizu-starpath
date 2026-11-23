@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ミズー一家のほしおき</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { background:#10172e; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    color:#fff; min-height:100dvh;
+  }
+  .app {
+    max-width:480px; margin:0 auto; min-height:100dvh; position:relative; overflow:hidden;
+    background:
+      radial-gradient(2px 2px at 24px 38px, #fff 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 130px 90px, #ffe9a8 50%, transparent 51%),
+      radial-gradient(2px 2px at 300px 30px, #fff 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 390px 120px, #fff 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 70px 170px, #dfe9ff 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 210px 150px, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 440px 200px, #ffe9a8 50%, transparent 51%),
+      linear-gradient(180deg, #1b2650 0%, #2c3a6e 52%, #46548c 100%);
+    background-size:480px 260px,480px 260px,480px 260px,480px 260px,480px 260px,480px 260px,480px 260px,100% 100%;
+    padding:14px 8px 30px;
+  }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fadein .25s ease; }
+  @keyframes fadein { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none;} }
+
+  /* ---------- タイトル ---------- */
+  .title-scene { width:100%; max-width:430px; margin:2px auto 0; display:block; }
+  h1.game-title {
+    text-align:center; font-size:34px; letter-spacing:.04em; margin-top:2px;
+    background:linear-gradient(180deg,#fff3b0,#ffc93c 60%,#f5a623);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 0 rgba(90,50,0,.45));
+  }
+  .subtitle { text-align:center; font-size:14px; color:#dfe7ff; margin:6px 0 14px; }
+  .btn {
+    display:block; width:100%; max-width:340px; margin:10px auto; padding:14px 18px;
+    font-family:inherit; font-size:18px; font-weight:700; color:#5a3a00;
+    background:linear-gradient(180deg,#ffe082,#ffc93c); border:none; border-radius:999px;
+    box-shadow:0 4px 0 #c47f17, 0 8px 16px rgba(0,0,0,.3); cursor:pointer;
+  }
+  .btn:active { transform:translateY(3px); box-shadow:0 1px 0 #c47f17; }
+  .btn.sub {
+    background:linear-gradient(180deg,#ffffff,#dfe7ff); color:#33406e;
+    box-shadow:0 4px 0 #8b99c4, 0 8px 16px rgba(0,0,0,.3); font-size:16px;
+  }
+  .howto {
+    max-width:400px; margin:16px auto 0; background:rgba(255,255,255,.94); color:#3a3450;
+    border-radius:16px; padding:14px 16px; font-size:14px; line-height:1.65;
+  }
+  .howto h2 { font-size:16px; color:#7a4d00; margin-bottom:6px; }
+  .howto ul { padding-left:1.2em; }
+  .mini-board { display:grid; grid-template-columns:repeat(4,34px); gap:0; margin:10px auto 4px; width:fit-content;
+    border:3px solid #6b5878; border-radius:8px; overflow:hidden; }
+  .mini-board div { width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:19px; }
+  .mini-cap { text-align:center; font-size:12px; color:#8a7f9d; }
+
+  /* ---------- ステージ選択 ---------- */
+  .topbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .icon-btn {
+    font-family:inherit; font-size:15px; font-weight:700; border:none; cursor:pointer;
+    background:rgba(255,255,255,.92); color:#33406e; border-radius:999px; padding:9px 16px;
+    box-shadow:0 3px 0 rgba(20,28,60,.45);
+  }
+  .icon-btn:active { transform:translateY(2px); box-shadow:none; }
+  .topbar .spacer { flex:1; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tab {
+    flex:1; font-family:inherit; font-size:14px; font-weight:700; padding:10px 2px; border-radius:12px;
+    border:2px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12); color:#dfe7ff; cursor:pointer;
+  }
+  .tab small { display:block; font-size:11px; font-weight:400; opacity:.85; }
+  .tab.on { background:linear-gradient(180deg,#ffe082,#ffc93c); color:#5a3a00; border-color:#ffc93c; }
+  .stage-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .stage-btn {
+    font-family:inherit; background:rgba(255,255,255,.95); border:none; border-radius:14px;
+    padding:10px 2px 8px; cursor:pointer; color:#33406e; box-shadow:0 3px 0 rgba(20,28,60,.4);
+    min-height:64px;
+  }
+  .stage-btn:active { transform:translateY(2px); box-shadow:none; }
+  .stage-btn .no { font-size:19px; font-weight:800; display:block; }
+  .stage-btn .st { font-size:12px; color:#f5a623; letter-spacing:1px; display:block; min-height:15px; }
+  .stage-btn .st.none { color:#c6cde4; }
+  .daily-note { text-align:center; font-size:13px; color:#dfe7ff; margin-bottom:10px; }
+
+  /* ---------- プレイ ---------- */
+  .comment-bar {
+    display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.95);
+    border-radius:16px; padding:6px 12px 6px 6px; margin:10px 0 12px; min-height:64px;
+  }
+  .comment-bar .face {
+    width:52px; height:52px; flex:0 0 52px; border-radius:50%; overflow:hidden;
+    background:linear-gradient(180deg,#bcd8ff,#e8f2ff); border:2px solid #ffc93c;
+  }
+  .comment-bar .face svg { width:100%; height:100%; }
+  .comment-bar p { color:#3a3450; font-size:14px; line-height:1.5; }
+  .board-wrap {
+    background:linear-gradient(180deg,#fff8ec,#ffedcb); border-radius:18px; padding:6px;
+    box-shadow:0 10px 24px rgba(0,0,0,.35), inset 0 2px 0 #fff;
+    width:fit-content; margin:0 auto;
+  }
+  .board { display:grid; gap:0; touch-action:manipulation; }
+  .cell {
+    position:relative; border:0; padding:0; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cell .star-svg { width:82%; height:82%; pointer-events:none; filter:drop-shadow(0 2px 2px rgba(120,70,0,.45)); }
+  .cell .cross { font-size:1.5em; color:rgba(90,74,106,.55); font-weight:700; pointer-events:none; line-height:1; }
+  .cell.locked { cursor:default; }
+  .cell.locked::after {
+    content:""; position:absolute; right:4%; top:4%; width:22%; height:22%;
+    background:#fff3b0; clip-path:polygon(50% 0,63% 37%,100% 50%,63% 63%,50% 100%,37% 63%,0 50%,37% 37%);
+    filter:drop-shadow(0 0 2px #f5a623);
+  }
+  .cell.bad { animation:shake .3s ease; }
+  .cell.bad::before {
+    content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 3px #ff5252; border-radius:4px;
+    background:rgba(255,60,60,.18); pointer-events:none;
+  }
+  @keyframes shake { 0%,100%{transform:none;} 25%{transform:translateX(-2px);} 75%{transform:translateX(2px);} }
+  .play-tools { display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+  .tool-btn {
+    font-family:inherit; font-size:15px; font-weight:700; border:none; cursor:pointer; border-radius:999px;
+    padding:11px 18px; background:rgba(255,255,255,.92); color:#33406e; box-shadow:0 3px 0 rgba(20,28,60,.45);
+    min-height:46px;
+  }
+  .tool-btn:active { transform:translateY(2px); box-shadow:none; }
+  .tool-btn.hint { background:linear-gradient(180deg,#ffe082,#ffc93c); color:#5a3a00; box-shadow:0 3px 0 #c47f17; }
+  .tool-btn:disabled { opacity:.45; }
+  .progress-line { text-align:center; margin-top:10px; font-size:15px; color:#ffe9a8; font-weight:700; }
+
+  /* ---------- クリア ---------- */
+  .overlay {
+    position:fixed; inset:0; background:rgba(10,14,34,.72); display:none;
+    align-items:center; justify-content:center; z-index:20; padding:18px;
+  }
+  .overlay.show { display:flex; }
+  .clear-card {
+    background:linear-gradient(180deg,#fffdf4,#ffedcb); border-radius:22px; padding:18px 18px 20px;
+    max-width:400px; width:100%; text-align:center; color:#3a3450;
+    box-shadow:0 18px 40px rgba(0,0,0,.5); animation:pop .35s ease; position:relative; overflow:hidden;
+  }
+  @keyframes pop { from { transform:scale(.85); opacity:0;} to { transform:scale(1); opacity:1;} }
+  .clear-card h2 { font-size:26px; color:#7a4d00; margin:4px 0 2px; }
+  .clear-stars { font-size:34px; color:#f5a623; letter-spacing:6px; margin:2px 0 6px; text-shadow:0 2px 0 rgba(196,127,23,.35); }
+  .clear-scene { width:100%; max-width:340px; margin:0 auto; display:block; }
+  .confetti { position:absolute; inset:0; pointer-events:none; }
+  .confetti i {
+    position:absolute; top:-14px; width:11px; height:11px; display:block;
+    background:#ffc93c; clip-path:polygon(50% 0,63% 37%,100% 50%,63% 63%,50% 100%,37% 63%,0 50%,37% 37%);
+    animation:fall linear forwards;
+  }
+  @keyframes fall { to { transform:translateY(560px) rotate(340deg); opacity:.4; } }
+  .footer-note { text-align:center; font-size:11px; color:rgba(223,231,255,.6); margin-top:22px; }
+</style>
+</head>
+<body>
+<!-- 共通SVG定義 (家族イラスト・星) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="starGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe97a"/><stop offset=".55" stop-color="#ffc93c"/><stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#27336a"/><stop offset="1" stop-color="#4a5b9e"/>
+    </linearGradient>
+    <path id="starShape" stroke-linejoin="round" d="M0,-10 L2.9,-4.1 L9.5,-3.1 L4.7,1.6 L5.9,8.1 L0,5 L-5.9,8.1 L-4.7,1.6 L-9.5,-3.1 L-2.9,-4.1 Z"/>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3c2"/><stop offset="1" stop-color="#ffd3a6"/>
+    </linearGradient>
+<linearGradient id="hairMizu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9c6642"/><stop offset="1" stop-color="#7a4a2b"/>
+    </linearGradient>
+<linearGradient id="hairDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4038"/><stop offset="1" stop-color="#2e2721"/>
+    </linearGradient>
+<linearGradient id="hairMama" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a5a34"/><stop offset="1" stop-color="#6b4223"/>
+    </linearGradient>
+<linearGradient id="jacketBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b9bd5"/><stop offset="1" stop-color="#3a74ad"/>
+    </linearGradient>
+<g id="ch-mizu">
+      <!-- backpack -->
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <!-- legs: striped white shorts, red socks, blue-white sneakers -->
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M66 226h30a6 6 0 0 1 6 6v4H66a6 6 0 0 1-6-6v-4z" fill="#3a74ad"/>
+      <path d="M100 226h30a6 6 0 0 1 6 6v4h-36a6 6 0 0 1-6-6v-4z" transform="translate(4,0)" fill="#3a74ad"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M98 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" transform="translate(4,0)" fill="#fff"/>
+      <!-- white hoodie body -->
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <circle cx="100" cy="146" r="3" fill="#d5dee6"/>
+      <path d="M96 152q-3 12 0 22M104 152q3 12 0 22" stroke="#d5dee6" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- blue jacket (open) -->
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <path d="M58 128q14-6 26-7l-1 12q-13 1-24 6z" fill="#2f6196"/>
+      <path d="M142 128q-14-6-26-7l1 12q13 1 24 6z" fill="#2f6196"/>
+      <!-- arms -->
+      <path d="M56 134q-16 22-12 44l16 3q0-22 6-40z" fill="url(#jacketBlue)"/>
+      <path d="M144 134q16 22 12 44l-16 3q0-22-6-40z" fill="url(#jacketBlue)"/>
+      <circle cx="50" cy="184" r="9" fill="url(#skin)"/>
+      <circle cx="150" cy="184" r="9" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <ellipse cx="152" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <!-- hair: layered brown with cowlick -->
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <!-- face -->
+      <path d="M66 62q8-6 16-2M118 60q8-4 16 2" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="78" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="78" r="2.2" fill="#fff"/>
+      <path d="M99 92q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M86 104q14 12 28 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <ellipse cx="140" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <!-- hood behind neck -->
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+<g id="ch-mizu-happy">
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M102 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M60 226h30a6 6 0 0 1 6 6v6H66a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M110 226h30a6 6 0 0 1 6 6v6h-30a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <!-- arms raised -->
+      <path d="M56 132Q34 108 40 84l15 4q-2 20 9 34z" fill="url(#jacketBlue)"/>
+      <path d="M144 132q22-24 16-48l-15 4q2 20-9 34z" fill="url(#jacketBlue)"/>
+      <circle cx="46" cy="80" r="9" fill="url(#skin)"/>
+      <circle cx="154" cy="80" r="9" fill="url(#skin)"/>
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M66 60q8-7 17-3M117 57q9-4 17 3" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M67 80q9-9 18 0M115 80q9-9 18 0" stroke="#5a3a22" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M84 102q16 16 32 0-3 12-16 12t-16-12z" fill="#a34a2e"/>
+      <path d="M90 110q10 5 20 0-2 5-10 5t-10-5z" fill="#ff9d8a"/>
+      <ellipse cx="58" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <ellipse cx="142" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+<g id="ch-onii">
+      <rect x="74" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <path d="M64 226h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M102 226h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M64 226h34M102 226h34" stroke="#c33" stroke-width="0"/>
+      <rect x="66" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <rect x="104" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <!-- shorts -->
+      <path d="M66 168h68l4 34H106l-6-18-6 18H62z" fill="#7db8e8"/>
+      <path d="M66 168h68l1 10H65z" fill="#5b9bd5"/>
+      <!-- sleeveless top -->
+      <path d="M64 118q36-13 72 0l6 52q-42 10-84 0z" fill="#a8d4f5"/>
+      <path d="M64 118q36-13 72 0l2 12q-38-11-76 0z" fill="#8ec3ef"/>
+      <path d="M84 112q16 10 32 0l-3 14q-13 7-26 0z" fill="url(#skin)"/>
+      <!-- arms: right waving -->
+      <path d="M62 124q-14 16-10 36l15 2q-1-20 5-32z" fill="url(#skin)"/>
+      <path d="M138 124q20-14 18-34l-15-2q1 18-8 30z" fill="url(#skin)"/>
+      <circle cx="57" cy="164" r="9" fill="url(#skin)"/>
+      <circle cx="158" cy="86" r="9" fill="url(#skin)"/>
+      <path d="M150 78l3-10M158 76l7-8M164 82l10-4" stroke="url(#skin)" stroke-width="0"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="46" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- black spiky hair -->
+      <path d="M48 70q-6-40 30-48-2 8 2 12 4-12 16-16-1 8 3 12 6-11 18-13-2 8 1 12 12-6 22 2 14 10 12 39-4-14-14-20 1 7-3 10-6-13-20-17 3 5 1 9-11-7-26-5 3 4 2 8-14-3-25 4-11 5-19 11z" fill="url(#hairDark)"/>
+      <path d="M64 34q12-8 26-8" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M68 58q8-5 15-1M117 57q8-4 15 1" stroke="#2e2721" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="77" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="123" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="78" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="122" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="78" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <ellipse cx="122" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <circle cx="76" cy="74" r="2.1" fill="#fff"/>
+      <circle cx="120" cy="74" r="2.1" fill="#fff"/>
+      <path d="M99 88q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 100q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="62" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+      <ellipse cx="138" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+    </g>
+<g id="ch-papa">
+      <rect x="72" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <rect x="106" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <path d="M62 224h36v6a5 5 0 0 1-5 5H67a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <path d="M102 224h36v6a5 5 0 0 1-5 5h-26a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <!-- pants -->
+      <path d="M64 160h72l4 40H110l-10-14-10 14H60z" fill="#5d6a7d"/>
+      <!-- black polo -->
+      <path d="M56 116q44-15 88 0l8 52q-52 12-104 0z" fill="#333a45"/>
+      <path d="M56 116q44-15 88 0l2 12q-46-13-92 0z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14-5 20H89z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14" fill="none" stroke="#4a5462" stroke-width="3"/>
+      <circle cx="100" cy="140" r="2.6" fill="#59636f"/>
+      <circle cx="100" cy="154" r="2.6" fill="#59636f"/>
+      <!-- arms: left thumbs-up -->
+      <path d="M54 122q-14 20-10 40l16 2q-1-20 5-34z" fill="#333a45"/>
+      <path d="M146 122q16 12 14 30l-16 1q1-16-5-27z" fill="#333a45"/>
+      <circle cx="50" cy="166" r="9" fill="url(#skin)"/>
+      <g>
+        <circle cx="162" cy="148" r="10" fill="url(#skin)"/>
+        <rect x="158" y="128" width="9" height="16" rx="4.5" fill="url(#skin)"/>
+      </g>
+      <!-- head -->
+      <ellipse cx="100" cy="70" rx="51" ry="47" fill="url(#skin)"/>
+      <ellipse cx="49" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="151" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- beard along jaw -->
+      <path d="M56 84q4 34 44 36 40-2 44-36-4 22-16 28-12-6-28-6t-28 6q-12-6-16-28z" fill="#3a332c"/>
+      <path d="M84 108q16 8 32 0-2 8-16 8t-16-8z" fill="#3a332c"/>
+      <!-- hair -->
+      <path d="M48 66q-2-38 52-40 54 2 52 40-6-18-18-24 2 6 0 10-10-12-28-14 3 4 2 8-14-4-28 0 2-4 4-6-16 2-26 10-8 6-10 16z" fill="url(#hairDark)"/>
+      <path d="M64 38q14-8 30-7" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M65 56q9-5 17-1M118 55q9-4 17 1" stroke="#2e2721" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="124" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="77" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="123" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="77" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <ellipse cx="123" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <circle cx="75" cy="72" r="2" fill="#fff"/>
+      <circle cx="121" cy="72" r="2" fill="#fff"/>
+      <path d="M99 84q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M88 96q12 9 24 0" stroke="#8a4a30" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="61" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+      <ellipse cx="139" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+    </g>
+<g id="ch-mama">
+      <!-- long hair back -->
+      <path d="M44 60q-6 90 10 128l14-4q-8-60-4-104z" fill="url(#hairMama)"/>
+      <path d="M156 60q6 90-10 128l-14-4q8-60 4-104z" fill="url(#hairMama)"/>
+      <rect x="74" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <path d="M64 224h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <path d="M102 224h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <!-- skirt -->
+      <path d="M68 156h64l12 44H56z" fill="#7a9e7e"/>
+      <path d="M68 156h64l3 12H65z" fill="#68896d"/>
+      <!-- brown top -->
+      <path d="M60 116q40-14 80 0l6 44q-46 10-92 0z" fill="#a9743f"/>
+      <path d="M60 116q40-14 80 0l2 12q-42-12-84 0z" fill="#96622f"/>
+      <path d="M86 110q14 9 28 0l-2 12q-12 6-24 0z" fill="url(#skin)"/>
+      <!-- arms: hands together -->
+      <path d="M58 122q-12 20-6 38l15 1q-3-19 3-33z" fill="#a9743f"/>
+      <path d="M142 122q12 20 6 38l-15 1q3-19-3-33z" fill="#a9743f"/>
+      <circle cx="88" cy="166" r="8.5" fill="url(#skin)"/>
+      <circle cx="112" cy="166" r="8.5" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="47" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- hair front: side-swept with shine -->
+      <path d="M47 72q-4-42 53-44 57 2 53 44-3-14-12-22 1 7-2 11-6-14-22-19 3 5 1 9-13-7-30-4 3 4 2 7-15-1-27 7-10 5-16 11z" fill="url(#hairMama)"/>
+      <path d="M60 42q16-11 36-10M118 36q14 2 24 10" stroke="#bd8a58" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M52 74q-3 34 3 62l10-2q-6-30-5-56z" fill="url(#hairMama)"/>
+      <path d="M148 74q3 34-3 62l-10-2q6-30 5-56z" fill="url(#hairMama)"/>
+      <path d="M66 58q8-6 16-2M118 56q8-4 16 2" stroke="#6b4223" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="76" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="76" r="2.2" fill="#fff"/>
+      <path d="M66 68q3-3 6-3M128 65q3 0 6 3" stroke="#3a2c20" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 101q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+      <ellipse cx="140" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- ================= タイトル ================= -->
+  <section id="screen-title" class="screen active">
+    <svg class="title-scene" viewBox="0 0 460 300" role="img" aria-label="星空のボードとミズー一家のイラスト">
+      <rect x="6" y="6" width="448" height="288" rx="26" fill="url(#nightSky)"/>
+      <circle cx="52" cy="46" r="2.2" fill="#fff"/><circle cx="120" cy="26" r="1.6" fill="#ffe9a8"/>
+      <circle cx="330" cy="34" r="2" fill="#fff"/><circle cx="404" cy="70" r="1.6" fill="#fff"/>
+      <circle cx="238" cy="20" r="1.4" fill="#dfe9ff"/><circle cx="70" cy="110" r="1.5" fill="#fff"/>
+      <circle cx="416" cy="140" r="1.4" fill="#ffe9a8"/>
+      <path d="M404 26a15 15 0 1 0 10 26 12 12 0 1 1-10-26z" fill="#ffedb0"/>
+      <!-- 星空ボード -->
+      <g transform="rotate(-6 230 118)">
+        <rect x="146" y="34" width="168" height="168" rx="14" fill="#fff8ec"/>
+        <g>
+          <rect x="154" y="42" width="38" height="38" fill="#ffd9d4"/><rect x="192" y="42" width="38" height="38" fill="#ffd9d4"/>
+          <rect x="230" y="42" width="38" height="38" fill="#ffedbe"/><rect x="268" y="42" width="38" height="38" fill="#c9e7f8"/>
+          <rect x="154" y="80" width="38" height="38" fill="#ffd9d4"/><rect x="192" y="80" width="38" height="38" fill="#d7efc2"/>
+          <rect x="230" y="80" width="38" height="38" fill="#ffedbe"/><rect x="268" y="80" width="38" height="38" fill="#c9e7f8"/>
+          <rect x="154" y="118" width="38" height="38" fill="#d7efc2"/><rect x="192" y="118" width="38" height="38" fill="#d7efc2"/>
+          <rect x="230" y="118" width="38" height="38" fill="#e2d8f8"/><rect x="268" y="118" width="38" height="38" fill="#e2d8f8"/>
+          <rect x="154" y="156" width="38" height="38" fill="#d7efc2"/><rect x="192" y="156" width="38" height="38" fill="#e2d8f8"/>
+          <rect x="230" y="156" width="38" height="38" fill="#e2d8f8"/><rect x="268" y="156" width="38" height="38" fill="#ffe3c2"/>
+        </g>
+        <rect x="146" y="34" width="168" height="168" rx="14" fill="none" stroke="#6b5878" stroke-width="5"/>
+        <path d="M192 34v168M230 34v168M268 34v168M146 80h168M146 118h168M146 156h168" stroke="#6b5878" stroke-width="2.4" opacity=".55"/>
+        <use href="#starShape" transform="translate(173 61) scale(1.9)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".8"/>
+        <use href="#starShape" transform="translate(287 99) scale(1.9)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".8"/>
+        <use href="#starShape" transform="translate(211 175) scale(1.9)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".8"/>
+      </g>
+      <ellipse cx="230" cy="284" rx="208" ry="11" fill="#1a2347" opacity=".65"/>
+      <g transform="translate(2,64) scale(0.92)"><use href="#ch-papa"/></g>
+      <g transform="translate(84,72) scale(0.88)"><use href="#ch-mama"/></g>
+      <g transform="translate(264,68) scale(0.9)"><use href="#ch-onii"/></g>
+      <g transform="translate(328,88) scale(0.84)"><use href="#ch-mizu"/></g>
+    </svg>
+    <h1 class="game-title">ミズー一家のほしおき</h1>
+    <p class="subtitle">星空ボードに、星を ひとつずつ置くパズル</p>
+    <button class="btn" id="btn-play">あそぶ</button>
+    <button class="btn sub" id="btn-sound">おと：ON</button>
+    <div class="howto">
+      <h2>あそびかた</h2>
+      <ul>
+        <li>各 <b>行</b>・各 <b>列</b>・各 <b>色エリア</b> に、星が <b>ちょうど1つ</b> ずつ入るように置いてね。</li>
+        <li>星同士は、タテ・ヨコ・<b>ななめ</b> で隣り合ってはダメ。</li>
+        <li>マスをタップすると「星 → ×メモ → 空っぽ」の順に切り替わるよ。×はメモ代わり。</li>
+        <li>ルール違反の星は赤く光るよ。ヒントは1つの面で3回まで。</li>
+      </ul>
+      <div class="mini-board" aria-hidden="true">
+        <div style="background:#ffd9d4"></div><div style="background:#ffd9d4">⭐</div><div style="background:#ffedbe"></div><div style="background:#c9e7f8"></div>
+        <div style="background:#ffd9d4"></div><div style="background:#d7efc2"></div><div style="background:#ffedbe"></div><div style="background:#c9e7f8">⭐</div>
+        <div style="background:#d7efc2">⭐</div><div style="background:#d7efc2"></div><div style="background:#e2d8f8"></div><div style="background:#c9e7f8"></div>
+        <div style="background:#d7efc2"></div><div style="background:#e2d8f8"></div><div style="background:#e2d8f8">⭐</div><div style="background:#e2d8f8"></div>
+      </div>
+      <p class="mini-cap">れい：4×4の完成図（各行・列・エリアに星1つ）</p>
+    </div>
+    <p class="footer-note">ミズー一家のゲームシリーズ</p>
+  </section>
+
+  <!-- ================= ステージ選択 ================= -->
+  <section id="screen-select" class="screen">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-back-title">← タイトル</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab" data-diff="easy">かんたん<small>6×6</small></button>
+      <button class="tab" data-diff="normal">ふつう<small>7×7</small></button>
+      <button class="tab" data-diff="hard">むずかしい<small>8×8</small></button>
+      <button class="tab" data-diff="daily">デイリー<small>毎日の10面</small></button>
+    </div>
+    <p class="daily-note" id="daily-note" style="display:none"></p>
+    <div class="stage-grid" id="stage-grid"></div>
+  </section>
+
+  <!-- ================= プレイ ================= -->
+  <section id="screen-play" class="screen">
+    <div class="topbar">
+      <button class="icon-btn" id="btn-back-select">← もどる</button>
+      <div class="spacer"></div>
+      <span id="play-title" style="font-weight:700;color:#ffe9a8"></span>
+    </div>
+    <div class="comment-bar">
+      <div class="face"><svg viewBox="36 0 128 132" aria-hidden="true"><use href="#ch-mizu"/></svg></div>
+      <p id="comment">星を置いてみよう！</p>
+    </div>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <p class="progress-line" id="progress"></p>
+    <div class="play-tools">
+      <button class="tool-btn hint" id="btn-hint">💡 ヒント（あと3）</button>
+      <button class="tool-btn" id="btn-restart">↺ はじめから</button>
+    </div>
+  </section>
+</div>
+
+<!-- ================= クリア ================= -->
+<div class="overlay" id="clear-overlay">
+  <div class="clear-card">
+    <div class="confetti" id="confetti"></div>
+    <h2>クリア！</h2>
+    <div class="clear-stars" id="clear-stars">★★★</div>
+    <svg class="clear-scene" viewBox="0 0 460 300" role="img" aria-label="喜ぶミズー一家のイラスト">
+      <rect x="6" y="6" width="448" height="288" rx="26" fill="url(#nightSky)"/>
+      <circle cx="60" cy="40" r="2" fill="#fff"/><circle cx="150" cy="24" r="1.5" fill="#ffe9a8"/>
+      <circle cx="330" cy="30" r="2" fill="#fff"/><circle cx="410" cy="60" r="1.6" fill="#fff"/>
+      <use href="#starShape" transform="translate(230 52) scale(2.6)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".7"/>
+      <use href="#starShape" transform="translate(96 84) scale(1.3)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".9"/>
+      <use href="#starShape" transform="translate(368 88) scale(1.3)" fill="url(#starGold)" stroke="#cf8a0a" stroke-width=".9"/>
+      <ellipse cx="230" cy="284" rx="208" ry="11" fill="#1a2347" opacity=".65"/>
+      <g transform="translate(2,64) scale(0.92)"><use href="#ch-papa"/></g>
+      <g transform="translate(84,72) scale(0.88)"><use href="#ch-mama"/></g>
+      <g transform="translate(264,68) scale(0.9)"><use href="#ch-onii"/></g>
+      <g transform="translate(328,82) scale(0.84)"><use href="#ch-mizu-happy"/></g>
+    </svg>
+    <p id="clear-msg" style="margin:8px 0 4px;font-size:15px"></p>
+    <button class="btn" id="btn-next">つぎの面へ</button>
+    <button class="btn sub" id="btn-to-select">ステージせんたくへ</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const DATA = {"easy":[{"n":6,"regions":[[3,0,2,2,2,2],[3,0,0,2,1,1],[3,3,3,2,4,4],[3,5,4,4,4,4],[3,5,4,4,4,4],[5,5,5,5,4,4]],"sol":[[0,1],[1,5],[2,3],[3,0],[4,4],[5,2]]},{"n":6,"regions":[[0,0,0,0,0,1],[0,2,0,0,0,1],[4,2,0,3,3,1],[4,2,2,3,5,5],[4,4,4,4,4,5],[4,4,4,5,5,5]],"sol":[[0,2],[1,5],[2,1],[3,3],[4,0],[5,4]]},{"n":6,"regions":[[1,1,0,0,0,0],[1,1,0,4,2,2],[1,3,5,4,4,2],[1,3,5,4,4,4],[5,5,5,4,4,4],[5,5,5,4,4,4]],"sol":[[0,3],[1,0],[2,5],[3,1],[4,4],[5,2]]},{"n":6,"regions":[[1,2,2,2,0,5],[1,1,2,2,0,5],[3,3,2,2,2,5],[3,4,4,2,5,5],[3,4,4,5,5,5],[4,4,5,5,5,5]],"sol":[[0,4],[1,1],[2,3],[3,0],[4,2],[5,5]]},{"n":6,"regions":[[2,0,0,1,1,1],[2,2,1,1,1,4],[3,2,1,3,4,4],[3,3,3,3,3,4],[3,5,3,4,4,4],[5,5,3,3,3,4]],"sol":[[0,2],[1,4],[2,1],[3,3],[4,5],[5,0]]},{"n":6,"regions":[[2,2,0,0,0,1],[2,2,3,3,3,1],[2,4,3,3,3,5],[4,4,5,3,5,5],[4,4,5,5,5,5],[4,4,5,5,5,5]],"sol":[[0,2],[1,5],[2,0],[3,3],[4,1],[5,4]]},{"n":6,"regions":[[1,1,0,0,0,0],[1,1,1,3,3,0],[2,2,1,3,3,0],[2,4,4,3,3,0],[4,4,3,3,3,3],[4,4,5,5,3,3]],"sol":[[0,5],[1,2],[2,0],[3,4],[4,1],[5,3]]},{"n":6,"regions":[[1,1,1,0,0,0],[1,2,1,3,3,3],[4,2,2,2,2,3],[4,2,2,2,2,3],[4,4,4,3,3,3],[4,4,4,3,5,5]],"sol":[[0,3],[1,0],[2,2],[3,5],[4,1],[5,4]]},{"n":6,"regions":[[2,2,2,0,0,0],[2,2,0,0,1,1],[2,2,2,2,3,1],[5,4,2,4,3,3],[5,4,4,4,4,4],[5,5,5,5,4,4]],"sol":[[0,3],[1,5],[2,1],[3,4],[4,2],[5,0]]},{"n":6,"regions":[[0,0,1,1,1,1],[1,1,1,1,4,2],[1,1,3,3,4,2],[3,3,3,3,4,2],[3,5,5,4,4,2],[3,5,4,4,2,2]],"sol":[[0,0],[1,3],[2,5],[3,2],[4,4],[5,1]]}],"normal":[{"n":7,"regions":[[1,1,1,1,2,0,0],[3,3,1,1,2,2,5],[3,6,6,1,2,2,5],[3,6,6,6,6,2,5],[3,3,6,4,4,2,5],[6,3,6,5,4,4,5],[6,6,6,5,5,5,5]],"sol":[[0,5],[1,2],[2,4],[3,0],[4,3],[5,6],[6,1]]},{"n":7,"regions":[[0,0,0,0,1,1,1],[0,0,2,0,1,1,1],[0,0,2,0,1,1,1],[3,0,2,2,2,1,1],[3,3,6,5,2,4,4],[3,3,6,5,5,4,4],[6,6,6,5,5,5,4]],"sol":[[0,3],[1,5],[2,2],[3,0],[4,6],[5,4],[6,1]]},{"n":7,"regions":[[2,2,2,2,0,0,0],[2,2,2,2,0,0,1],[2,4,2,2,0,0,1],[4,4,4,2,0,3,3],[6,4,4,4,4,4,3],[6,4,4,5,5,5,3],[6,6,6,5,5,5,3]],"sol":[[0,4],[1,6],[2,2],[3,5],[4,1],[5,3],[6,0]]},{"n":7,"regions":[[1,1,1,0,0,0,0],[1,1,0,0,0,2,2],[1,1,1,0,0,0,2],[1,3,3,3,2,2,2],[1,3,3,4,4,2,2],[5,6,3,6,4,4,2],[5,6,6,6,6,4,4]],"sol":[[0,5],[1,1],[2,6],[3,2],[4,4],[5,0],[6,3]]},{"n":7,"regions":[[1,1,1,1,1,2,0],[1,3,3,3,3,2,0],[1,3,3,3,3,2,2],[4,4,3,3,3,3,5],[4,4,5,5,3,5,5],[4,6,6,5,5,5,5],[6,6,6,5,5,5,5]],"sol":[[0,6],[1,0],[2,5],[3,3],[4,1],[5,4],[6,2]]},{"n":7,"regions":[[2,2,0,1,1,1,1],[2,2,0,1,1,1,3],[4,2,2,1,1,3,3],[4,4,4,1,1,3,3],[4,4,4,4,6,3,3],[5,4,6,6,6,3,3],[5,5,6,6,6,3,3]],"sol":[[0,2],[1,5],[2,1],[3,6],[4,3],[5,0],[6,4]]},{"n":7,"regions":[[0,0,0,0,2,1,1],[0,3,0,0,2,1,4],[0,3,0,2,2,2,4],[3,3,3,2,2,2,4],[3,5,3,2,4,4,4],[3,5,3,2,4,6,4],[5,5,3,2,4,6,6]],"sol":[[0,2],[1,5],[2,3],[3,0],[4,4],[5,1],[6,6]]},{"n":7,"regions":[[1,1,1,2,2,0,0],[1,1,4,2,2,2,5],[1,1,4,2,5,5,5],[3,1,4,2,2,5,5],[3,6,4,4,4,4,5],[6,6,4,4,5,5,5],[6,6,6,4,4,4,5]],"sol":[[0,5],[1,1],[2,3],[3,0],[4,4],[5,6],[6,2]]},{"n":7,"regions":[[3,0,0,1,2,2,2],[3,3,1,1,4,4,2],[3,3,1,4,4,2,2],[3,3,1,1,4,4,2],[3,3,1,4,4,4,2],[3,6,4,4,4,6,5],[6,6,6,6,6,6,5]],"sol":[[0,1],[1,3],[2,5],[3,0],[4,4],[5,6],[6,2]]},{"n":7,"regions":[[1,0,0,0,0,0,0],[1,1,0,0,2,2,2],[1,1,0,0,2,2,2],[3,1,1,2,2,2,2],[3,4,4,4,2,2,4],[6,5,5,4,4,4,4],[6,6,6,6,6,4,4]],"sol":[[0,3],[1,1],[2,5],[3,0],[4,6],[5,2],[6,4]]}],"hard":[{"n":8,"regions":[[1,1,1,0,0,0,0,0],[1,1,1,1,1,2,0,0],[1,1,1,2,1,2,0,0],[3,1,1,2,2,2,2,0],[3,3,4,2,2,2,2,0],[3,4,4,6,2,2,2,5],[7,7,7,6,6,6,5,5],[7,7,7,5,5,5,5,5]],"sol":[[0,6],[1,3],[2,5],[3,0],[4,2],[5,7],[6,4],[7,1]]},{"n":8,"regions":[[0,2,2,3,3,3,1,4],[0,0,2,3,3,1,1,4],[5,5,2,5,3,4,4,4],[5,5,5,5,3,3,4,4],[5,6,6,6,6,3,4,7],[5,5,6,6,6,3,4,7],[5,6,6,6,6,7,7,7],[5,6,7,7,7,7,7,7]],"sol":[[0,0],[1,5],[2,2],[3,4],[4,6],[5,1],[6,3],[7,7]]},{"n":8,"regions":[[0,0,0,0,1,1,1,1],[0,0,0,0,1,1,1,1],[0,2,0,1,1,1,1,3],[2,2,3,3,3,3,3,3],[2,2,2,3,5,3,3,4],[2,2,2,3,5,6,6,4],[2,7,2,7,6,6,6,4],[2,7,7,7,7,6,6,6]],"sol":[[0,0],[1,5],[2,1],[3,3],[4,7],[5,4],[6,6],[7,2]]},{"n":8,"regions":[[0,0,0,0,0,0,1,1],[0,0,0,0,0,1,1,1],[2,0,1,1,1,1,3,3],[2,2,1,1,1,1,3,3],[2,2,4,1,3,3,3,3],[2,6,4,4,3,3,3,5],[6,6,7,7,3,7,5,5],[6,6,7,7,7,7,5,5]],"sol":[[0,3],[1,5],[2,0],[3,6],[4,2],[5,7],[6,1],[7,4]]},{"n":8,"regions":[[3,3,2,2,5,0,0,1],[3,3,2,5,5,1,1,1],[3,2,2,5,5,5,4,4],[3,5,5,5,5,4,4,4],[6,6,5,4,4,4,4,4],[6,6,5,5,7,7,4,4],[6,6,6,6,7,7,7,4],[6,6,6,7,7,7,7,7]],"sol":[[0,5],[1,7],[2,2],[3,0],[4,6],[5,3],[6,1],[7,4]]},{"n":8,"regions":[[1,1,1,0,3,3,3,3],[1,1,1,0,0,3,3,3],[1,1,4,2,2,3,3,3],[1,4,4,4,4,3,5,3],[6,6,4,4,7,5,5,5],[6,4,4,4,7,5,5,5],[6,4,6,4,7,5,5,5],[6,6,6,7,7,7,5,5]],"sol":[[0,3],[1,1],[2,4],[3,7],[4,2],[5,6],[6,0],[7,5]]},{"n":8,"regions":[[0,0,0,1,1,1,2,2],[0,0,1,1,1,2,2,2],[0,0,0,1,2,2,2,2],[0,3,0,4,4,2,2,2],[3,3,3,4,4,4,2,2],[3,3,5,5,4,4,6,6],[5,5,5,4,4,4,4,6],[7,7,5,5,5,4,6,6]],"sol":[[0,2],[1,4],[2,6],[3,1],[4,5],[5,3],[6,7],[7,0]]},{"n":8,"regions":[[1,1,1,1,0,0,0,0],[1,1,1,1,1,0,0,0],[1,1,0,0,0,0,2,0],[3,1,3,3,2,2,2,5],[3,3,3,4,4,2,5,5],[3,3,3,4,4,5,5,5],[3,3,6,6,6,6,5,5],[6,6,6,6,6,6,7,7]],"sol":[[0,4],[1,1],[2,6],[3,0],[4,3],[5,5],[6,2],[7,7]]},{"n":8,"regions":[[1,1,1,1,2,0,0,0],[4,1,1,1,2,2,3,0],[4,4,1,1,2,2,3,0],[4,4,4,4,6,2,3,2],[4,4,4,6,6,2,2,2],[5,5,4,4,6,6,6,2],[5,5,6,6,6,6,7,2],[5,5,6,6,6,6,7,7]],"sol":[[0,5],[1,1],[2,4],[3,6],[4,2],[5,0],[6,3],[7,7]]},{"n":8,"regions":[[0,0,0,0,2,2,2,1],[3,0,0,0,0,2,2,1],[3,0,0,2,2,2,2,5],[3,3,4,2,4,2,5,5],[6,4,4,2,4,2,5,5],[6,4,4,4,4,5,5,5],[6,6,4,4,5,5,5,5],[6,6,6,4,4,5,7,7]],"sol":[[0,3],[1,7],[2,4],[3,0],[4,2],[5,5],[6,1],[7,6]]}],"dailyPool":[{"n":6,"regions":[[1,0,0,0,0,0],[1,1,2,0,0,0],[1,1,2,0,2,0],[3,2,2,2,2,4],[3,4,4,4,4,4],[3,5,5,5,5,4]],"sol":[[0,3],[1,1],[2,4],[3,0],[4,5],[5,2]]},{"n":7,"regions":[[0,0,1,1,1,1,1],[2,0,2,1,1,3,3],[2,2,2,2,3,3,3],[2,4,3,3,3,6,3],[5,4,3,6,6,6,3],[5,5,5,5,5,6,6],[5,5,5,6,6,6,6]],"sol":[[0,0],[1,4],[2,2],[3,6],[4,1],[5,3],[6,5]]},{"n":8,"regions":[[0,0,0,0,1,1,1,1],[0,0,0,1,1,1,1,1],[0,0,0,0,1,2,1,1],[3,3,0,5,2,2,2,2],[3,4,4,5,2,5,2,2],[7,4,4,5,5,5,5,5],[7,4,4,6,6,6,5,6],[7,7,6,6,6,6,6,6]],"sol":[[0,3],[1,7],[2,5],[3,0],[4,2],[5,6],[6,4],[7,1]]},{"n":6,"regions":[[1,0,0,0,0,0],[1,1,1,4,0,0],[2,4,1,4,4,0],[2,4,1,1,4,3],[2,4,4,4,4,3],[5,5,4,4,3,3]],"sol":[[0,4],[1,2],[2,0],[3,5],[4,3],[5,1]]},{"n":7,"regions":[[0,0,0,1,1,3,3],[4,4,0,0,1,1,3],[2,4,0,3,3,3,3],[2,4,4,6,3,5,5],[4,4,6,6,6,5,5],[6,6,6,5,5,5,5],[6,6,6,6,6,5,5]],"sol":[[0,2],[1,5],[2,0],[3,4],[4,1],[5,6],[6,3]]},{"n":8,"regions":[[4,0,0,2,2,1,1,1],[4,0,0,2,2,3,1,5],[4,4,2,2,3,3,3,5],[4,4,4,3,3,3,3,5],[4,4,7,3,3,5,3,5],[4,4,7,7,3,5,5,5],[4,6,7,7,3,5,5,5],[4,6,7,7,7,5,5,5]],"sol":[[0,2],[1,6],[2,3],[3,5],[4,0],[5,7],[6,1],[7,4]]},{"n":6,"regions":[[0,0,0,0,1,1],[2,0,0,1,1,1],[2,2,3,3,1,1],[4,2,3,3,1,3],[4,5,5,3,3,3],[4,5,5,5,3,3]],"sol":[[0,2],[1,4],[2,1],[3,5],[4,0],[5,3]]},{"n":7,"regions":[[2,2,2,0,0,0,0],[2,1,1,2,0,3,0],[2,2,2,2,2,3,0],[2,4,2,5,2,3,6],[5,4,5,5,5,6,6],[5,5,5,5,6,6,6],[5,5,5,6,6,6,6]],"sol":[[0,4],[1,2],[2,0],[3,5],[4,1],[5,3],[6,6]]},{"n":8,"regions":[[1,1,0,0,0,0,2,2],[1,1,1,1,0,0,2,2],[1,1,0,0,0,2,2,2],[1,1,0,0,5,2,3,3],[1,4,0,5,5,5,3,3],[6,4,6,6,5,5,5,7],[6,4,6,5,5,5,5,7],[6,6,6,5,5,5,7,7]],"sol":[[0,3],[1,0],[2,5],[3,7],[4,1],[5,4],[6,2],[7,6]]},{"n":6,"regions":[[0,0,0,0,1,1],[0,3,3,1,1,2],[0,0,3,4,4,2],[0,0,3,4,4,4],[0,5,3,3,4,4],[0,5,4,4,4,4]],"sol":[[0,0],[1,3],[2,5],[3,2],[4,4],[5,1]]},{"n":7,"regions":[[2,0,0,0,0,1,1],[2,2,0,1,1,1,3],[2,2,0,0,1,1,3],[2,4,0,0,1,3,3],[4,4,0,4,1,3,3],[5,4,4,4,4,3,3],[5,5,4,6,6,3,3]],"sol":[[0,2],[1,5],[2,1],[3,6],[4,3],[5,0],[6,4]]},{"n":8,"regions":[[0,0,0,0,0,0,0,0],[2,2,2,1,1,1,1,0],[2,2,3,3,1,1,1,0],[2,2,2,3,3,3,1,1],[2,2,2,4,3,3,3,3],[5,2,4,4,4,3,3,3],[5,6,4,6,6,7,3,3],[5,6,6,6,6,7,7,7]],"sol":[[0,2],[1,6],[2,1],[3,5],[4,3],[5,0],[6,4],[7,7]]},{"n":6,"regions":[[0,0,0,1,2,2],[0,3,3,1,1,2],[3,3,3,5,1,2],[3,5,5,5,5,4],[3,3,5,4,4,4],[5,5,5,5,5,4]],"sol":[[0,1],[1,3],[2,5],[3,0],[4,4],[5,2]]},{"n":7,"regions":[[0,0,0,0,0,1,1],[0,0,0,0,1,1,2],[0,0,0,6,4,1,2],[3,0,6,6,4,5,2],[3,3,6,4,4,5,5],[3,3,6,6,5,5,5],[3,3,6,6,5,5,5]],"sol":[[0,1],[1,4],[2,6],[3,0],[4,3],[5,5],[6,2]]},{"n":8,"regions":[[2,2,2,2,3,1,0,0],[2,2,2,3,3,1,1,1],[2,4,3,3,3,6,6,6],[4,4,4,3,5,6,5,6],[4,4,3,3,5,6,5,6],[4,4,7,5,5,5,5,6],[4,7,7,5,5,5,6,6],[4,4,7,7,7,7,7,6]],"sol":[[0,7],[1,5],[2,0],[3,3],[4,1],[5,4],[6,6],[7,2]]},{"n":6,"regions":[[0,0,0,0,0,0],[1,1,2,2,0,0],[3,2,2,2,5,0],[3,3,4,2,5,0],[4,4,4,2,5,0],[4,4,5,5,5,0]],"sol":[[0,5],[1,1],[2,3],[3,0],[4,2],[5,4]]},{"n":7,"regions":[[0,0,1,1,1,1,2],[0,4,1,1,1,1,2],[0,4,4,1,1,3,2],[0,4,1,1,3,3,2],[0,4,4,4,4,3,6],[5,4,4,4,3,3,6],[5,5,4,4,3,6,6]],"sol":[[0,1],[1,3],[2,6],[3,4],[4,2],[5,0],[6,5]]},{"n":8,"regions":[[0,0,1,1,1,3,3,3],[2,1,1,2,2,3,3,3],[2,2,2,2,2,3,3,3],[2,4,4,4,2,3,5,3],[2,6,4,4,4,5,5,5],[6,6,6,6,4,5,7,5],[6,6,6,7,7,7,7,5],[6,6,6,6,6,7,7,5]],"sol":[[0,0],[1,2],[2,4],[3,7],[4,3],[5,5],[6,1],[7,6]]},{"n":6,"regions":[[0,0,0,1,1,1],[0,0,4,1,1,1],[2,4,4,1,1,1],[2,2,4,1,1,3],[5,2,4,4,3,3],[5,5,4,4,4,3]],"sol":[[0,2],[1,4],[2,0],[3,5],[4,3],[5,1]]},{"n":7,"regions":[[0,0,0,0,0,2,2],[0,0,2,0,0,2,1],[0,0,2,0,2,2,1],[0,3,2,2,2,2,1],[3,3,4,4,4,5,5],[3,3,3,4,4,5,5],[3,6,6,4,4,5,5]],"sol":[[0,0],[1,6],[2,4],[3,1],[4,3],[5,5],[6,2]]},{"n":8,"regions":[[0,0,0,1,1,1,1,1],[0,0,0,2,1,1,1,1],[0,5,2,2,1,1,1,3],[5,5,2,4,3,3,3,3],[5,2,2,4,4,4,4,3],[5,2,5,5,3,3,3,3],[5,5,5,5,3,6,6,3],[5,5,5,6,6,6,7,7]],"sol":[[0,1],[1,4],[2,2],[3,6],[4,3],[5,0],[6,5],[7,7]]},{"n":6,"regions":[[2,0,0,0,1,3],[2,0,4,0,1,3],[2,0,4,3,3,3],[2,2,4,3,3,3],[2,2,4,4,3,3],[5,5,5,4,3,3]],"sol":[[0,2],[1,4],[2,0],[3,5],[4,3],[5,1]]},{"n":7,"regions":[[1,0,0,0,0,0,0],[1,1,0,1,2,0,0],[1,1,1,1,2,2,0],[1,1,1,2,2,2,3],[4,1,5,2,5,5,3],[4,6,5,5,5,5,3],[6,6,6,5,5,5,5]],"sol":[[0,3],[1,1],[2,4],[3,6],[4,0],[5,5],[6,2]]},{"n":8,"regions":[[0,0,0,0,0,1,2,2],[0,0,0,1,1,1,1,2],[0,0,0,1,1,2,1,2],[0,3,5,5,4,2,2,2],[3,3,6,5,4,4,4,2],[7,6,6,5,5,5,4,4],[7,6,6,5,4,4,4,4],[7,7,5,5,4,4,4,4]],"sol":[[0,3],[1,5],[2,7],[3,1],[4,6],[5,4],[6,2],[7,0]]},{"n":6,"regions":[[3,2,0,0,0,1],[3,2,2,2,2,1],[3,2,5,2,2,4],[3,5,5,5,4,4],[5,5,5,5,4,4],[5,5,5,4,4,4]],"sol":[[0,2],[1,5],[2,3],[3,0],[4,4],[5,1]]},{"n":7,"regions":[[1,1,1,1,2,0,0],[1,1,1,1,2,0,2],[1,3,1,1,2,2,2],[1,3,1,3,2,4,6],[3,3,3,3,6,4,6],[5,6,6,3,6,4,6],[5,6,6,6,6,6,6]],"sol":[[0,6],[1,2],[2,4],[3,1],[4,5],[5,0],[6,3]]},{"n":8,"regions":[[1,1,3,3,0,0,0,4],[1,3,3,3,0,2,4,4],[1,3,3,3,3,2,4,4],[5,5,5,3,3,4,4,4],[5,5,3,3,3,4,4,6],[7,5,5,5,5,5,4,6],[7,7,5,5,6,6,6,6],[7,7,5,5,6,6,6,6]],"sol":[[0,4],[1,0],[2,5],[3,3],[4,6],[5,2],[6,7],[7,1]]},{"n":6,"regions":[[3,0,0,2,1,1],[3,3,2,2,1,1],[3,3,3,2,2,2],[5,3,4,4,4,4],[5,5,4,4,4,4],[5,5,5,4,4,4]],"sol":[[0,2],[1,5],[2,3],[3,1],[4,4],[5,0]]},{"n":7,"regions":[[1,0,0,0,0,0,0],[1,1,0,0,0,0,4],[1,2,2,2,0,0,4],[3,2,5,2,2,2,4],[3,5,5,2,2,4,4],[5,5,5,5,2,2,6],[5,5,5,5,2,2,6]],"sol":[[0,4],[1,1],[2,3],[3,0],[4,5],[5,2],[6,6]]},{"n":8,"regions":[[4,4,0,0,0,0,2,2],[4,0,0,0,3,1,1,2],[4,4,4,4,3,3,3,2],[4,4,4,5,3,3,3,3],[4,5,5,5,5,3,6,3],[5,5,7,5,5,5,6,6],[7,5,7,7,5,5,6,6],[7,7,7,6,6,6,6,6]],"sol":[[0,2],[1,5],[2,7],[3,4],[4,0],[5,3],[6,6],[7,1]]},{"n":6,"regions":[[0,0,0,0,0,0],[0,0,0,2,1,1],[0,0,0,2,1,4],[3,2,2,2,2,4],[3,3,2,5,4,4],[3,3,5,5,4,4]],"sol":[[0,1],[1,5],[2,3],[3,0],[4,4],[5,2]]},{"n":7,"regions":[[0,0,0,0,1,1,1],[0,4,2,0,1,1,1],[4,4,2,5,1,1,1],[4,4,4,5,1,3,1],[4,4,5,5,5,3,1],[6,4,5,5,5,3,3],[6,5,5,5,5,5,3]],"sol":[[0,3],[1,6],[2,2],[3,5],[4,1],[5,4],[6,0]]},{"n":8,"regions":[[0,0,0,0,1,1,1,2],[0,0,0,1,1,1,1,2],[0,0,0,1,1,2,2,2],[0,3,0,1,1,2,2,2],[3,3,3,1,4,2,2,2],[3,6,3,4,4,4,5,5],[3,6,6,4,6,4,6,5],[7,7,6,6,6,6,6,5]],"sol":[[0,3],[1,5],[2,7],[3,1],[4,4],[5,6],[6,2],[7,0]]},{"n":6,"regions":[[0,0,0,0,1,1],[3,3,2,2,1,4],[3,2,2,2,2,4],[3,2,5,5,2,4],[5,5,5,4,4,4],[5,5,5,5,4,4]],"sol":[[0,1],[1,4],[2,2],[3,0],[4,5],[5,3]]},{"n":7,"regions":[[0,0,0,0,0,0,0],[1,1,1,0,3,3,0],[4,1,2,2,3,0,0],[4,1,2,3,3,3,0],[4,4,4,3,3,3,3],[5,5,4,4,3,6,3],[5,5,5,4,3,6,6]],"sol":[[0,4],[1,1],[2,3],[3,5],[4,2],[5,0],[6,6]]},{"n":8,"regions":[[0,0,0,0,0,0,0,2],[1,0,0,0,2,0,0,2],[1,0,0,2,2,2,2,2],[1,1,6,3,3,2,2,2],[1,6,6,6,3,5,4,4],[6,6,5,5,5,5,4,5],[7,6,6,6,5,5,5,5],[7,7,6,6,6,5,5,5]],"sol":[[0,2],[1,0],[2,6],[3,4],[4,7],[5,5],[6,3],[7,1]]},{"n":6,"regions":[[2,2,3,3,0,0],[2,1,1,3,0,0],[2,2,2,3,4,4],[5,2,3,3,4,4],[5,2,5,4,4,4],[5,5,5,5,4,4]],"sol":[[0,4],[1,2],[2,0],[3,3],[4,5],[5,1]]},{"n":7,"regions":[[1,1,0,0,0,0,6],[1,1,1,1,0,0,6],[1,1,2,2,2,0,6],[1,1,3,2,2,0,6],[4,4,3,3,2,6,6],[5,5,5,5,5,6,6],[5,5,5,6,6,6,6]],"sol":[[0,5],[1,1],[2,4],[3,2],[4,0],[5,3],[6,6]]},{"n":8,"regions":[[2,0,0,0,0,0,1,1],[2,0,2,0,0,1,1,1],[2,2,2,4,0,1,1,1],[2,2,2,4,1,1,3,1],[2,2,2,4,4,4,3,3],[5,5,5,5,4,3,3,3],[6,6,5,5,7,7,7,3],[5,5,5,5,5,5,7,7]],"sol":[[0,3],[1,5],[2,1],[3,6],[4,4],[5,2],[6,0],[7,7]]},{"n":6,"regions":[[0,0,0,0,0,0],[0,1,3,0,0,0],[1,1,3,3,2,4],[1,3,3,3,2,4],[1,5,3,3,4,4],[5,5,3,3,4,4]],"sol":[[0,3],[1,1],[2,4],[3,2],[4,5],[5,0]]}]};
+const SAVE_KEY = 'mizu-hoshioki-v1';
+const AREA_COLORS = ['#ffd9d4','#ffedbe','#d7efc2','#c9e7f8','#e2d8f8','#ffe3c2','#c9f0e4','#fbd7e8'];
+const DIFF_LABEL = { easy:'かんたん', normal:'ふつう', hard:'むずかしい', daily:'デイリー' };
+const START_COMMENTS = {
+  easy:'各エリアに星は1つずつ。まずは大きめのエリアから見てみよう！',
+  normal:'行と列も忘れずに。星同士はななめでも隣り合わないよ。',
+  hard:'8×8の大きな星空だ。×メモをうまく使ってね！',
+  daily:'今日の星空だよ。全部のエリアに星を置こう！'
+};
+
+/* ---------- 保存 ---------- */
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (s && typeof s === 'object') return Object.assign({ stars:{}, daily:{}, sound:true }, s);
+  } catch (e) {}
+  return { stars:{}, daily:{}, sound:true };
+}
+let save = loadSave();
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+/* ---------- デイリー ---------- */
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function hashStr(s) { let h = 2166136261; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function dailyStages(dateStr) {
+  const rnd = mulberry32(hashStr('hoshioki-' + dateStr));
+  const idxs = DATA.dailyPool.map((_, i) => i);
+  for (let i = idxs.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+  }
+  return idxs.slice(0, 10).map(i => DATA.dailyPool[i]);
+}
+
+/* ---------- サウンド ---------- */
+let audioCtx = null;
+function tone(freq, dur, type, vol, delay) {
+  if (!save.sound) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) {}
+}
+const sndTap   = () => tone(520, 0.06, 'triangle', 0.06);
+const sndStar  = () => { tone(880, 0.12, 'sine', 0.12); tone(1318, 0.16, 'sine', 0.1, 0.07); };
+const sndCross = () => tone(320, 0.05, 'square', 0.04);
+const sndErr   = () => tone(150, 0.16, 'sawtooth', 0.06);
+const sndClear = () => { [523,659,784,1046,1318].forEach((f,i)=>tone(f, 0.22, 'sine', 0.11, i*0.09)); };
+
+/* ---------- 画面遷移 ---------- */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  window.scrollTo(0, 0);
+}
+
+/* ---------- ステージ選択 ---------- */
+let currentTab = 'easy';
+function renderSelect() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.diff === currentTab));
+  const note = document.getElementById('daily-note');
+  const grid = document.getElementById('stage-grid');
+  grid.innerHTML = '';
+  let stages, getStars;
+  if (currentTab === 'daily') {
+    const d = todayStr();
+    note.style.display = 'block';
+    note.textContent = '📅 ' + d.replace(/-/g,'/') + ' の10面（毎日かわるよ）';
+    stages = dailyStages(d);
+    getStars = i => save.daily[d + ':' + i] || 0;
+  } else {
+    note.style.display = 'none';
+    stages = DATA[currentTab];
+    getStars = i => save.stars[currentTab + ':' + i] || 0;
+  }
+  stages.forEach((st, i) => {
+    const b = document.createElement('button');
+    b.className = 'stage-btn';
+    const got = getStars(i);
+    b.innerHTML = '<span class="no">' + (i + 1) + '</span>' +
+      (got ? '<span class="st">' + '★'.repeat(got) + '☆'.repeat(3 - got) + '</span>'
+           : '<span class="st none">☆☆☆</span>');
+    b.addEventListener('click', () => { sndTap(); startStage(currentTab, i); });
+    grid.appendChild(b);
+  });
+}
+
+/* ---------- プレイ ---------- */
+let cur = null; // {mode, idx, stage, grid, locked, hintsLeft, hintsUsed, finished}
+function startStage(mode, idx) {
+  const stage = mode === 'daily' ? dailyStages(todayStr())[idx] : DATA[mode][idx];
+  cur = {
+    mode, idx, stage,
+    grid: new Array(stage.n * stage.n).fill(0),
+    locked: new Set(), hintsLeft: 3, hintsUsed: 0, finished: false
+  };
+  document.getElementById('play-title').textContent =
+    DIFF_LABEL[mode] + ' ' + (idx + 1) + '面（' + stage.n + '×' + stage.n + '）';
+  setComment(START_COMMENTS[mode]);
+  buildBoard();
+  updateTools();
+  showScreen('screen-play');
+}
+function setComment(t) { document.getElementById('comment').textContent = t; }
+
+function buildBoard() {
+  const { n, regions } = cur.stage;
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const boardPx = Math.min(window.innerWidth - 28, 440);
+  const cell = Math.floor(boardPx / n);
+  board.style.gridTemplateColumns = 'repeat(' + n + ',' + cell + 'px)';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const b = document.createElement('button');
+    b.className = 'cell';
+    b.dataset.r = r; b.dataset.c = c;
+    b.style.width = cell + 'px'; b.style.height = cell + 'px';
+    b.style.background = AREA_COLORS[regions[r][c] % AREA_COLORS.length];
+    b.style.fontSize = Math.round(cell * 0.55) + 'px';
+    const reg = regions[r][c];
+    const thin = '1px solid rgba(107,88,120,.28)', thick = '3px solid #6b5878';
+    b.style.borderTop    = (r === 0 || regions[r-1][c] !== reg) ? thick : thin;
+    b.style.borderLeft   = (c === 0 || regions[r][c-1] !== reg) ? thick : thin;
+    b.style.borderBottom = (r === n-1 || regions[r+1][c] !== reg) ? thick : thin;
+    b.style.borderRight  = (c === n-1 || regions[r][c+1] !== reg) ? thick : thin;
+    b.addEventListener('click', () => onCell(r, c));
+    board.appendChild(b);
+  }
+  refreshCells();
+}
+
+function starPositions() {
+  const { n } = cur.stage;
+  const out = [];
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+    if (cur.grid[r * n + c] === 1) out.push([r, c]);
+  return out;
+}
+function conflictSet() {
+  const { regions } = cur.stage;
+  const stars = starPositions();
+  const bad = new Set();
+  for (let i = 0; i < stars.length; i++) for (let j = i + 1; j < stars.length; j++) {
+    const [r1, c1] = stars[i], [r2, c2] = stars[j];
+    if (r1 === r2 || c1 === c2 || regions[r1][c1] === regions[r2][c2] ||
+        (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1)) {
+      bad.add(r1 + ',' + c1); bad.add(r2 + ',' + c2);
+    }
+  }
+  return bad;
+}
+
+function refreshCells() {
+  const { n } = cur.stage;
+  const bad = conflictSet();
+  document.querySelectorAll('#board .cell').forEach(el => {
+    const r = +el.dataset.r, c = +el.dataset.c;
+    const v = cur.grid[r * n + c];
+    el.classList.toggle('locked', cur.locked.has(r * n + c));
+    el.classList.toggle('bad', bad.has(r + ',' + c));
+    if (v === 1) el.innerHTML = '<svg class="star-svg" viewBox="-12 -12 24 24"><use href="#starShape" fill="url(#starGold)" stroke="#cf8a0a" stroke-width="1.1"/></svg>';
+    else if (v === 2) el.innerHTML = '<span class="cross">×</span>';
+    else el.innerHTML = '';
+  });
+  const placed = starPositions().length;
+  document.getElementById('progress').textContent = '⭐ 星 ' + placed + ' / ' + n;
+  return bad;
+}
+
+function onCell(r, c) {
+  if (!cur || cur.finished) return;
+  const { n } = cur.stage;
+  const k = r * n + c;
+  if (cur.locked.has(k)) { setComment('その星はヒントで置いた星だよ。動かせないんだ。'); return; }
+  const before = conflictSet().size;
+  cur.grid[k] = (cur.grid[k] + 1) % 3;
+  const v = cur.grid[k];
+  if (v === 1) sndStar(); else if (v === 2) sndCross(); else sndTap();
+  const bad = refreshCells();
+  if (v === 1 && bad.has(r + ',' + c) && bad.size > before) {
+    sndErr();
+    setComment('あっ、その星はルール違反だよ。赤い星同士が近すぎたり、同じ行・列・エリアにいるよ。');
+  } else if (bad.size === 0 && v === 1) {
+    const placed = starPositions().length;
+    if (placed === Math.ceil(n / 2)) setComment('半分まできたよ。その調子！');
+    else if (placed === n - 1) setComment('あと1つ！最後の星はどこかな？');
+    else setComment('いい感じ！そのまま置いていこう。');
+  }
+  checkWin(bad);
+}
+
+function checkWin(bad) {
+  const { n } = cur.stage;
+  if (starPositions().length === n && bad.size === 0) {
+    cur.finished = true;
+    sndClear();
+    const earned = Math.max(1, 3 - cur.hintsUsed);
+    if (cur.mode === 'daily') {
+      const key = todayStr() + ':' + cur.idx;
+      save.daily[key] = Math.max(save.daily[key] || 0, earned);
+    } else {
+      const key = cur.mode + ':' + cur.idx;
+      save.stars[key] = Math.max(save.stars[key] || 0, earned);
+    }
+    persist();
+    setTimeout(() => showClear(earned), 450);
+  }
+}
+
+function showClear(earned) {
+  document.getElementById('clear-stars').textContent = '★'.repeat(earned) + '☆'.repeat(3 - earned);
+  document.getElementById('clear-msg').textContent =
+    cur.hintsUsed === 0 ? 'ヒントなしで星を全部置けたね。すごい！' :
+    '星空が完成したよ！一家みんなで大喜び。';
+  const conf = document.getElementById('confetti');
+  conf.innerHTML = '';
+  const colors = ['#ffc93c','#ff8fa3','#7fd4ff','#b5e48c','#e2b8ff'];
+  for (let i = 0; i < 26; i++) {
+    const el = document.createElement('i');
+    el.style.left = (Math.random() * 96) + '%';
+    el.style.background = colors[i % colors.length];
+    el.style.animationDuration = (1.4 + Math.random() * 1.6) + 's';
+    el.style.animationDelay = (Math.random() * 0.7) + 's';
+    conf.appendChild(el);
+  }
+  const hasNext = cur.idx < 9;
+  document.getElementById('btn-next').style.display = hasNext ? 'block' : 'none';
+  document.getElementById('clear-overlay').classList.add('show');
+}
+
+function updateTools() {
+  const b = document.getElementById('btn-hint');
+  b.textContent = '💡 ヒント（あと' + cur.hintsLeft + '）';
+  b.disabled = cur.hintsLeft <= 0 || cur.finished;
+}
+
+function useHint() {
+  if (!cur || cur.finished || cur.hintsLeft <= 0) return;
+  const { n, sol } = cur.stage;
+  const solSet = new Set(sol.map(([r, c]) => r * n + c));
+  const missing = [...solSet].filter(k => cur.grid[k] !== 1);
+  if (missing.length) {
+    const k = missing[Math.floor(Math.random() * missing.length)];
+    cur.grid[k] = 1;
+    cur.locked.add(k);
+    cur.hintsLeft--; cur.hintsUsed++;
+    sndStar();
+    setComment('ヒント！光っている星の場所が正解だよ。');
+    const bad = refreshCells();
+    updateTools();
+    checkWin(bad);
+    return;
+  }
+  // 正解の星は全部あるのに完成していない = 余分な間違い星がある
+  const wrong = [];
+  for (let k = 0; k < n * n; k++)
+    if (cur.grid[k] === 1 && !solSet.has(k) && !cur.locked.has(k)) wrong.push(k);
+  if (wrong.length) {
+    cur.grid[wrong[0]] = 0;
+    cur.hintsLeft--; cur.hintsUsed++;
+    sndCross();
+    setComment('ヒント！間違っていた星を1つ消したよ。');
+    refreshCells();
+    updateTools();
+  } else {
+    setComment('ヒントは必要なさそうだよ。もう完成間近！');
+  }
+}
+
+/* ---------- イベント ---------- */
+document.getElementById('btn-play').addEventListener('click', () => { sndTap(); renderSelect(); showScreen('screen-select'); });
+document.getElementById('btn-back-title').addEventListener('click', () => { sndTap(); showScreen('screen-title'); });
+document.getElementById('btn-back-select').addEventListener('click', () => { sndTap(); renderSelect(); showScreen('screen-select'); });
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  sndTap(); currentTab = t.dataset.diff; renderSelect();
+}));
+document.getElementById('btn-hint').addEventListener('click', useHint);
+document.getElementById('btn-restart').addEventListener('click', () => {
+  if (!cur) return;
+  sndTap();
+  cur.grid.fill(0); cur.locked.clear(); cur.hintsLeft = 3; cur.hintsUsed = 0; cur.finished = false;
+  setComment(START_COMMENTS[cur.mode]);
+  refreshCells(); updateTools();
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  document.getElementById('clear-overlay').classList.remove('show');
+  startStage(cur.mode, cur.idx + 1);
+});
+document.getElementById('btn-to-select').addEventListener('click', () => {
+  document.getElementById('clear-overlay').classList.remove('show');
+  currentTab = cur.mode;
+  renderSelect();
+  showScreen('screen-select');
+});
+const soundBtn = document.getElementById('btn-sound');
+function syncSoundBtn() { soundBtn.textContent = 'おと：' + (save.sound ? 'ON' : 'OFF'); }
+soundBtn.addEventListener('click', () => { save.sound = !save.sound; persist(); syncSoundBtn(); if (save.sound) sndStar(); });
+syncSoundBtn();
+</script>
+</body>
+</html>

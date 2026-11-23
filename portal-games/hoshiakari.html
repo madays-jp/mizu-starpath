@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ミズーのほしあかり</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    background:linear-gradient(180deg,#070d24 0%,#101b40 52%,#1a2c5c 100%);
+    color:#eef2ff; min-height:100vh; touch-action:manipulation; overflow-x:hidden;
+  }
+  #app { max-width:480px; margin:0 auto; padding:14px 14px 30px; position:relative; }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fadein .25s ease; }
+  @keyframes fadein { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none;} }
+
+  /* ---------- 共通ボタン ---------- */
+  button { font-family:inherit; cursor:pointer; border:none; }
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px 26px; border-radius:999px; font-size:17px; font-weight:700;
+    color:#3a2703; background:linear-gradient(180deg,#ffe066,#f5a623);
+    box-shadow:0 4px 0 #b97a0e, 0 8px 18px rgba(0,0,0,.35);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active { transform:translateY(3px); box-shadow:0 1px 0 #b97a0e, 0 4px 10px rgba(0,0,0,.3); }
+  .btn.sub {
+    background:rgba(255,255,255,.1); color:#dfe8ff; box-shadow:none;
+    border:1.5px solid rgba(255,255,255,.35); font-size:15px; padding:11px 20px;
+  }
+  .btn.sub:active { transform:translateY(1px); }
+  .btn:disabled { opacity:.38; pointer-events:none; }
+  .icon-btn {
+    width:44px; height:44px; border-radius:50%; flex:0 0 auto;
+    background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.3);
+    color:#fff; font-size:19px; display:inline-flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- タイトル ---------- */
+  .title-scene {
+    border-radius:22px; overflow:hidden; position:relative;
+    background:radial-gradient(ellipse at 78% 12%, #2b3f7d 0%, transparent 55%),
+               linear-gradient(180deg,#0a1332 0%,#15234e 62%,#1d3168 100%);
+    border:1.5px solid rgba(160,185,255,.25);
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .title-scene svg { display:block; width:100%; height:auto; }
+  h1.game-title {
+    text-align:center; font-size:34px; letter-spacing:.06em; margin:16px 0 2px;
+    color:#fff3bf; text-shadow:0 0 18px rgba(255,205,60,.55), 0 3px 0 #8a5c00;
+  }
+  .subtitle { text-align:center; color:#b9c8f2; font-size:14px; margin-bottom:14px; }
+  .title-btns { display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:16px; }
+  .title-btns .btn { min-width:240px; }
+  .title-meta { text-align:center; color:#93a5d8; font-size:13px; margin-top:14px; }
+  .twinkle { animation:tw 2.6s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+  .twinkle.t2 { animation-delay:.7s; } .twinkle.t3 { animation-delay:1.3s; } .twinkle.t4 { animation-delay:1.9s; }
+  @keyframes tw { 0%,100% { opacity:.25; transform:scale(.8);} 50% { opacity:1; transform:scale(1.12);} }
+  .glowstar { animation:glowp 3s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+  @keyframes glowp { 0%,100% { transform:scale(1);} 50% { transform:scale(1.05);} }
+
+  /* ---------- 画面ヘッダ ---------- */
+  .head { display:flex; align-items:center; gap:10px; margin:4px 0 12px; }
+  .head h2 { font-size:20px; flex:1; text-align:center; color:#ffe9a8; letter-spacing:.04em; }
+  .head .spacer { width:44px; flex:0 0 auto; }
+
+  /* ---------- ステージ選択 ---------- */
+  .tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tab {
+    flex:1; padding:10px 2px; border-radius:12px; font-size:14.5px; font-weight:700;
+    background:rgba(255,255,255,.08); color:#b9c8f2; border:1.5px solid rgba(255,255,255,.16);
+  }
+  .tab.on { background:linear-gradient(180deg,#ffe066,#f5a623); color:#3a2703; border-color:#f5a623; }
+  .stage-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+  .stage-btn {
+    aspect-ratio:.92; border-radius:14px; background:rgba(255,255,255,.07);
+    border:1.5px solid rgba(255,255,255,.18); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-size:19px; font-weight:700; padding:4px 0;
+  }
+  .stage-btn:active { background:rgba(255,255,255,.16); }
+  .stage-btn .st { font-size:11px; color:#ffd94d; letter-spacing:1px; min-height:14px; }
+  .stage-btn .st.none { color:#5f6f9d; }
+  .daily-note { color:#93a5d8; font-size:13px; text-align:center; margin:0 0 12px; }
+  .total-line { text-align:center; color:#ffd94d; font-size:14px; margin-bottom:12px; }
+
+  /* ---------- プレイ画面 ---------- */
+  .talk { display:flex; align-items:flex-end; gap:8px; margin-bottom:12px; }
+  .talk .face {
+    width:64px; height:64px; flex:0 0 auto; border-radius:50%; overflow:hidden;
+    background:radial-gradient(circle at 50% 35%, #ffe9c9, #ffd3a6);
+    border:2.5px solid rgba(255,255,255,.5);
+  }
+  .talk .face svg { width:100%; height:100%; display:block; }
+  .bubble {
+    position:relative; flex:1; background:#fff; color:#2c3550; border-radius:14px;
+    padding:10px 13px; font-size:14.5px; line-height:1.45; min-height:62px;
+    display:flex; align-items:center;
+  }
+  .bubble::before {
+    content:""; position:absolute; left:-9px; bottom:16px; border:6px solid transparent;
+    border-right:10px solid #fff; border-left:0;
+  }
+  .status {
+    display:flex; justify-content:center; gap:22px; margin:10px 0 4px;
+    color:#cdd9ff; font-size:15px;
+  }
+  .status b { color:#ffe066; font-size:18px; }
+  .board-wrap {
+    position:relative; border-radius:22px; padding:13px;
+    background:radial-gradient(ellipse at 50% 22%, #263a75 0%, #16224d 58%, #101a3a 100%);
+    border:1.5px solid rgba(160,185,255,.28);
+    box-shadow:inset 0 0 40px rgba(0,0,0,.45), 0 10px 26px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+  .board-specks { position:absolute; inset:0; pointer-events:none; }
+  .board {
+    position:relative; display:grid; gap:8px; margin:0 auto;
+  }
+  .board.g6 { gap:6px; }
+  .cell {
+    aspect-ratio:1; border-radius:18%; position:relative;
+    background:rgba(255,255,255,.045); border:1.5px solid rgba(150,175,235,.16);
+    display:flex; align-items:center; justify-content:center;
+    transition:background .25s, border-color .25s, box-shadow .25s;
+  }
+  .cell svg { width:84%; height:84%; display:block; transition:transform .22s ease, filter .25s; }
+  .cell .star-main { fill:#33436b; stroke:#54679c; stroke-width:1.6; transition:fill .25s, stroke .25s; }
+  .cell .star-spark { opacity:0; transition:opacity .25s; }
+  .cell.on {
+    background:radial-gradient(circle at 50% 42%, rgba(255,236,160,.4), rgba(255,190,60,.13) 62%, rgba(255,190,60,.04));
+    border-color:rgba(255,214,90,.65);
+    box-shadow:0 0 16px rgba(255,200,60,.4), inset 0 0 12px rgba(255,220,110,.35);
+  }
+  .cell.on .star-main { fill:url(#starGold); stroke:#e8930c; }
+  .cell.on svg { filter:drop-shadow(0 0 6px rgba(255,205,70,.85)); }
+  .cell.on .star-spark { opacity:1; }
+  .cell:active svg { transform:scale(.88); }
+  .cell.pop svg { animation:pop .28s ease; }
+  @keyframes pop { 0% { transform:scale(.8);} 55% { transform:scale(1.14);} 100% { transform:scale(1);} }
+  .cell.hint { animation:hintring 0.55s ease-in-out 3; z-index:2; }
+  @keyframes hintring {
+    0%,100% { box-shadow:0 0 0 0 rgba(120,255,170,0); }
+    50% { box-shadow:0 0 0 4px rgba(120,255,170,.95), 0 0 22px rgba(120,255,170,.8); }
+  }
+  .play-btns { display:flex; gap:9px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .play-btns .btn { padding:11px 18px; font-size:15px; }
+  .play-btns .btn.sub { padding:11px 16px; }
+
+  /* ---------- オーバーレイ ---------- */
+  .overlay {
+    position:fixed; inset:0; background:rgba(4,8,24,.72); display:none;
+    align-items:center; justify-content:center; padding:18px; z-index:50;
+  }
+  .overlay.show { display:flex; animation:fadein .2s ease; }
+  .card {
+    background:linear-gradient(180deg,#1b2a58,#131f45); border:1.5px solid rgba(160,185,255,.35);
+    border-radius:22px; padding:20px 18px; max-width:420px; width:100%;
+    max-height:92vh; overflow-y:auto; text-align:center;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+  .card h3 { color:#ffe9a8; font-size:22px; margin-bottom:8px; }
+  .card p { color:#cdd9ff; font-size:14.5px; line-height:1.6; }
+  .clear-stars { font-size:42px; letter-spacing:8px; margin:6px 0 2px; color:#3d4a75; }
+  .clear-stars .lit { color:#ffd94d; text-shadow:0 0 16px rgba(255,205,60,.8); display:inline-block; animation:starpop .5s ease backwards; }
+  .clear-stars .lit:nth-child(2) { animation-delay:.15s; } .clear-stars .lit:nth-child(3) { animation-delay:.3s; }
+  @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0;} to { transform:scale(1) rotate(0); opacity:1;} }
+  .card .scene { border-radius:16px; overflow:hidden; margin:10px 0 4px; border:1.5px solid rgba(160,185,255,.25); }
+  .card .scene svg { display:block; width:100%; height:auto; }
+  .card-btns { display:flex; gap:9px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .howto-diagram { display:flex; justify-content:center; margin:12px 0; }
+  .confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .confetti span {
+    position:absolute; top:-24px; color:#ffd94d; animation:fall linear forwards;
+    text-shadow:0 0 8px rgba(255,205,60,.8);
+  }
+  @keyframes fall { to { transform:translateY(105vh) rotate(320deg); opacity:.4; } }
+</style>
+</head>
+<body>
+
+<!-- ================= SVG DEFS ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <radialGradient id="starGold" cx=".38" cy=".34" r=".9">
+    <stop offset="0" stop-color="#fff8d6"/><stop offset=".45" stop-color="#ffd94d"/><stop offset="1" stop-color="#ef9b14"/>
+  </radialGradient>
+  <radialGradient id="moonHalo" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#fdf6d8" stop-opacity=".55"/><stop offset="1" stop-color="#fdf6d8" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1c2c58"/><stop offset="1" stop-color="#141f42"/>
+  </linearGradient>
+  <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#131e3e"/><stop offset="1" stop-color="#0a1128"/>
+  </linearGradient>
+  <g id="bigstar"><path d="M0 -21 L5 -6.9 L20 -6.5 L8.1 2.6 L12.3 17 L0 8.5 L-12.3 17 L-8.1 2.6 L-20 -6.5 L-5 -6.9 Z"/></g>
+  <g id="spark4"><path d="M0 -7 L1.8 -1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8 -1.8 Z"/></g>
+<linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3c2"/><stop offset="1" stop-color="#ffd3a6"/>
+    </linearGradient>
+    <linearGradient id="hairMizu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9c6642"/><stop offset="1" stop-color="#7a4a2b"/>
+    </linearGradient>
+    <linearGradient id="hairDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4038"/><stop offset="1" stop-color="#2e2721"/>
+    </linearGradient>
+    <linearGradient id="hairMama" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a5a34"/><stop offset="1" stop-color="#6b4223"/>
+    </linearGradient>
+    <linearGradient id="jacketBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b9bd5"/><stop offset="1" stop-color="#3a74ad"/>
+    </linearGradient>
+    <linearGradient id="tileIvory" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf4"/><stop offset=".55" stop-color="#fdf6e3"/><stop offset="1" stop-color="#f0e3c6"/>
+    </linearGradient>
+    <radialGradient id="pipGrad" cx=".35" cy=".3" r=".9">
+      <stop offset="0" stop-color="#66779c"/><stop offset=".45" stop-color="#3c4c6e"/><stop offset="1" stop-color="#232f49"/>
+    </radialGradient>
+
+    <!-- ============ ミズー (5歳・茶髪・白フーディー+青ジャケット・リュック・そばかすなし) ============ -->
+    <g id="ch-mizu">
+      <!-- backpack -->
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <!-- legs: striped white shorts, red socks, blue-white sneakers -->
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M66 226h30a6 6 0 0 1 6 6v4H66a6 6 0 0 1-6-6v-4z" fill="#3a74ad"/>
+      <path d="M100 226h30a6 6 0 0 1 6 6v4h-36a6 6 0 0 1-6-6v-4z" transform="translate(4,0)" fill="#3a74ad"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M98 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" transform="translate(4,0)" fill="#fff"/>
+      <!-- white hoodie body -->
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <circle cx="100" cy="146" r="3" fill="#d5dee6"/>
+      <path d="M96 152q-3 12 0 22M104 152q3 12 0 22" stroke="#d5dee6" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- blue jacket (open) -->
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <path d="M58 128q14-6 26-7l-1 12q-13 1-24 6z" fill="#2f6196"/>
+      <path d="M142 128q-14-6-26-7l1 12q13 1 24 6z" fill="#2f6196"/>
+      <!-- arms -->
+      <path d="M56 134q-16 22-12 44l16 3q0-22 6-40z" fill="url(#jacketBlue)"/>
+      <path d="M144 134q16 22 12 44l-16 3q0-22-6-40z" fill="url(#jacketBlue)"/>
+      <circle cx="50" cy="184" r="9" fill="url(#skin)"/>
+      <circle cx="150" cy="184" r="9" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <ellipse cx="152" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <!-- hair: layered brown with cowlick -->
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <!-- face -->
+      <path d="M66 62q8-6 16-2M118 60q8-4 16 2" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="78" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="78" r="2.2" fill="#fff"/>
+      <path d="M99 92q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M86 104q14 12 28 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <ellipse cx="140" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <!-- hood behind neck -->
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+
+    <!-- ============ ミズー 喜び (両手を上げてジャンプ) ============ -->
+    <g id="ch-mizu-happy">
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M102 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M60 226h30a6 6 0 0 1 6 6v6H66a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M110 226h30a6 6 0 0 1 6 6v6h-30a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <!-- arms raised -->
+      <path d="M56 132Q34 108 40 84l15 4q-2 20 9 34z" fill="url(#jacketBlue)"/>
+      <path d="M144 132q22-24 16-48l-15 4q2 20-9 34z" fill="url(#jacketBlue)"/>
+      <circle cx="46" cy="80" r="9" fill="url(#skin)"/>
+      <circle cx="154" cy="80" r="9" fill="url(#skin)"/>
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M66 60q8-7 17-3M117 57q9-4 17 3" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M67 80q9-9 18 0M115 80q9-9 18 0" stroke="#5a3a22" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M84 102q16 16 32 0-3 12-16 12t-16-12z" fill="#a34a2e"/>
+      <path d="M90 110q10 5 20 0-2 5-10 5t-10-5z" fill="#ff9d8a"/>
+      <ellipse cx="58" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <ellipse cx="142" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+
+    <!-- ============ お兄ちゃん (黒髪・水色ノースリーブ+短パン) ============ -->
+    <g id="ch-onii">
+      <rect x="74" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <path d="M64 226h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M102 226h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M64 226h34M102 226h34" stroke="#c33" stroke-width="0"/>
+      <rect x="66" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <rect x="104" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <!-- shorts -->
+      <path d="M66 168h68l4 34H106l-6-18-6 18H62z" fill="#7db8e8"/>
+      <path d="M66 168h68l1 10H65z" fill="#5b9bd5"/>
+      <!-- sleeveless top -->
+      <path d="M64 118q36-13 72 0l6 52q-42 10-84 0z" fill="#a8d4f5"/>
+      <path d="M64 118q36-13 72 0l2 12q-38-11-76 0z" fill="#8ec3ef"/>
+      <path d="M84 112q16 10 32 0l-3 14q-13 7-26 0z" fill="url(#skin)"/>
+      <!-- arms: right waving -->
+      <path d="M62 124q-14 16-10 36l15 2q-1-20 5-32z" fill="url(#skin)"/>
+      <path d="M138 124q20-14 18-34l-15-2q1 18-8 30z" fill="url(#skin)"/>
+      <circle cx="57" cy="164" r="9" fill="url(#skin)"/>
+      <circle cx="158" cy="86" r="9" fill="url(#skin)"/>
+      <path d="M150 78l3-10M158 76l7-8M164 82l10-4" stroke="url(#skin)" stroke-width="0"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="46" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- black spiky hair -->
+      <path d="M48 70q-6-40 30-48-2 8 2 12 4-12 16-16-1 8 3 12 6-11 18-13-2 8 1 12 12-6 22 2 14 10 12 39-4-14-14-20 1 7-3 10-6-13-20-17 3 5 1 9-11-7-26-5 3 4 2 8-14-3-25 4-11 5-19 11z" fill="url(#hairDark)"/>
+      <path d="M64 34q12-8 26-8" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M68 58q8-5 15-1M117 57q8-4 15 1" stroke="#2e2721" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="77" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="123" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="78" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="122" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="78" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <ellipse cx="122" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <circle cx="76" cy="74" r="2.1" fill="#fff"/>
+      <circle cx="120" cy="74" r="2.1" fill="#fff"/>
+      <path d="M99 88q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 100q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="62" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+      <ellipse cx="138" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+    </g>
+
+    <!-- ============ パパ (黒ポロシャツ・ヒゲ) ============ -->
+    <g id="ch-papa">
+      <rect x="72" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <rect x="106" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <path d="M62 224h36v6a5 5 0 0 1-5 5H67a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <path d="M102 224h36v6a5 5 0 0 1-5 5h-26a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <!-- pants -->
+      <path d="M64 160h72l4 40H110l-10-14-10 14H60z" fill="#5d6a7d"/>
+      <!-- black polo -->
+      <path d="M56 116q44-15 88 0l8 52q-52 12-104 0z" fill="#333a45"/>
+      <path d="M56 116q44-15 88 0l2 12q-46-13-92 0z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14-5 20H89z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14" fill="none" stroke="#4a5462" stroke-width="3"/>
+      <circle cx="100" cy="140" r="2.6" fill="#59636f"/>
+      <circle cx="100" cy="154" r="2.6" fill="#59636f"/>
+      <!-- arms: left thumbs-up -->
+      <path d="M54 122q-14 20-10 40l16 2q-1-20 5-34z" fill="#333a45"/>
+      <path d="M146 122q16 12 14 30l-16 1q1-16-5-27z" fill="#333a45"/>
+      <circle cx="50" cy="166" r="9" fill="url(#skin)"/>
+      <g>
+        <circle cx="162" cy="148" r="10" fill="url(#skin)"/>
+        <rect x="158" y="128" width="9" height="16" rx="4.5" fill="url(#skin)"/>
+      </g>
+      <!-- head -->
+      <ellipse cx="100" cy="70" rx="51" ry="47" fill="url(#skin)"/>
+      <ellipse cx="49" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="151" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- beard along jaw -->
+      <path d="M56 84q4 34 44 36 40-2 44-36-4 22-16 28-12-6-28-6t-28 6q-12-6-16-28z" fill="#3a332c"/>
+      <path d="M84 108q16 8 32 0-2 8-16 8t-16-8z" fill="#3a332c"/>
+      <!-- hair -->
+      <path d="M48 66q-2-38 52-40 54 2 52 40-6-18-18-24 2 6 0 10-10-12-28-14 3 4 2 8-14-4-28 0 2-4 4-6-16 2-26 10-8 6-10 16z" fill="url(#hairDark)"/>
+      <path d="M64 38q14-8 30-7" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M65 56q9-5 17-1M118 55q9-4 17 1" stroke="#2e2721" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="124" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="77" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="123" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="77" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <ellipse cx="123" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <circle cx="75" cy="72" r="2" fill="#fff"/>
+      <circle cx="121" cy="72" r="2" fill="#fff"/>
+      <path d="M99 84q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M88 96q12 9 24 0" stroke="#8a4a30" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="61" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+      <ellipse cx="139" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+    </g>
+
+    <!-- ============ ママ (ロングヘア・茶色のトップス) ============ -->
+    <g id="ch-mama">
+      <!-- long hair back -->
+      <path d="M44 60q-6 90 10 128l14-4q-8-60-4-104z" fill="url(#hairMama)"/>
+      <path d="M156 60q6 90-10 128l-14-4q8-60 4-104z" fill="url(#hairMama)"/>
+      <rect x="74" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <path d="M64 224h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <path d="M102 224h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <!-- skirt -->
+      <path d="M68 156h64l12 44H56z" fill="#7a9e7e"/>
+      <path d="M68 156h64l3 12H65z" fill="#68896d"/>
+      <!-- brown top -->
+      <path d="M60 116q40-14 80 0l6 44q-46 10-92 0z" fill="#a9743f"/>
+      <path d="M60 116q40-14 80 0l2 12q-42-12-84 0z" fill="#96622f"/>
+      <path d="M86 110q14 9 28 0l-2 12q-12 6-24 0z" fill="url(#skin)"/>
+      <!-- arms: hands together -->
+      <path d="M58 122q-12 20-6 38l15 1q-3-19 3-33z" fill="#a9743f"/>
+      <path d="M142 122q12 20 6 38l-15 1q3-19-3-33z" fill="#a9743f"/>
+      <circle cx="88" cy="166" r="8.5" fill="url(#skin)"/>
+      <circle cx="112" cy="166" r="8.5" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="47" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- hair front: side-swept with shine -->
+      <path d="M47 72q-4-42 53-44 57 2 53 44-3-14-12-22 1 7-2 11-6-14-22-19 3 5 1 9-13-7-30-4 3 4 2 7-15-1-27 7-10 5-16 11z" fill="url(#hairMama)"/>
+      <path d="M60 42q16-11 36-10M118 36q14 2 24 10" stroke="#bd8a58" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M52 74q-3 34 3 62l10-2q-6-30-5-56z" fill="url(#hairMama)"/>
+      <path d="M148 74q3 34-3 62l-10-2q6-30 5-56z" fill="url(#hairMama)"/>
+      <path d="M66 58q8-6 16-2M118 56q8-4 16 2" stroke="#6b4223" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="76" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="76" r="2.2" fill="#fff"/>
+      <path d="M66 68q3-3 6-3M128 65q3 0 6 3" stroke="#3a2c20" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 101q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+      <ellipse cx="140" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+    </g>
+
+  <!-- ============ 家族: タイトル画面（夜空と大きな星） ============ -->
+  <g id="family-night-title">
+    <circle cx="392" cy="52" r="58" fill="url(#moonHalo)"/>
+    <g transform="translate(374,24) scale(2.1)" fill="#f7ecc8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></g>
+    <g fill="#ffeeb0">
+      <circle class="twinkle" cx="40" cy="38" r="2.4"/>
+      <circle class="twinkle t2" cx="96" cy="70" r="1.8"/>
+      <circle class="twinkle t3" cx="150" cy="30" r="2.1"/>
+      <circle class="twinkle t4" cx="300" cy="42" r="1.7"/>
+      <circle class="twinkle t2" cx="338" cy="96" r="2.2"/>
+      <circle class="twinkle" cx="60" cy="118" r="1.6"/>
+      <circle class="twinkle t3" cx="196" cy="66" r="1.5"/>
+    </g>
+    <g fill="#fff3bf">
+      <use href="#spark4" class="twinkle t2" transform="translate(70,150) scale(1.1)"/>
+      <use href="#spark4" class="twinkle t4" transform="translate(416,140)"/>
+      <use href="#spark4" class="twinkle" transform="translate(252,26) scale(.8)"/>
+    </g>
+    <!-- 大きな星のランプ -->
+    <circle cx="230" cy="106" r="52" fill="#ffdf6b" opacity=".14"/>
+    <circle cx="230" cy="106" r="34" fill="#ffdf6b" opacity=".13"/>
+    <g class="glowstar"><use href="#bigstar" transform="translate(230,106) scale(2.35)" fill="url(#starGold)" stroke="#e8930c" stroke-width=".8"/></g>
+    <use href="#spark4" class="twinkle t3" transform="translate(268,66) scale(1.2)" fill="#fff8d6"/>
+    <use href="#spark4" class="twinkle" transform="translate(192,140) scale(.9)" fill="#fff8d6"/>
+    <!-- 丘 -->
+    <path d="M0 236 Q110 208 235 228 T460 222 V300 H0 Z" fill="url(#hillBack)"/>
+    <path d="M0 258 Q140 236 260 250 T460 246 V300 H0 Z" fill="url(#hillFront)"/>
+    <ellipse cx="230" cy="288" rx="208" ry="11" fill="#060b1e" opacity=".65"/>
+    <!-- 家族 -->
+    <g transform="translate(6,52) scale(0.94)"><use href="#ch-papa"/></g>
+    <g transform="translate(88,60) scale(0.9)"><use href="#ch-mama"/></g>
+    <g transform="translate(268,56) scale(0.92)"><use href="#ch-onii"/></g>
+    <g transform="translate(330,78) scale(0.86)"><use href="#ch-mizu"/></g>
+    <!-- 地面の小さな星あかり -->
+    <g fill="#ffd94d">
+      <use href="#spark4" class="twinkle t2" transform="translate(36,262) scale(.7)"/>
+      <use href="#spark4" class="twinkle" transform="translate(428,268) scale(.8)"/>
+      <use href="#spark4" class="twinkle t4" transform="translate(238,282) scale(.6)"/>
+    </g>
+  </g>
+
+  <!-- ============ 家族: クリア画面（お祝い） ============ -->
+  <g id="family-night-clear">
+    <circle cx="392" cy="52" r="58" fill="url(#moonHalo)"/>
+    <g transform="translate(374,24) scale(2.1)" fill="#f7ecc8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></g>
+    <g fill="#ffeeb0">
+      <circle class="twinkle" cx="40" cy="38" r="2.4"/>
+      <circle class="twinkle t2" cx="110" cy="64" r="1.9"/>
+      <circle class="twinkle t3" cx="168" cy="28" r="2.2"/>
+      <circle class="twinkle t4" cx="300" cy="40" r="1.8"/>
+      <circle class="twinkle t2" cx="52" cy="120" r="1.7"/>
+    </g>
+    <g fill="#ffd94d">
+      <use href="#spark4" class="twinkle" transform="translate(56,84) scale(1.2)"/>
+      <use href="#spark4" class="twinkle t2" transform="translate(230,44) scale(1.4)"/>
+      <use href="#spark4" class="twinkle t3" transform="translate(408,120) scale(1.1)"/>
+      <use href="#spark4" class="twinkle t4" transform="translate(150,120) scale(.9)"/>
+      <use href="#spark4" class="twinkle t2" transform="translate(330,150) scale(.9)"/>
+    </g>
+    <circle cx="230" cy="100" r="46" fill="#ffdf6b" opacity=".15"/>
+    <g class="glowstar"><use href="#bigstar" transform="translate(230,100) scale(2.1)" fill="url(#starGold)" stroke="#e8930c" stroke-width=".8"/></g>
+    <path d="M0 236 Q110 208 235 228 T460 222 V300 H0 Z" fill="url(#hillBack)"/>
+    <path d="M0 258 Q140 236 260 250 T460 246 V300 H0 Z" fill="url(#hillFront)"/>
+    <ellipse cx="230" cy="288" rx="208" ry="11" fill="#060b1e" opacity=".65"/>
+    <g transform="translate(6,52) scale(0.94)"><use href="#ch-papa"/></g>
+    <g transform="translate(88,60) scale(0.9)"><use href="#ch-mama"/></g>
+    <g transform="translate(268,56) scale(0.92)"><use href="#ch-onii"/></g>
+    <g transform="translate(330,72) scale(0.86)"><use href="#ch-mizu-happy"/></g>
+  </g>
+</defs>
+</svg>
+
+<div id="app">
+  <!-- ================= TITLE ================= -->
+  <section id="screen-title" class="screen active">
+    <div class="title-scene">
+      <svg viewBox="0 0 460 300" role="img" aria-label="夜空の星を見上げるミズー一家のイラスト"><use href="#family-night-title"/></svg>
+    </div>
+    <h1 class="game-title">ミズーのほしあかり</h1>
+    <p class="subtitle">ほしをタップして、ぜんぶに あかりを ともそう！</p>
+    <div class="title-btns">
+      <button class="btn" id="btn-to-select">▶ あそぶ</button>
+      <button class="btn sub" id="btn-to-daily">📅 きょうのデイリー</button>
+      <button class="btn sub" id="btn-howto">❓ あそびかた</button>
+    </div>
+    <p class="title-meta" id="title-total"></p>
+  </section>
+
+  <!-- ================= SELECT ================= -->
+  <section id="screen-select" class="screen">
+    <div class="head">
+      <button class="icon-btn" id="btn-back-title" aria-label="タイトルへもどる">←</button>
+      <h2>ステージをえらぶ</h2>
+      <div class="spacer"></div>
+    </div>
+    <div class="total-line" id="select-total"></div>
+    <div class="tabs">
+      <button class="tab" data-diff="easy">かんたん</button>
+      <button class="tab" data-diff="normal">ふつう</button>
+      <button class="tab" data-diff="hard">むずかしい</button>
+      <button class="tab" data-diff="daily">デイリー</button>
+    </div>
+    <p class="daily-note" id="daily-note" style="display:none"></p>
+    <div class="stage-grid" id="stage-grid"></div>
+  </section>
+
+  <!-- ================= PLAY ================= -->
+  <section id="screen-play" class="screen">
+    <div class="head">
+      <button class="icon-btn" id="btn-back-select" aria-label="いちらんへもどる">←</button>
+      <h2 id="play-title">かんたん 1</h2>
+      <button class="icon-btn" id="btn-sound" aria-label="おとの オン・オフ">🔊</button>
+    </div>
+    <div class="talk">
+      <div class="face"><svg viewBox="36 2 128 132" aria-hidden="true"><use href="#ch-mizu"/></svg></div>
+      <div class="bubble" id="talk-text">ほしを タップしてみて！</div>
+    </div>
+    <div class="board-wrap">
+      <div class="board-specks" id="board-specks"></div>
+      <div class="board" id="board"></div>
+    </div>
+    <div class="status">
+      <span>てかず <b id="stat-moves">0</b></span>
+      <span>さいたん <b id="stat-min">0</b></span>
+      <span>ついてる ほし <b id="stat-lit">0/0</b></span>
+    </div>
+    <div class="play-btns">
+      <button class="btn" id="btn-hint">💡 ヒント（のこり3）</button>
+      <button class="btn sub" id="btn-undo">↩ もどす</button>
+      <button class="btn sub" id="btn-reset">🔄 さいしょから</button>
+    </div>
+  </section>
+</div>
+
+<!-- ================= CLEAR ================= -->
+<div class="overlay" id="clear-overlay">
+  <div class="confetti" id="confetti"></div>
+  <div class="card">
+    <h3>クリア！</h3>
+    <div class="clear-stars" id="clear-stars"></div>
+    <p id="clear-msg"></p>
+    <div class="scene">
+      <svg viewBox="0 0 460 300" role="img" aria-label="クリアを喜ぶミズー一家のイラスト"><use href="#family-night-clear"/></svg>
+    </div>
+    <div class="card-btns">
+      <button class="btn" id="btn-next">つぎへ ▶</button>
+      <button class="btn sub" id="btn-replay">もういちど</button>
+      <button class="btn sub" id="btn-tolist">いちらんへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= HOWTO ================= -->
+<div class="overlay" id="howto-overlay">
+  <div class="card">
+    <h3>あそびかた</h3>
+    <p>ほしを タップすると、その ほしと、上下左右の ほしが<br>ついたり きえたり します。</p>
+    <div class="howto-diagram">
+      <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">
+        <g>
+          <rect x="6" y="6" width="36" height="36" rx="9" fill="#26355f"/>
+          <rect x="48" y="6" width="36" height="36" rx="9" fill="#ffd94d"/>
+          <rect x="90" y="6" width="36" height="36" rx="9" fill="#26355f"/>
+          <rect x="6" y="48" width="36" height="36" rx="9" fill="#ffd94d"/>
+          <rect x="48" y="48" width="36" height="36" rx="9" fill="#ffd94d" stroke="#fff3bf" stroke-width="3"/>
+          <rect x="90" y="48" width="36" height="36" rx="9" fill="#ffd94d"/>
+          <rect x="6" y="90" width="36" height="36" rx="9" fill="#26355f"/>
+          <rect x="48" y="90" width="36" height="36" rx="9" fill="#ffd94d"/>
+          <rect x="90" y="90" width="36" height="36" rx="9" fill="#26355f"/>
+          <use href="#bigstar" transform="translate(66,66) scale(.85)" fill="#b97a0e"/>
+        </g>
+      </svg>
+    </div>
+    <p>ぜんぶの ほしに あかりが ともれば クリア！<br>
+    てかずが すくないほど ⭐が ふえます。<br>
+    ヒントは 1つの めんに 3かいまで つかえます。<br>
+    タイマーは ないので、ゆっくり かんがえてね。</p>
+    <div class="card-btns">
+      <button class="btn" id="btn-howto-close">わかった！</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= データ ================= */
+const STAGES = {"easy":[{"rows":4,"cols":4,"bits":"1101001011101001","min":4},{"rows":4,"cols":4,"bits":"0000100110000011","min":5},{"rows":4,"cols":4,"bits":"0100100111010011","min":4},{"rows":4,"cols":4,"bits":"0001011001001001","min":4},{"rows":4,"cols":4,"bits":"0010011110111111","min":3},{"rows":4,"cols":4,"bits":"0101001111101011","min":6},{"rows":4,"cols":4,"bits":"0001010011101010","min":6},{"rows":4,"cols":4,"bits":"0001100000110000","min":4},{"rows":4,"cols":4,"bits":"1100100100110001","min":4},{"rows":4,"cols":4,"bits":"1111100001011000","min":3}],"normal":[{"rows":5,"cols":5,"bits":"0110010110011001101011100","min":7},{"rows":5,"cols":5,"bits":"1101100100001111001100100","min":8},{"rows":5,"cols":5,"bits":"1011010001011101001000100","min":8},{"rows":5,"cols":5,"bits":"1110001110011011001110010","min":8},{"rows":5,"cols":5,"bits":"0000001111100001011100110","min":7},{"rows":5,"cols":5,"bits":"1011000001011010100100000","min":8},{"rows":5,"cols":5,"bits":"1000001100101110000110101","min":8},{"rows":5,"cols":5,"bits":"0110010101001111100001100","min":8},{"rows":5,"cols":5,"bits":"0101001000101111110000010","min":8},{"rows":5,"cols":5,"bits":"1111001000001011011011100","min":8}],"hard":[{"rows":6,"cols":6,"bits":"001100111011111010010001000100110110","min":12},{"rows":6,"cols":6,"bits":"010001011001000010011011001000001111","min":10},{"rows":6,"cols":6,"bits":"101011111011111100100111111010001111","min":12},{"rows":6,"cols":6,"bits":"011101000010011001110111101000011000","min":10},{"rows":6,"cols":6,"bits":"111111011110001000100011101110001001","min":11},{"rows":6,"cols":6,"bits":"000011101001001100000100001100011110","min":11},{"rows":6,"cols":6,"bits":"010100010100010110100111001000101001","min":10},{"rows":6,"cols":6,"bits":"010111110010110010001100011110111010","min":11},{"rows":6,"cols":6,"bits":"001101000100001100101011100011011111","min":12},{"rows":6,"cols":6,"bits":"101001011111000010011100111101101010","min":10}]};
+const SAVE_KEY = 'mizu-hoshiakari-v1';
+const DIFF_LABEL = { easy:'かんたん', normal:'ふつう', hard:'むずかしい', daily:'デイリー' };
+const STAR_PATH = 'M24 3 L29 17.1 L44 17.5 L32.1 26.6 L36.3 41 L24 32.5 L11.7 41 L15.9 26.6 L4 17.5 L19 17.1 Z';
+const SPARK_PATH = 'M38.5 2 L40.1 8.4 L46.5 10 L40.1 11.6 L38.5 18 L36.9 11.6 L30.5 10 L36.9 8.4 Z';
+
+/* ================= ユーティリティ ================= */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function todayStr(d) {
+  d = d || new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function applyTap(board, rows, cols, idx) {
+  const r = Math.floor(idx / cols), c = idx % cols;
+  const flip = (rr, cc) => { if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) board[rr * cols + cc] ^= 1; };
+  flip(r, c); flip(r - 1, c); flip(r + 1, c); flip(r, c - 1); flip(r, c + 1);
+}
+
+/* ============ GF(2) ソルバー（ヒント・デイリー最短手数用） ============ */
+function solveMin(rows, cols, board) {
+  const n = rows * cols;
+  const mat = [];
+  for (let cell = 0; cell < n; cell++) {
+    const row = new Array(n + 1).fill(0);
+    const r = Math.floor(cell / cols), c = cell % cols;
+    const nb = [[r, c], [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+    for (const [rr, cc] of nb) if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) row[rr * cols + cc] = 1;
+    row[n] = board[cell] ^ 1; // 目標は全点灯(1)
+    mat.push(row);
+  }
+  const pivotOf = new Array(n).fill(-1);
+  let rank = 0;
+  for (let col = 0; col < n && rank < n; col++) {
+    let sel = -1;
+    for (let i = rank; i < n; i++) if (mat[i][col] === 1) { sel = i; break; }
+    if (sel === -1) continue;
+    const tmp = mat[rank]; mat[rank] = mat[sel]; mat[sel] = tmp;
+    for (let i = 0; i < n; i++) {
+      if (i !== rank && mat[i][col] === 1) {
+        for (let j = col; j <= n; j++) mat[i][j] ^= mat[rank][j];
+      }
+    }
+    pivotOf[col] = rank;
+    rank++;
+  }
+  for (let i = 0; i < n; i++) {
+    let allZero = true;
+    for (let j = 0; j < n; j++) if (mat[i][j] === 1) { allZero = false; break; }
+    if (allZero && mat[i][n] === 1) return null;
+  }
+  const freeCols = [];
+  for (let c = 0; c < n; c++) if (pivotOf[c] === -1) freeCols.push(c);
+  const particular = new Array(n).fill(0);
+  for (let c = 0; c < n; c++) if (pivotOf[c] !== -1) particular[c] = mat[pivotOf[c]][n];
+  if (freeCols.length > 20) return { min: particular.reduce((a, v) => a + v, 0), solution: particular };
+  let best = particular, bestW = particular.reduce((a, v) => a + v, 0);
+  const total = 1 << freeCols.length;
+  for (let s = 1; s < total; s++) {
+    const x = particular.slice();
+    for (let b = 0; b < freeCols.length; b++) {
+      if ((s >> b) & 1) {
+        const fc = freeCols[b];
+        x[fc] ^= 1;
+        for (let c = 0; c < n; c++) {
+          if (pivotOf[c] !== -1 && mat[pivotOf[c]][fc] === 1) x[c] ^= 1;
+        }
+      }
+    }
+    const w = x.reduce((a, v) => a + v, 0);
+    if (w < bestW) { bestW = w; best = x; }
+  }
+  return { min: bestW, solution: best };
+}
+
+/* ================= デイリー生成 ================= */
+const DAILY_PLAN = [
+  { s: 4, taps: [4, 8],  lo: 3, hi: 6  }, { s: 4, taps: [4, 8],  lo: 3, hi: 6  }, { s: 4, taps: [5, 9],  lo: 4, hi: 6  },
+  { s: 5, taps: [7, 13], lo: 5, hi: 9  }, { s: 5, taps: [7, 13], lo: 5, hi: 9  }, { s: 5, taps: [8, 14], lo: 6, hi: 9  }, { s: 5, taps: [8, 14], lo: 6, hi: 9  },
+  { s: 6, taps: [10, 18], lo: 7, hi: 12 }, { s: 6, taps: [10, 18], lo: 7, hi: 12 }, { s: 6, taps: [11, 19], lo: 8, hi: 12 },
+];
+function genDailyStage(rnd, plan) {
+  const n = plan.s * plan.s;
+  for (let attempt = 0; attempt < 4000; attempt++) {
+    const k = plan.taps[0] + Math.floor(rnd() * (plan.taps[1] - plan.taps[0] + 1));
+    const taps = new Set();
+    while (taps.size < k) taps.add(Math.floor(rnd() * n));
+    const board = new Array(n).fill(1);
+    for (const t of taps) applyTap(board, plan.s, plan.s, t);
+    const lit = board.reduce((a, v) => a + v, 0);
+    const frac = lit / n;
+    if (lit === n || frac < 0.2 || frac > 0.85) continue;
+    const sol = solveMin(plan.s, plan.s, board);
+    if (!sol || sol.min < plan.lo || sol.min > plan.hi) continue;
+    return { rows: plan.s, cols: plan.s, bits: board.join(''), min: sol.min };
+  }
+  throw new Error('daily generation failed');
+}
+function dailyStages(dateStr) {
+  const rnd = mulberry32(hashStr('hoshiakari-' + dateStr));
+  return DAILY_PLAN.map((p) => genDailyStage(rnd, p));
+}
+
+/* ================= セーブ ================= */
+let save = { stars: { easy: [], normal: [], hard: [] }, daily: {}, sound: true };
+try {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) { const p = JSON.parse(raw); if (p && p.stars) save = Object.assign(save, p); }
+} catch (e) { /* localStorage不可の環境では素通り */ }
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+function starsOf(diff, idx, dateStr) {
+  if (diff === 'daily') { const d = save.daily[dateStr || todayStr()]; return (d && d[idx]) || 0; }
+  return save.stars[diff][idx] || 0;
+}
+function setStars(diff, idx, s, dateStr) {
+  if (diff === 'daily') {
+    const key = dateStr || todayStr();
+    if (!save.daily[key]) save.daily[key] = [];
+    if ((save.daily[key][idx] || 0) < s) save.daily[key][idx] = s;
+  } else if ((save.stars[diff][idx] || 0) < s) save.stars[diff][idx] = s;
+  persist();
+}
+function totalStars() {
+  let t = 0;
+  for (const d of ['easy', 'normal', 'hard']) for (const s of save.stars[d]) t += s || 0;
+  for (const key of Object.keys(save.daily)) for (const s of save.daily[key]) t += s || 0;
+  return t;
+}
+
+/* ================= サウンド (WebAudio) ================= */
+let actx = null;
+function ensureAudio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function tone(freq, dur, type, vol, delay, slideTo) {
+  if (!actx || save.sound === false) return;
+  const t0 = actx.currentTime + (delay || 0);
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+const sndTapOn  = () => { tone(1174, 0.16, 'sine', 0.16); tone(1760, 0.22, 'sine', 0.07, 0.02); };
+const sndTapOff = () => { tone(523, 0.13, 'triangle', 0.11); };
+const sndClick  = () => { tone(880, 0.06, 'sine', 0.06); };
+const sndHint   = () => { tone(1568, 0.14, 'sine', 0.1); tone(2093, 0.2, 'sine', 0.08, 0.07); };
+const sndClear  = () => { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.3, 'sine', 0.13, i * 0.09)); tone(2637, 0.4, 'sine', 0.05, 0.48); };
+
+/* ================= 画面遷移 ================= */
+const $ = (id) => document.getElementById(id);
+function showScreen(name) {
+  for (const s of document.querySelectorAll('.screen')) s.classList.remove('active');
+  $('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ================= ステージ選択 ================= */
+let selectDiff = 'easy';
+function stageList(diff) { return diff === 'daily' ? dailyStages(todayStr()) : STAGES[diff]; }
+function renderSelect() {
+  for (const t of document.querySelectorAll('.tab')) t.classList.toggle('on', t.dataset.diff === selectDiff);
+  const isDaily = selectDiff === 'daily';
+  $('daily-note').style.display = isDaily ? 'block' : 'none';
+  if (isDaily) {
+    const d = new Date();
+    const wd = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    $('daily-note').textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日（' + wd + '）のデイリー・全10面（毎日0時に更新）';
+  }
+  const list = stageList(selectDiff);
+  const grid = $('stage-grid');
+  grid.innerHTML = '';
+  list.forEach((s, i) => {
+    const st = starsOf(selectDiff, i);
+    const b = document.createElement('button');
+    b.className = 'stage-btn';
+    b.setAttribute('aria-label', DIFF_LABEL[selectDiff] + ' ステージ' + (i + 1));
+    b.innerHTML = '<span>' + (i + 1) + '</span><span class="st' + (st ? '' : ' none') + '">' +
+      '★'.repeat(st) + '☆'.repeat(3 - st) + '</span>';
+    b.addEventListener('click', () => { ensureAudio(); sndClick(); startStage(selectDiff, i); });
+    grid.appendChild(b);
+  });
+  $('select-total').textContent = 'あつめた ⭐ ' + totalStars();
+}
+
+/* ================= プレイ ================= */
+let cur = null; // {diff, idx, stage, board, initial, moves, history, hintsLeft, cleared}
+const TALKS_START = [
+  'ほしを タップすると、じぶんと まわりの ほしが かわるよ！',
+  'ぜんぶの ほしに あかりを ともせるかな？',
+  'タップする ほしを よく かんがえてね。',
+];
+function startStage(diff, idx) {
+  const stage = stageList(diff)[idx];
+  const board = stage.bits.split('').map(Number);
+  cur = {
+    diff, idx, stage,
+    board: board.slice(), initial: board.slice(),
+    moves: 0, history: [], hintsLeft: 3, cleared: false,
+  };
+  $('play-title').textContent = DIFF_LABEL[diff] + ' ' + (idx + 1);
+  buildBoard();
+  updatePlayUI();
+  setTalk(TALKS_START[Math.floor(Math.random() * TALKS_START.length)]);
+  showScreen('play');
+}
+function buildBoard() {
+  const { rows, cols } = cur.stage;
+  const boardEl = $('board');
+  boardEl.innerHTML = '';
+  boardEl.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  boardEl.style.width = cols <= 4 ? 'min(100%, 320px)' : '100%';
+  boardEl.classList.toggle('g6', cols >= 6);
+  for (let i = 0; i < rows * cols; i++) {
+    const b = document.createElement('button');
+    b.className = 'cell';
+    b.dataset.i = i;
+    b.setAttribute('aria-label', 'ほし ' + (i + 1));
+    b.innerHTML = '<svg viewBox="0 0 48 48"><path class="star-main" d="' + STAR_PATH + '"/><path class="star-spark" d="' + SPARK_PATH + '" fill="#fff8d6"/></svg>';
+    b.addEventListener('click', () => onTap(i));
+    boardEl.appendChild(b);
+  }
+  // 盤面の小さな星くず
+  const specks = $('board-specks');
+  specks.innerHTML = '';
+  const rnd = mulberry32(hashStr('specks-' + cur.stage.bits));
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span');
+    const sz = 1.5 + rnd() * 2.2;
+    s.style.cssText = 'position:absolute;border-radius:50%;background:#dbe7ff;left:' + (rnd() * 98) +
+      '%;top:' + (rnd() * 98) + '%;width:' + sz + 'px;height:' + sz + 'px;opacity:' + (0.15 + rnd() * 0.4);
+    specks.appendChild(s);
+  }
+  refreshCells();
+}
+function refreshCells() {
+  const cells = $('board').children;
+  for (let i = 0; i < cells.length; i++) cells[i].classList.toggle('on', cur.board[i] === 1);
+}
+function litCount() { return cur.board.reduce((a, v) => a + v, 0); }
+function updatePlayUI() {
+  $('stat-moves').textContent = cur.moves;
+  $('stat-min').textContent = cur.stage.min;
+  $('stat-lit').textContent = litCount() + '/' + cur.board.length;
+  $('btn-hint').textContent = '💡 ヒント（のこり' + cur.hintsLeft + '）';
+  $('btn-hint').disabled = cur.hintsLeft <= 0 || cur.cleared;
+  $('btn-undo').disabled = cur.history.length === 0 || cur.cleared;
+  $('btn-sound').textContent = save.sound === false ? '🔇' : '🔊';
+}
+function setTalk(t) { $('talk-text').textContent = t; }
+function progressTalk() {
+  const f = litCount() / cur.board.length;
+  if (f >= 0.92) setTalk('もうちょっと！ あと すこしだよ！');
+  else if (f >= 0.75) setTalk('あと すこし！ その ちょうし！');
+  else if (f >= 0.5) setTalk('ついた ほしが ふえてきたね！');
+}
+function onTap(i) {
+  if (!cur || cur.cleared) return;
+  ensureAudio();
+  applyTap(cur.board, cur.stage.rows, cur.stage.cols, i);
+  cur.history.push(i);
+  cur.moves++;
+  if (cur.board[i] === 1) sndTapOn(); else sndTapOff();
+  const cells = $('board').children;
+  const r = Math.floor(i / cur.stage.cols), c = i % cur.stage.cols;
+  const nb = [[r, c], [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+  for (const [rr, cc] of nb) {
+    if (rr >= 0 && rr < cur.stage.rows && cc >= 0 && cc < cur.stage.cols) {
+      const el = cells[rr * cur.stage.cols + cc];
+      el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    }
+  }
+  refreshCells();
+  updatePlayUI();
+  if (litCount() === cur.board.length) { onClear(); return; }
+  progressTalk();
+}
+function onClear() {
+  cur.cleared = true;
+  const s = cur.moves <= cur.stage.min ? 3 : (cur.moves <= cur.stage.min + 3 ? 2 : 1);
+  setStars(cur.diff, cur.idx, s);
+  sndClear();
+  setTalk('やったー！ ぜんぶ ついたね！');
+  updatePlayUI();
+  $('clear-stars').innerHTML = [1, 2, 3].map((k) =>
+    '<span class="' + (k <= s ? 'lit' : '') + '">★</span>').join('');
+  $('clear-msg').textContent = 'てかず ' + cur.moves + '（さいたん ' + cur.stage.min + '）' +
+    (s === 3 ? '　さいたんで クリア！すごい！' : s === 2 ? '　あと すこしで さいたん！' : '');
+  const list = stageList(cur.diff);
+  $('btn-next').style.display = cur.idx + 1 < list.length ? '' : 'none';
+  spawnConfetti();
+  setTimeout(() => $('clear-overlay').classList.add('show'), 550);
+}
+function spawnConfetti() {
+  const box = $('confetti');
+  box.innerHTML = '';
+  const colors = ['#ffd94d', '#fff3bf', '#a8c6ff', '#ffb59d'];
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.fontSize = (11 + Math.random() * 15) + 'px';
+    s.style.color = colors[i % colors.length];
+    s.style.animationDuration = (1.7 + Math.random() * 1.6) + 's';
+    s.style.animationDelay = (Math.random() * 0.7) + 's';
+    box.appendChild(s);
+  }
+}
+
+/* ================= ボタン類 ================= */
+$('btn-hint').addEventListener('click', () => {
+  if (!cur || cur.cleared || cur.hintsLeft <= 0) return;
+  ensureAudio();
+  const sol = solveMin(cur.stage.rows, cur.stage.cols, cur.board);
+  if (!sol) return;
+  const targets = [];
+  sol.solution.forEach((v, i) => { if (v === 1) targets.push(i); });
+  if (!targets.length) return;
+  const pick = targets[Math.floor(Math.random() * targets.length)];
+  cur.hintsLeft--;
+  sndHint();
+  const el = $('board').children[pick];
+  el.classList.remove('hint'); void el.offsetWidth; el.classList.add('hint');
+  setTalk('みどりに ひかった ほしが ヒントだよ！');
+  updatePlayUI();
+});
+$('btn-undo').addEventListener('click', () => {
+  if (!cur || cur.cleared || !cur.history.length) return;
+  ensureAudio(); sndClick();
+  const last = cur.history.pop();
+  applyTap(cur.board, cur.stage.rows, cur.stage.cols, last);
+  cur.moves--;
+  refreshCells(); updatePlayUI();
+});
+$('btn-reset').addEventListener('click', () => {
+  if (!cur || cur.cleared) return;
+  ensureAudio(); sndClick();
+  cur.board = cur.initial.slice();
+  cur.history = []; cur.moves = 0;
+  refreshCells(); updatePlayUI();
+  setTalk('さいしょから やりなおし！');
+});
+$('btn-sound').addEventListener('click', () => {
+  save.sound = save.sound === false ? true : false;
+  persist(); ensureAudio(); if (save.sound) sndClick();
+  updatePlayUI();
+});
+$('btn-back-select').addEventListener('click', () => { ensureAudio(); sndClick(); selectDiff = cur ? cur.diff : selectDiff; renderSelect(); showScreen('select'); });
+$('btn-back-title').addEventListener('click', () => { ensureAudio(); sndClick(); renderTitle(); showScreen('title'); });
+$('btn-to-select').addEventListener('click', () => { ensureAudio(); sndClick(); selectDiff = 'easy'; renderSelect(); showScreen('select'); });
+$('btn-to-daily').addEventListener('click', () => { ensureAudio(); sndClick(); selectDiff = 'daily'; renderSelect(); showScreen('select'); });
+$('btn-howto').addEventListener('click', () => { ensureAudio(); sndClick(); $('howto-overlay').classList.add('show'); });
+$('btn-howto-close').addEventListener('click', () => { ensureAudio(); sndClick(); $('howto-overlay').classList.remove('show'); });
+for (const t of document.querySelectorAll('.tab')) {
+  t.addEventListener('click', () => { ensureAudio(); sndClick(); selectDiff = t.dataset.diff; renderSelect(); });
+}
+$('btn-next').addEventListener('click', () => {
+  ensureAudio(); sndClick();
+  $('clear-overlay').classList.remove('show');
+  if (cur && cur.idx + 1 < stageList(cur.diff).length) startStage(cur.diff, cur.idx + 1);
+});
+$('btn-replay').addEventListener('click', () => {
+  ensureAudio(); sndClick();
+  $('clear-overlay').classList.remove('show');
+  if (cur) startStage(cur.diff, cur.idx);
+});
+$('btn-tolist').addEventListener('click', () => {
+  ensureAudio(); sndClick();
+  $('clear-overlay').classList.remove('show');
+  selectDiff = cur ? cur.diff : 'easy';
+  renderSelect(); showScreen('select');
+});
+function renderTitle() {
+  const t = totalStars();
+  $('title-total').textContent = t > 0 ? 'あつめた ⭐ ' + t : '';
+}
+document.body.style.userSelect = 'none';
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+renderTitle();
+
+/* テスト・検証用フック */
+window.HoshiAkari = { STAGES, dailyStages, solveMin, getCur: () => cur, startStage, todayStr };
+</script>
+</body>
+</html>

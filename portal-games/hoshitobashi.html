@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ミズーのほしとばし</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI",sans-serif;
+    background-color: #fdf6e9;
+    background-image: radial-gradient(#f3e2bb 1.2px, transparent 1.4px);
+    background-size: 22px 22px;
+    color: #4a3826;
+    min-height: 100vh;
+  }
+  #app { max-width: 480px; margin: 0 auto; padding: 14px 12px 30px; }
+  .hidden { display: none !important; }
+  .screen { animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .game-title {
+    text-align: center; font-size: 36px; font-weight: 900; line-height: 1.25;
+    color: #7a4a21; margin: 8px 0 10px; letter-spacing: .02em;
+  }
+  .game-title .accent { color: #e2703a; }
+  .game-title .star-deco { color: #f6b73c; font-size: 26px; vertical-align: 6px; }
+  .family-stage {
+    background: linear-gradient(180deg, #fffdf4, #fdf1d3);
+    border: 3px solid #f0d9a8; border-radius: 20px; padding: 6px 4px 0;
+    box-shadow: 0 4px 0 #ecd9ac; margin-bottom: 14px;
+  }
+  .family-svg { width: 100%; height: auto; display: block; }
+  .big-btn {
+    display: block; width: 100%; border: none; cursor: pointer;
+    font-family: inherit; font-weight: 900; font-size: 21px; color: #fff;
+    background: linear-gradient(180deg, #ffb03a, #f68b1f);
+    border-radius: 16px; padding: 16px 0 14px; margin-bottom: 10px;
+    box-shadow: 0 5px 0 #cf6f10; transition: transform .06s, box-shadow .06s;
+  }
+  .big-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #cf6f10; }
+  .sub-btn {
+    display: block; width: 100%; cursor: pointer;
+    font-family: inherit; font-weight: 900; font-size: 16px; color: #7a4a21;
+    background: #fff; border: 3px solid #f0d9a8; border-radius: 16px; padding: 12px 0;
+  }
+  .title-note { text-align: center; font-size: 14px; font-weight: 700; color: #9a7443; margin-top: 12px; }
+
+  .sel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .sel-head h2 { font-size: 20px; font-weight: 900; margin: 0; color: #7a4a21; }
+  .nav-btn {
+    font-family: inherit; font-weight: 900; font-size: 14px; color: #7a4a21;
+    background: #fff; border: 2.5px solid #e8d5ae; border-radius: 12px;
+    padding: 10px 13px; min-height: 44px; cursor: pointer; white-space: nowrap;
+  }
+  .nav-btn:active { background: #fdf1d3; }
+  #tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    flex: 1; font-family: inherit; font-weight: 900; font-size: 14.5px;
+    padding: 11px 0; min-height: 48px; border-radius: 13px; cursor: pointer;
+    background: #fff; border: 2.5px solid #e8d5ae; color: #7a4a21;
+  }
+  .tab.on { background: #e2703a; border-color: #e2703a; color: #fff; }
+  #daily-label { font-size: 14px; font-weight: 900; color: #9a7443; margin: 2px 0 8px; }
+  #stage-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .stage-btn {
+    font-family: inherit; cursor: pointer; background: #fff;
+    border: 2.5px solid #e8d5ae; border-radius: 14px; padding: 7px 2px 6px;
+    min-height: 68px; color: #4a3826; position: relative;
+  }
+  .stage-btn:active { background: #fdf1d3; }
+  .stage-btn .num { display: block; font-size: 20px; font-weight: 900; line-height: 1.1; }
+  .stage-btn .shape { display: block; font-size: 9.5px; font-weight: 700; color: #9a7443; margin-top: 1px; white-space: nowrap; overflow: hidden; }
+  .stage-btn .stars { display: block; font-size: 10.5px; color: #f0a51e; letter-spacing: -1px; min-height: 13px; }
+  .stage-btn.cleared { border-color: #8bd450; background: #f4fbe9; }
+  .stage-btn .target-badge {
+    position: absolute; top: -7px; right: -4px; background: #ff5964; color: #fff;
+    font-size: 9px; font-weight: 900; border-radius: 8px; padding: 2px 5px;
+  }
+
+  .play-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  #level-label { flex: 1; font-size: 16.5px; font-weight: 900; color: #7a4a21; text-align: center; }
+  .mizu-strip { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+  .mizu-face {
+    width: 54px; height: 54px; flex: none; background: #fff;
+    border: 2.5px solid #f0d9a8; border-radius: 50%; overflow: hidden;
+  }
+  .bubble {
+    flex: 1; background: #fff; border: 2.5px solid #f0d9a8; border-radius: 14px;
+    padding: 9px 12px; font-size: 14px; font-weight: 700; line-height: 1.45; position: relative;
+  }
+  .bubble::before {
+    content: ""; position: absolute; left: -9px; top: 50%; margin-top: -6px;
+    border: 6px solid transparent; border-right-color: #f0d9a8; border-left: 0;
+  }
+  #board-wrap { position: relative; }
+  #board { width: 100%; height: auto; display: block; touch-action: manipulation; }
+  #status-line { text-align: center; font-size: 14.5px; font-weight: 900; color: #7a4a21; min-height: 22px; margin-top: 4px; }
+  .controls { display: flex; gap: 8px; margin-top: 6px; }
+  .ctl-btn {
+    flex: 1; font-family: inherit; font-weight: 900; font-size: 15px; color: #7a4a21;
+    background: #fff; border: 2.5px solid #e8d5ae; border-radius: 14px;
+    min-height: 52px; padding: 8px 2px; cursor: pointer;
+  }
+  .ctl-btn:active { background: #fdf1d3; }
+  .ctl-btn:disabled { opacity: .4; }
+  .ctl-btn .sub { display: block; font-size: 11px; color: #b08c4f; margin-top: 1px; }
+  #stuck-banner {
+    position: absolute; left: 6px; right: 6px; bottom: 8px; z-index: 5;
+    background: rgba(255, 250, 238, .97); border: 3px solid #e2703a; border-radius: 16px;
+    padding: 12px; text-align: center; font-weight: 900; font-size: 16.5px; color: #b34a17;
+    box-shadow: 0 6px 18px rgba(90, 50, 0, .25); animation: fadein .25s ease;
+  }
+  #stuck-banner .row { display: flex; gap: 8px; margin-top: 10px; }
+  #stuck-banner button {
+    flex: 1; font-family: inherit; font-weight: 900; font-size: 15px; min-height: 48px;
+    border-radius: 12px; cursor: pointer; border: 2.5px solid #e8d5ae; background: #fff; color: #7a4a21;
+  }
+  #stuck-banner button.main { background: #e2703a; border-color: #e2703a; color: #fff; }
+
+  .peg { cursor: pointer; }
+  .peg-in { transform-box: fill-box; transform-origin: center; transition: transform .12s ease; }
+  .peg.selected .peg-in { transform: scale(1.22); }
+  .peg.hint-from .peg-in { animation: hintpulse .45s ease 3; }
+  @keyframes hintpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+  .landing-mark { animation: lpulse .85s ease-in-out infinite; pointer-events: none; }
+  @keyframes lpulse { 0%,100% { opacity: .45; } 50% { opacity: .9; } }
+  .target-ring { animation: lpulse 1.6s ease-in-out infinite; }
+  .hint-ring { animation: lpulse .45s ease 3; }
+
+  .overlay {
+    position: fixed; inset: 0; z-index: 50; background: rgba(66, 42, 8, .5);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .clear-card, .howto-card {
+    background: #fffdf6; border-radius: 22px; padding: 20px 18px 18px;
+    width: min(94vw, 430px); max-height: 92vh; overflow-y: auto; text-align: center;
+    box-shadow: 0 14px 40px rgba(60, 35, 0, .35); animation: pop .3s ease;
+  }
+  @keyframes pop { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .clear-title { font-size: 32px; font-weight: 900; color: #e2703a; margin-bottom: 2px; }
+  #clear-stars { font-size: 36px; color: #f0a51e; letter-spacing: 4px; min-height: 44px; }
+  #perfect-badge {
+    display: inline-block; background: #fff0f2; border: 2px solid #ff5964; color: #d92b3a;
+    font-weight: 900; font-size: 14px; border-radius: 12px; padding: 5px 12px; margin: 4px 0 6px;
+  }
+  .clear-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .clear-btns button {
+    font-family: inherit; font-weight: 900; font-size: 17px; min-height: 52px;
+    border-radius: 14px; cursor: pointer; border: 3px solid #f0d9a8; background: #fff; color: #7a4a21;
+  }
+  .clear-btns button.main { background: linear-gradient(180deg, #ffb03a, #f68b1f); border-color: #f68b1f; color: #fff; }
+  .howto-card { text-align: left; }
+  .howto-card h3 { text-align: center; font-size: 21px; font-weight: 900; color: #7a4a21; margin: 0 0 10px; }
+  .howto-card p { font-size: 15px; font-weight: 700; line-height: 1.75; margin: 8px 0; }
+  .howto-card .mini { display: block; margin: 4px auto; }
+  .howto-card button {
+    display: block; width: 100%; font-family: inherit; font-weight: 900; font-size: 16px;
+    min-height: 50px; border-radius: 14px; cursor: pointer; margin-top: 12px;
+    background: linear-gradient(180deg, #ffb03a, #f68b1f); border: none; color: #fff;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ===== タイトル ===== -->
+  <section id="screen-title" class="screen">
+    <h1 class="game-title"><span class="star-deco">★</span>ミズーの<br><span class="accent">ほしとばし</span><span class="star-deco">★</span></h1>
+    <div class="family-stage">
+      <svg class="family-svg" viewBox="0 0 460 300" role="img" aria-label="ほしとばしで遊ぶミズー一家のイラスト"><use href="#family-title"/></svg>
+    </div>
+    <button id="btn-play" class="big-btn">▶ あそぶ</button>
+    <button id="btn-howto" class="sub-btn">📖 あそびかた</button>
+    <p class="title-note">星の駒を とびこえて、最後に 1個だけ 残そう！</p>
+  </section>
+
+  <!-- ===== ステージ選択 ===== -->
+  <section id="screen-select" class="screen hidden">
+    <div class="sel-head">
+      <button id="btn-back-title" class="nav-btn">← タイトル</button>
+      <h2>ステージを えらぶ</h2>
+    </div>
+    <div id="tabs">
+      <button class="tab" data-diff="easy">やさしい</button>
+      <button class="tab" data-diff="normal">ふつう</button>
+      <button class="tab" data-diff="hard">むずかしい</button>
+      <button class="tab" data-diff="daily">デイリー</button>
+    </div>
+    <div id="daily-label" class="hidden"></div>
+    <div id="stage-grid"></div>
+  </section>
+
+  <!-- ===== プレイ ===== -->
+  <section id="screen-play" class="screen hidden">
+    <div class="play-head">
+      <button id="btn-back-select" class="nav-btn">← 一覧</button>
+      <div id="level-label"></div>
+      <button id="btn-sound" class="nav-btn" aria-label="音のオンオフ">♪</button>
+    </div>
+    <div class="mizu-strip">
+      <svg class="mizu-face" viewBox="42 6 116 120" aria-hidden="true"><use href="#ch-mizu"/></svg>
+      <div class="bubble" id="mizu-comment">星を タップして えらんでね！</div>
+    </div>
+    <div id="board-wrap">
+      <svg id="board" role="img" aria-label="ほしとばしの盤面"></svg>
+      <div id="stuck-banner" class="hidden">
+        つんだ！ もう うごかせないよ 💦
+        <div class="row">
+          <button id="btn-stuck-undo">↩ もどす</button>
+          <button id="btn-stuck-retry" class="main">↻ やりなおす</button>
+        </div>
+      </div>
+    </div>
+    <div id="status-line"></div>
+    <div class="controls">
+      <button id="btn-hint" class="ctl-btn">💡 ヒント<span class="sub" id="hint-left"></span></button>
+      <button id="btn-undo" class="ctl-btn">↩ もどす</button>
+      <button id="btn-retry" class="ctl-btn">↻ さいしょから</button>
+    </div>
+  </section>
+</div>
+
+<!-- ===== クリア ===== -->
+<div id="clear-overlay" class="overlay hidden">
+  <div class="clear-card">
+    <div class="clear-title">🎉 クリア！</div>
+    <div id="clear-stars">★★★</div>
+    <div><span id="perfect-badge" class="hidden">✨ パーフェクト！ 目標のマスに 残せたよ ✨</span></div>
+    <svg class="family-svg" viewBox="0 0 460 300" role="img" aria-label="喜ぶミズー一家のイラスト"><use href="#family-clear"/></svg>
+    <div class="clear-btns">
+      <button id="btn-next" class="main">つぎへ ▶</button>
+      <button id="btn-tolist">いちらんへ</button>
+      <button id="btn-replay">もういちど</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== あそびかた ===== -->
+<div id="howto-overlay" class="overlay hidden">
+  <div class="howto-card">
+    <h3>📖 あそびかた</h3>
+    <svg class="mini" viewBox="0 0 300 92" width="280" aria-hidden="true">
+      <rect x="6" y="14" width="288" height="66" rx="12" fill="#b9834f"/>
+      <rect x="6" y="14" width="288" height="66" rx="12" fill="none" stroke="#6f4520" stroke-width="3"/>
+      <circle cx="52" cy="47" r="15" fill="#3c2410"/>
+      <circle cx="122" cy="47" r="15" fill="#3c2410"/>
+      <circle cx="192" cy="47" r="15" fill="#3c2410"/>
+      <use href="#star-unit" transform="translate(52,45) scale(1.5)"/>
+      <use href="#star-unit" transform="translate(122,45) scale(1.5)"/>
+      <path d="M66 22 Q122 -6 178 22" fill="none" stroke="#e2703a" stroke-width="4" stroke-linecap="round"/>
+      <path d="M178 22 l-12 1 M178 22 l-3 -11" stroke="#e2703a" stroke-width="4" stroke-linecap="round"/>
+      <text x="248" y="42" font-size="15" font-weight="900" fill="#7a4a21">→ 空きマスへ</text>
+      <text x="248" y="62" font-size="15" font-weight="900" fill="#d92b3a">✕ 消える</text>
+    </svg>
+    <p>① 星の駒（ほしペグ）を タップして えらぶ。</p>
+    <p>② 緑に 光った マスを タップすると、となりの 駒を <b>とびこえて</b> 着地するよ。</p>
+    <p>③ とびこえた 駒は 消える。</p>
+    <p>④ これを くりかえして、最後に <b>1個だけ</b> 残せば クリア！</p>
+    <p>⑤ 赤い わくの マスが ある面は、そこに 最後の 1個を 残すと <b>パーフェクト</b>！</p>
+    <p>⑥ うごかせなく なったら「つんだ」表示。もどしたり、やりなおしたり できるよ。タイマーは ないから、ゆっくり 考えてね。</p>
+    <button id="btn-howto-close">とじる</button>
+  </div>
+</div>
+
+<!-- ================= SVG ART ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="starGold" cx=".38" cy=".32" r=".95">
+      <stop offset="0" stop-color="#ffe98a"/><stop offset=".55" stop-color="#f6b73c"/><stop offset="1" stop-color="#dd8f16"/>
+    </radialGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cd9257"/><stop offset=".5" stop-color="#b9834f"/><stop offset="1" stop-color="#9c6836"/>
+    </linearGradient>
+    <radialGradient id="holeGrad" cx=".5" cy=".42" r=".75">
+      <stop offset="0" stop-color="#54340f"/><stop offset=".8" stop-color="#3c2410"/><stop offset="1" stop-color="#2e1b09"/>
+    </radialGradient>
+    <path id="star-unit" d="M0,-10 L2.47,-3.40 L9.51,-3.09 L3.99,1.30 L5.88,8.09 L0,4.2 L-5.88,8.09 L-3.99,1.30 L-9.51,-3.09 L-2.47,-3.40 Z" fill="url(#starGold)" stroke="#c47f17" stroke-width="1.1" stroke-linejoin="round"/>
+<linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3c2"/><stop offset="1" stop-color="#ffd3a6"/>
+    </linearGradient>
+    <linearGradient id="hairMizu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9c6642"/><stop offset="1" stop-color="#7a4a2b"/>
+    </linearGradient>
+    <linearGradient id="hairDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4038"/><stop offset="1" stop-color="#2e2721"/>
+    </linearGradient>
+    <linearGradient id="hairMama" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a5a34"/><stop offset="1" stop-color="#6b4223"/>
+    </linearGradient>
+    <linearGradient id="jacketBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b9bd5"/><stop offset="1" stop-color="#3a74ad"/>
+    </linearGradient>
+    <!-- ============ ミズー (5歳・茶髪・白フーディー+青ジャケット・リュック・そばかすなし) ============ -->
+    <g id="ch-mizu">
+      <!-- backpack -->
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <!-- legs: striped white shorts, red socks, blue-white sneakers -->
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M66 226h30a6 6 0 0 1 6 6v4H66a6 6 0 0 1-6-6v-4z" fill="#3a74ad"/>
+      <path d="M100 226h30a6 6 0 0 1 6 6v4h-36a6 6 0 0 1-6-6v-4z" transform="translate(4,0)" fill="#3a74ad"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M98 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" transform="translate(4,0)" fill="#fff"/>
+      <!-- white hoodie body -->
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <circle cx="100" cy="146" r="3" fill="#d5dee6"/>
+      <path d="M96 152q-3 12 0 22M104 152q3 12 0 22" stroke="#d5dee6" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- blue jacket (open) -->
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <path d="M58 128q14-6 26-7l-1 12q-13 1-24 6z" fill="#2f6196"/>
+      <path d="M142 128q-14-6-26-7l1 12q13 1 24 6z" fill="#2f6196"/>
+      <!-- arms -->
+      <path d="M56 134q-16 22-12 44l16 3q0-22 6-40z" fill="url(#jacketBlue)"/>
+      <path d="M144 134q16 22 12 44l-16 3q0-22-6-40z" fill="url(#jacketBlue)"/>
+      <circle cx="50" cy="184" r="9" fill="url(#skin)"/>
+      <circle cx="150" cy="184" r="9" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <ellipse cx="152" cy="80" rx="4" ry="6" fill="#f2b98d"/>
+      <!-- hair: layered brown with cowlick -->
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <!-- face -->
+      <path d="M66 62q8-6 16-2M118 60q8-4 16 2" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="80" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="82" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="84" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="78" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="78" r="2.2" fill="#fff"/>
+      <path d="M99 92q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M86 104q14 12 28 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <ellipse cx="140" cy="98" rx="9" ry="5.5" fill="#ffb59d" opacity=".65"/>
+      <!-- hood behind neck -->
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+
+    <!-- ============ ミズー 喜び (両手を上げてジャンプ) ============ -->
+    <g id="ch-mizu-happy">
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="#a9743f"/>
+      <rect x="52" y="118" width="96" height="86" rx="24" fill="none" stroke="#8a5a2e" stroke-width="4"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="#bf8750"/>
+      <rect x="66" y="140" width="68" height="44" rx="14" fill="none" stroke="#8a5a2e" stroke-width="3"/>
+      <rect x="72" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="106" y="196" width="22" height="26" rx="6" fill="#fff"/>
+      <rect x="70" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <rect x="104" y="188" width="26" height="18" rx="5" fill="#ffffff"/>
+      <path d="M70 194h26M70 200h26M104 194h26M104 200h26" stroke="#bcd6ee" stroke-width="3"/>
+      <rect x="74" y="216" width="18" height="10" fill="#e2492f"/>
+      <rect x="108" y="216" width="18" height="10" fill="#e2492f"/>
+      <path d="M60 232h42v4a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M102 232h42v4a4 4 0 0 1-4 4h-34a4 4 0 0 1-4-4z" fill="#fff"/>
+      <path d="M60 226h30a6 6 0 0 1 6 6v6H66a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M110 226h30a6 6 0 0 1 6 6v6h-30a6 6 0 0 1-6-6z" fill="#3a74ad"/>
+      <path d="M58 128q42-16 84 0l8 66q-50 12-100 0z" fill="#ffffff"/>
+      <path d="M58 128q42-16 84 0l2 14q-44-13-88 0z" fill="#eef3f7"/>
+      <path d="M92 138h16v40H92z" fill="#f4f7fa"/>
+      <path d="M58 128q14-6 26-7l-6 74q-14 1-28-1z" fill="url(#jacketBlue)"/>
+      <path d="M142 128q-14-6-26-7l6 74q14 1 28-1z" fill="url(#jacketBlue)"/>
+      <!-- arms raised -->
+      <path d="M56 132Q34 108 40 84l15 4q-2 20 9 34z" fill="url(#jacketBlue)"/>
+      <path d="M144 132q22-24 16-48l-15 4q2 20-9 34z" fill="url(#jacketBlue)"/>
+      <circle cx="46" cy="80" r="9" fill="url(#skin)"/>
+      <circle cx="154" cy="80" r="9" fill="url(#skin)"/>
+      <ellipse cx="100" cy="76" rx="52" ry="48" fill="url(#skin)"/>
+      <ellipse cx="48" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="152" cy="80" rx="8" ry="11" fill="url(#skin)"/>
+      <path d="M46 74q-4-44 54-46 58 2 54 46-2-16-14-24 2 8-2 12-8-16-26-20 4 6 2 10-12-8-30-6 4 4 4 8-16-2-26 6-10 6-16 14z" fill="url(#hairMizu)"/>
+      <path d="M96 26q6-14 20-14-4 4-4 8 8-2 12 2-12 0-18 8z" fill="#7a4a2b"/>
+      <path d="M62 44q14-10 30-10" stroke="#c08b5c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M66 60q8-7 17-3M117 57q9-4 17 3" stroke="#7a4a2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M67 80q9-9 18 0M115 80q9-9 18 0" stroke="#5a3a22" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M84 102q16 16 32 0-3 12-16 12t-16-12z" fill="#a34a2e"/>
+      <path d="M90 110q10 5 20 0-2 5-10 5t-10-5z" fill="#ff9d8a"/>
+      <ellipse cx="58" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <ellipse cx="142" cy="96" rx="10" ry="6" fill="#ffb59d" opacity=".75"/>
+      <path d="M72 122q28-10 56 0l-4 10q-24-8-48 0z" fill="#eef3f7"/>
+    </g>
+
+    <!-- ============ お兄ちゃん (黒髪・水色ノースリーブ+短パン) ============ -->
+    <g id="ch-onii">
+      <rect x="74" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="192" width="20" height="30" rx="6" fill="url(#skin)"/>
+      <path d="M64 226h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M102 226h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#e8eef4"/>
+      <path d="M64 226h34M102 226h34" stroke="#c33" stroke-width="0"/>
+      <rect x="66" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <rect x="104" y="220" width="30" height="8" rx="3" fill="#d84f3d"/>
+      <!-- shorts -->
+      <path d="M66 168h68l4 34H106l-6-18-6 18H62z" fill="#7db8e8"/>
+      <path d="M66 168h68l1 10H65z" fill="#5b9bd5"/>
+      <!-- sleeveless top -->
+      <path d="M64 118q36-13 72 0l6 52q-42 10-84 0z" fill="#a8d4f5"/>
+      <path d="M64 118q36-13 72 0l2 12q-38-11-76 0z" fill="#8ec3ef"/>
+      <path d="M84 112q16 10 32 0l-3 14q-13 7-26 0z" fill="url(#skin)"/>
+      <!-- arms: right waving -->
+      <path d="M62 124q-14 16-10 36l15 2q-1-20 5-32z" fill="url(#skin)"/>
+      <path d="M138 124q20-14 18-34l-15-2q1 18-8 30z" fill="url(#skin)"/>
+      <circle cx="57" cy="164" r="9" fill="url(#skin)"/>
+      <circle cx="158" cy="86" r="9" fill="url(#skin)"/>
+      <path d="M150 78l3-10M158 76l7-8M164 82l10-4" stroke="url(#skin)" stroke-width="0"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="46" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- black spiky hair -->
+      <path d="M48 70q-6-40 30-48-2 8 2 12 4-12 16-16-1 8 3 12 6-11 18-13-2 8 1 12 12-6 22 2 14 10 12 39-4-14-14-20 1 7-3 10-6-13-20-17 3 5 1 9-11-7-26-5 3 4 2 8-14-3-25 4-11 5-19 11z" fill="url(#hairDark)"/>
+      <path d="M64 34q12-8 26-8" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M68 58q8-5 15-1M117 57q8-4 15 1" stroke="#2e2721" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="77" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="123" cy="76" rx="8" ry="10" fill="#fff"/>
+      <ellipse cx="78" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="122" cy="78" rx="4.8" ry="6.6" fill="#3a2c20"/>
+      <ellipse cx="78" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <ellipse cx="122" cy="80" rx="2.4" ry="3.8" fill="#160d06"/>
+      <circle cx="76" cy="74" r="2.1" fill="#fff"/>
+      <circle cx="120" cy="74" r="2.1" fill="#fff"/>
+      <path d="M99 88q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 100q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="62" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+      <ellipse cx="138" cy="94" rx="8.5" ry="5" fill="#ffb59d" opacity=".6"/>
+    </g>
+
+    <!-- ============ パパ (黒ポロシャツ・ヒゲ) ============ -->
+    <g id="ch-papa">
+      <rect x="72" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <rect x="106" y="196" width="22" height="28" rx="6" fill="#4c5462"/>
+      <path d="M62 224h36v6a5 5 0 0 1-5 5H67a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <path d="M102 224h36v6a5 5 0 0 1-5 5h-26a5 5 0 0 1-5-5z" fill="#5d4630"/>
+      <!-- pants -->
+      <path d="M64 160h72l4 40H110l-10-14-10 14H60z" fill="#5d6a7d"/>
+      <!-- black polo -->
+      <path d="M56 116q44-15 88 0l8 52q-52 12-104 0z" fill="#333a45"/>
+      <path d="M56 116q44-15 88 0l2 12q-46-13-92 0z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14-5 20H89z" fill="#272d36"/>
+      <path d="M84 106l16 14 16-14" fill="none" stroke="#4a5462" stroke-width="3"/>
+      <circle cx="100" cy="140" r="2.6" fill="#59636f"/>
+      <circle cx="100" cy="154" r="2.6" fill="#59636f"/>
+      <!-- arms: left thumbs-up -->
+      <path d="M54 122q-14 20-10 40l16 2q-1-20 5-34z" fill="#333a45"/>
+      <path d="M146 122q16 12 14 30l-16 1q1-16-5-27z" fill="#333a45"/>
+      <circle cx="50" cy="166" r="9" fill="url(#skin)"/>
+      <g>
+        <circle cx="162" cy="148" r="10" fill="url(#skin)"/>
+        <rect x="158" y="128" width="9" height="16" rx="4.5" fill="url(#skin)"/>
+      </g>
+      <!-- head -->
+      <ellipse cx="100" cy="70" rx="51" ry="47" fill="url(#skin)"/>
+      <ellipse cx="49" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="151" cy="74" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- beard along jaw -->
+      <path d="M56 84q4 34 44 36 40-2 44-36-4 22-16 28-12-6-28-6t-28 6q-12-6-16-28z" fill="#3a332c"/>
+      <path d="M84 108q16 8 32 0-2 8-16 8t-16-8z" fill="#3a332c"/>
+      <!-- hair -->
+      <path d="M48 66q-2-38 52-40 54 2 52 40-6-18-18-24 2 6 0 10-10-12-28-14 3 4 2 8-14-4-28 0 2-4 4-6-16 2-26 10-8 6-10 16z" fill="url(#hairDark)"/>
+      <path d="M64 38q14-8 30-7" stroke="#6e6156" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M65 56q9-5 17-1M118 55q9-4 17 1" stroke="#2e2721" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="124" cy="74" rx="8" ry="9.5" fill="#fff"/>
+      <ellipse cx="77" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="123" cy="76" rx="4.6" ry="6.2" fill="#3a2c20"/>
+      <ellipse cx="77" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <ellipse cx="123" cy="78" rx="2.3" ry="3.6" fill="#160d06"/>
+      <circle cx="75" cy="72" r="2" fill="#fff"/>
+      <circle cx="121" cy="72" r="2" fill="#fff"/>
+      <path d="M99 84q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M88 96q12 9 24 0" stroke="#8a4a30" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="61" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+      <ellipse cx="139" cy="90" rx="8" ry="4.6" fill="#ffb59d" opacity=".5"/>
+    </g>
+
+    <!-- ============ ママ (ロングヘア・茶色のトップス) ============ -->
+    <g id="ch-mama">
+      <!-- long hair back -->
+      <path d="M44 60q-6 90 10 128l14-4q-8-60-4-104z" fill="url(#hairMama)"/>
+      <path d="M156 60q6 90-10 128l-14-4q8-60 4-104z" fill="url(#hairMama)"/>
+      <rect x="74" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <rect x="106" y="196" width="20" height="28" rx="6" fill="url(#skin)"/>
+      <path d="M64 224h34v5a5 5 0 0 1-5 5H69a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <path d="M102 224h34v5a5 5 0 0 1-5 5h-24a5 5 0 0 1-5-5z" fill="#b0512f"/>
+      <!-- skirt -->
+      <path d="M68 156h64l12 44H56z" fill="#7a9e7e"/>
+      <path d="M68 156h64l3 12H65z" fill="#68896d"/>
+      <!-- brown top -->
+      <path d="M60 116q40-14 80 0l6 44q-46 10-92 0z" fill="#a9743f"/>
+      <path d="M60 116q40-14 80 0l2 12q-42-12-84 0z" fill="#96622f"/>
+      <path d="M86 110q14 9 28 0l-2 12q-12 6-24 0z" fill="url(#skin)"/>
+      <!-- arms: hands together -->
+      <path d="M58 122q-12 20-6 38l15 1q-3-19 3-33z" fill="#a9743f"/>
+      <path d="M142 122q12 20 6 38l-15 1q3-19-3-33z" fill="#a9743f"/>
+      <circle cx="88" cy="166" r="8.5" fill="url(#skin)"/>
+      <circle cx="112" cy="166" r="8.5" fill="url(#skin)"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="47" fill="url(#skin)"/>
+      <ellipse cx="50" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <ellipse cx="150" cy="76" rx="8" ry="11" fill="url(#skin)"/>
+      <!-- hair front: side-swept with shine -->
+      <path d="M47 72q-4-42 53-44 57 2 53 44-3-14-12-22 1 7-2 11-6-14-22-19 3 5 1 9-13-7-30-4 3 4 2 7-15-1-27 7-10 5-16 11z" fill="url(#hairMama)"/>
+      <path d="M60 42q16-11 36-10M118 36q14 2 24 10" stroke="#bd8a58" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M52 74q-3 34 3 62l10-2q-6-30-5-56z" fill="url(#hairMama)"/>
+      <path d="M148 74q3 34-3 62l-10-2q6-30 5-56z" fill="url(#hairMama)"/>
+      <path d="M66 58q8-6 16-2M118 56q8-4 16 2" stroke="#6b4223" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="76" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="124" cy="78" rx="8.5" ry="10.5" fill="#fff"/>
+      <ellipse cx="77" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="123" cy="80" rx="5" ry="7" fill="#5a3a22"/>
+      <ellipse cx="77" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <ellipse cx="123" cy="82" rx="2.6" ry="4" fill="#241207"/>
+      <circle cx="75" cy="76" r="2.2" fill="#fff"/>
+      <circle cx="121" cy="76" r="2.2" fill="#fff"/>
+      <path d="M66 68q3-3 6-3M128 65q3 0 6 3" stroke="#3a2c20" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M99 90q3 3 0 6" stroke="#e0a173" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M87 101q13 11 26 0" stroke="#b95f3c" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="60" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+      <ellipse cx="140" cy="95" rx="9.5" ry="5.6" fill="#ffb59d" opacity=".7"/>
+    </g>
+
+    
+    <!-- ============ 家族: タイトル画面 (木の盤と星の駒と家族) ============ -->
+    <g id="family-title">
+      <ellipse cx="230" cy="284" rx="205" ry="12" fill="#e6c88f" opacity=".8"/>
+      <g transform="rotate(-5 230 148)">
+        <rect x="148" y="50" width="164" height="200" rx="16" fill="url(#wood)" stroke="#6f4520" stroke-width="5"/>
+        <path d="M156 100h148M156 150h148M156 200h148" stroke="#8a5a2e" stroke-width="2.5" opacity=".55"/>
+        <circle cx="180" cy="82" r="13" fill="url(#holeGrad)"/>
+        <circle cx="230" cy="82" r="13" fill="url(#holeGrad)"/>
+        <circle cx="280" cy="82" r="13" fill="url(#holeGrad)"/>
+        <circle cx="180" cy="132" r="13" fill="url(#holeGrad)"/>
+        <circle cx="230" cy="132" r="13" fill="url(#holeGrad)"/>
+        <circle cx="280" cy="132" r="13" fill="url(#holeGrad)"/>
+        <circle cx="180" cy="182" r="13" fill="url(#holeGrad)"/>
+        <circle cx="230" cy="182" r="13" fill="url(#holeGrad)"/>
+        <circle cx="280" cy="182" r="13" fill="url(#holeGrad)"/>
+        <circle cx="180" cy="228" r="13" fill="url(#holeGrad)"/>
+        <circle cx="230" cy="228" r="13" fill="url(#holeGrad)"/>
+        <circle cx="280" cy="228" r="13" fill="url(#holeGrad)"/>
+        <use href="#star-unit" transform="translate(180,79) scale(1.45)"/>
+        <use href="#star-unit" transform="translate(280,79) scale(1.45)"/>
+        <use href="#star-unit" transform="translate(230,129) scale(1.45)"/>
+        <use href="#star-unit" transform="translate(180,179) scale(1.45)"/>
+        <use href="#star-unit" transform="translate(280,225) scale(1.45)"/>
+      </g>
+      <path d="M52 60l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#f2b544"/>
+      <path d="M404 44l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#f2b544"/>
+      <path d="M420 150l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#f6c453"/>
+      <g transform="translate(6,58) scale(0.94)"><use href="#ch-papa"/></g>
+      <g transform="translate(88,66) scale(0.9)"><use href="#ch-mama"/></g>
+      <g transform="translate(268,62) scale(0.92)"><use href="#ch-onii"/></g>
+      <g transform="translate(330,84) scale(0.86)"><use href="#ch-mizu"/></g>
+    </g>
+
+    <!-- ============ 家族: クリア画面 (お祝い) ============ -->
+    <g id="family-clear">
+      <ellipse cx="230" cy="284" rx="205" ry="12" fill="#e6c88f" opacity=".8"/>
+      <g>
+        <rect x="52" y="18" width="9" height="15" rx="2" fill="#ff5964" transform="rotate(18 56 25)"/>
+        <rect x="120" y="8" width="9" height="15" rx="2" fill="#4f9dde" transform="rotate(-12 124 15)"/>
+        <rect x="330" y="12" width="9" height="15" rx="2" fill="#8bd450" transform="rotate(24 334 19)"/>
+        <rect x="398" y="30" width="9" height="15" rx="2" fill="#f6b73c" transform="rotate(-20 402 37)"/>
+        <circle cx="88" cy="34" r="5" fill="#f6b73c"/>
+        <circle cx="368" cy="52" r="5" fill="#ff5964"/>
+        <circle cx="230" cy="16" r="5" fill="#4f9dde"/>
+      </g>
+      <use href="#star-unit" transform="translate(36,96) scale(1.1)"/>
+      <use href="#star-unit" transform="translate(424,108) scale(1.1)"/>
+      <use href="#star-unit" transform="translate(230,44) scale(0.9)"/>
+      <path d="M40 40l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#f2b544"/>
+      <path d="M414 30l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#f2b544"/>
+      <g transform="translate(6,58) scale(0.94)"><use href="#ch-papa"/></g>
+      <g transform="translate(88,66) scale(0.9)"><use href="#ch-mama"/></g>
+      <g transform="translate(268,62) scale(0.92)"><use href="#ch-onii"/></g>
+      <g transform="translate(330,78) scale(0.86)"><use href="#ch-mizu-happy"/></g>
+    </g>
+  </defs>
+</svg>
+
+<script>
+'use strict';
+const LEVELS = {"easy":[{"boardName":"diamond5","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[1,3],[2,3],[3,3],[2,4]],"moves":[[0,2,6],[1,2,3],[1,5,9],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,10,12],[6,2,0],[7,6,5],[8,7,6],[9,10,11],[9,5,1],[10,6,2],[11,10,9],[11,7,3],[12,10,6]],"pegs":[2,5,7,8,9,10,12],"target":-1},{"boardName":"plus5","type":"grid","cells":[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,1,4],[1,4,7],[2,3,4],[3,4,5],[4,5,6],[4,3,2],[4,7,8],[4,1,0],[5,4,3],[6,5,4],[7,4,1],[8,7,4]],"pegs":[0,1,3,5,7,8],"target":-1},{"boardName":"tee","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[2,2],[2,3]],"moves":[[0,1,2],[1,2,3],[2,3,4],[2,1,0],[2,6,8],[3,2,1],[4,3,2],[5,6,7],[6,8,9],[7,6,5],[8,6,2],[9,8,6]],"pegs":[0,1,3,4,6,9],"target":-1},{"boardName":"square4","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3]],"moves":[[0,1,2],[0,4,8],[1,2,3],[1,5,9],[2,1,0],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[4,8,12],[5,6,7],[5,9,13],[6,5,4],[6,10,14],[7,6,5],[7,11,15],[8,9,10],[8,4,0],[9,10,11],[9,5,1],[10,9,8],[10,6,2],[11,10,9],[11,7,3],[12,13,14],[12,8,4],[13,14,15],[13,9,5],[14,13,12],[14,10,6],[15,14,13],[15,11,7]],"pegs":[1,2,5,10,11,12,13,15],"target":-1},{"boardName":"arrow","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,2,6],[1,2,3],[2,6,9],[3,2,1],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,9,10],[6,2,0],[7,6,5],[8,7,6],[9,6,2],[10,9,6]],"pegs":[2,5,6,8,9,10],"target":-1},{"boardName":"diamond5","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[1,3],[2,3],[3,3],[2,4]],"moves":[[0,2,6],[1,2,3],[1,5,9],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,10,12],[6,2,0],[7,6,5],[8,7,6],[9,10,11],[9,5,1],[10,6,2],[11,10,9],[11,7,3],[12,10,6]],"pegs":[0,2,4,5,6,7,10,11],"target":1},{"boardName":"plus5","type":"grid","cells":[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,1,4],[1,4,7],[2,3,4],[3,4,5],[4,5,6],[4,3,2],[4,7,8],[4,1,0],[5,4,3],[6,5,4],[7,4,1],[8,7,4]],"pegs":[1,3,4,5,6,7],"target":5},{"boardName":"square4","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3]],"moves":[[0,1,2],[0,4,8],[1,2,3],[1,5,9],[2,1,0],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[4,8,12],[5,6,7],[5,9,13],[6,5,4],[6,10,14],[7,6,5],[7,11,15],[8,9,10],[8,4,0],[9,10,11],[9,5,1],[10,9,8],[10,6,2],[11,10,9],[11,7,3],[12,13,14],[12,8,4],[13,14,15],[13,9,5],[14,13,12],[14,10,6],[15,14,13],[15,11,7]],"pegs":[0,1,7,8,9,10,11,12,14,15],"target":-1},{"boardName":"arrow","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,2,6],[1,2,3],[2,6,9],[3,2,1],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,9,10],[6,2,0],[7,6,5],[8,7,6],[9,6,2],[10,9,6]],"pegs":[0,2,5,7,8,9,10],"target":-1},{"boardName":"tee","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[2,2],[2,3]],"moves":[[0,1,2],[1,2,3],[2,3,4],[2,1,0],[2,6,8],[3,2,1],[4,3,2],[5,6,7],[6,8,9],[7,6,5],[8,6,2],[9,8,6]],"pegs":[1,2,4,6,7,9],"target":5}],"normal":[{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[1,2,3,4,5,6,8,9,11,14,15],"target":-1},{"boardName":"square5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[2,7,12],[3,2,1],[3,8,13],[4,3,2],[4,9,14],[5,6,7],[5,10,15],[6,7,8],[6,11,16],[7,8,9],[7,6,5],[7,12,17],[8,7,6],[8,13,18],[9,8,7],[9,14,19],[10,11,12],[10,15,20],[10,5,0],[11,12,13],[11,16,21],[11,6,1],[12,13,14],[12,11,10],[12,17,22],[12,7,2],[13,12,11],[13,18,23],[13,8,3],[14,13,12],[14,19,24],[14,9,4],[15,16,17],[15,10,5],[16,17,18],[16,11,6],[17,18,19],[17,16,15],[17,12,7],[18,17,16],[18,13,8],[19,18,17],[19,14,9],[20,21,22],[20,15,10],[21,22,23],[21,16,11],[22,23,24],[22,21,20],[22,17,12],[23,22,21],[23,18,13],[24,23,22],[24,19,14]],"pegs":[1,4,6,8,11,13,15,16,17,18,20,21,22],"target":-1},{"boardName":"donut5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[3,2,1],[3,8,12],[4,3,2],[4,9,13],[5,6,7],[5,10,14],[6,7,8],[6,11,15],[7,8,9],[7,6,5],[8,7,6],[8,12,17],[9,8,7],[9,13,18],[10,14,19],[10,5,0],[11,15,20],[11,6,1],[12,17,22],[12,8,3],[13,18,23],[13,9,4],[14,15,16],[14,10,5],[15,16,17],[15,11,6],[16,17,18],[16,15,14],[17,16,15],[17,12,8],[18,17,16],[18,13,9],[19,20,21],[19,14,10],[20,21,22],[20,15,11],[21,22,23],[21,20,19],[22,21,20],[22,17,12],[23,22,21],[23,18,13]],"pegs":[1,2,6,7,8,9,11,15,16,18,19,20,22],"target":-1},{"boardName":"hex5","type":"grid","cells":[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]],"moves":[[0,1,2],[0,4,9],[1,5,10],[2,1,0],[2,6,11],[3,4,5],[3,8,13],[4,5,6],[4,9,14],[5,6,7],[5,4,3],[5,10,15],[6,5,4],[6,11,16],[7,6,5],[7,12,17],[8,9,10],[9,10,11],[9,14,18],[9,4,0],[10,11,12],[10,9,8],[10,15,19],[10,5,1],[11,10,9],[11,16,20],[11,6,2],[12,11,10],[13,14,15],[13,8,3],[14,15,16],[14,9,4],[15,16,17],[15,14,13],[15,10,5],[16,15,14],[16,11,6],[17,16,15],[17,12,7],[18,19,20],[18,14,9],[19,15,10],[20,19,18],[20,16,11]],"pegs":[1,2,4,5,6,7,10,11,14,16,17],"target":-1},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[1,4,5,7,11,13,14,17,19,21,22],"target":-1},{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[1,2,3,4,6,8,9,10,11,13,14,16,19],"target":18},{"boardName":"square5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[2,7,12],[3,2,1],[3,8,13],[4,3,2],[4,9,14],[5,6,7],[5,10,15],[6,7,8],[6,11,16],[7,8,9],[7,6,5],[7,12,17],[8,7,6],[8,13,18],[9,8,7],[9,14,19],[10,11,12],[10,15,20],[10,5,0],[11,12,13],[11,16,21],[11,6,1],[12,13,14],[12,11,10],[12,17,22],[12,7,2],[13,12,11],[13,18,23],[13,8,3],[14,13,12],[14,19,24],[14,9,4],[15,16,17],[15,10,5],[16,17,18],[16,11,6],[17,18,19],[17,16,15],[17,12,7],[18,17,16],[18,13,8],[19,18,17],[19,14,9],[20,21,22],[20,15,10],[21,22,23],[21,16,11],[22,23,24],[22,21,20],[22,17,12],[23,22,21],[23,18,13],[24,23,22],[24,19,14]],"pegs":[1,2,3,4,5,6,7,8,9,12,16,17,19],"target":19},{"boardName":"donut5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[3,2,1],[3,8,12],[4,3,2],[4,9,13],[5,6,7],[5,10,14],[6,7,8],[6,11,15],[7,8,9],[7,6,5],[8,7,6],[8,12,17],[9,8,7],[9,13,18],[10,14,19],[10,5,0],[11,15,20],[11,6,1],[12,17,22],[12,8,3],[13,18,23],[13,9,4],[14,15,16],[14,10,5],[15,16,17],[15,11,6],[16,17,18],[16,15,14],[17,16,15],[17,12,8],[18,17,16],[18,13,9],[19,20,21],[19,14,10],[20,21,22],[20,15,11],[21,22,23],[21,20,19],[22,21,20],[22,17,12],[23,22,21],[23,18,13]],"pegs":[1,3,5,6,7,8,9,10,11,15,17,18],"target":-1},{"boardName":"hex5","type":"grid","cells":[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]],"moves":[[0,1,2],[0,4,9],[1,5,10],[2,1,0],[2,6,11],[3,4,5],[3,8,13],[4,5,6],[4,9,14],[5,6,7],[5,4,3],[5,10,15],[6,5,4],[6,11,16],[7,6,5],[7,12,17],[8,9,10],[9,10,11],[9,14,18],[9,4,0],[10,11,12],[10,9,8],[10,15,19],[10,5,1],[11,10,9],[11,16,20],[11,6,2],[12,11,10],[13,14,15],[13,8,3],[14,15,16],[14,9,4],[15,16,17],[15,14,13],[15,10,5],[16,15,14],[16,11,6],[17,16,15],[17,12,7],[18,19,20],[18,14,9],[19,15,10],[20,19,18],[20,16,11]],"pegs":[1,3,4,6,8,11,12,13,14,15,16,19],"target":19},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[0,2,4,5,7,9,10,12,17,19,20,21,22],"target":-1}],"hard":[{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[4,5,6,7,9,14,16,20,21,23,24,26,28,31],"target":-1},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[3,4,8,9,10,11,13,15,16,17,18,19,20],"target":-1},{"boardName":"square6","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5]],"moves":[[0,1,2],[0,6,12],[1,2,3],[1,7,13],[2,3,4],[2,1,0],[2,8,14],[3,4,5],[3,2,1],[3,9,15],[4,3,2],[4,10,16],[5,4,3],[5,11,17],[6,7,8],[6,12,18],[7,8,9],[7,13,19],[8,9,10],[8,7,6],[8,14,20],[9,10,11],[9,8,7],[9,15,21],[10,9,8],[10,16,22],[11,10,9],[11,17,23],[12,13,14],[12,18,24],[12,6,0],[13,14,15],[13,19,25],[13,7,1],[14,15,16],[14,13,12],[14,20,26],[14,8,2],[15,16,17],[15,14,13],[15,21,27],[15,9,3],[16,15,14],[16,22,28],[16,10,4],[17,16,15],[17,23,29],[17,11,5],[18,19,20],[18,24,30],[18,12,6],[19,20,21],[19,25,31],[19,13,7],[20,21,22],[20,19,18],[20,26,32],[20,14,8],[21,22,23],[21,20,19],[21,27,33],[21,15,9],[22,21,20],[22,28,34],[22,16,10],[23,22,21],[23,29,35],[23,17,11],[24,25,26],[24,18,12],[25,26,27],[25,19,13],[26,27,28],[26,25,24],[26,20,14],[27,28,29],[27,26,25],[27,21,15],[28,27,26],[28,22,16],[29,28,27],[29,23,17],[30,31,32],[30,24,18],[31,32,33],[31,25,19],[32,33,34],[32,31,30],[32,26,20],[33,34,35],[33,32,31],[33,27,21],[34,33,32],[34,28,22],[35,34,33],[35,29,23]],"pegs":[0,1,4,8,10,16,18,20,22,24,25,30,31,33,34,35],"target":-1},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[1,2,3,5,7,10,11,12,13,14,16,17,18,19,22,24],"target":-1},{"boardName":"tri5","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,3,1],[7,8,9],[7,4,2],[8,7,6],[8,4,1],[9,8,7],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5]],"pegs":[0,1,2,6,7,8,9,10,11,13],"target":-1},{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[2,3,4,5,10,11,14,16,18,24,25,27,28,29,32],"target":13},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[0,1,2,3,4,5,7,8,9,11,12,13,16,18,19,20],"target":19},{"boardName":"square6","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5]],"moves":[[0,1,2],[0,6,12],[1,2,3],[1,7,13],[2,3,4],[2,1,0],[2,8,14],[3,4,5],[3,2,1],[3,9,15],[4,3,2],[4,10,16],[5,4,3],[5,11,17],[6,7,8],[6,12,18],[7,8,9],[7,13,19],[8,9,10],[8,7,6],[8,14,20],[9,10,11],[9,8,7],[9,15,21],[10,9,8],[10,16,22],[11,10,9],[11,17,23],[12,13,14],[12,18,24],[12,6,0],[13,14,15],[13,19,25],[13,7,1],[14,15,16],[14,13,12],[14,20,26],[14,8,2],[15,16,17],[15,14,13],[15,21,27],[15,9,3],[16,15,14],[16,22,28],[16,10,4],[17,16,15],[17,23,29],[17,11,5],[18,19,20],[18,24,30],[18,12,6],[19,20,21],[19,25,31],[19,13,7],[20,21,22],[20,19,18],[20,26,32],[20,14,8],[21,22,23],[21,20,19],[21,27,33],[21,15,9],[22,21,20],[22,28,34],[22,16,10],[23,22,21],[23,29,35],[23,17,11],[24,25,26],[24,18,12],[25,26,27],[25,19,13],[26,27,28],[26,25,24],[26,20,14],[27,28,29],[27,26,25],[27,21,15],[28,27,26],[28,22,16],[29,28,27],[29,23,17],[30,31,32],[30,24,18],[31,32,33],[31,25,19],[32,33,34],[32,31,30],[32,26,20],[33,34,35],[33,32,31],[33,27,21],[34,33,32],[34,28,22],[35,34,33],[35,29,23]],"pegs":[4,8,10,12,13,15,18,21,23,24,26,27,31,33,35],"target":-1},{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[4,6,7,13,14,16,20,21,23,27,28,29,30,31],"target":-1},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[0,1,3,4,6,8,9,10,11,12,13,14,17,20],"target":-1}],"dailyPool":[{"boardName":"diamond5","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[1,3],[2,3],[3,3],[2,4]],"moves":[[0,2,6],[1,2,3],[1,5,9],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,10,12],[6,2,0],[7,6,5],[8,7,6],[9,10,11],[9,5,1],[10,6,2],[11,10,9],[11,7,3],[12,10,6]],"pegs":[0,1,2,4,5,6,7,10],"target":-1},{"boardName":"plus5","type":"grid","cells":[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,1,4],[1,4,7],[2,3,4],[3,4,5],[4,5,6],[4,3,2],[4,7,8],[4,1,0],[5,4,3],[6,5,4],[7,4,1],[8,7,4]],"pegs":[1,2,3,4,5,6],"target":-1},{"boardName":"tee","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[2,2],[2,3]],"moves":[[0,1,2],[1,2,3],[2,3,4],[2,1,0],[2,6,8],[3,2,1],[4,3,2],[5,6,7],[6,8,9],[7,6,5],[8,6,2],[9,8,6]],"pegs":[0,1,3,4,6,8],"target":-1},{"boardName":"square4","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3]],"moves":[[0,1,2],[0,4,8],[1,2,3],[1,5,9],[2,1,0],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[4,8,12],[5,6,7],[5,9,13],[6,5,4],[6,10,14],[7,6,5],[7,11,15],[8,9,10],[8,4,0],[9,10,11],[9,5,1],[10,9,8],[10,6,2],[11,10,9],[11,7,3],[12,13,14],[12,8,4],[13,14,15],[13,9,5],[14,13,12],[14,10,6],[15,14,13],[15,11,7]],"pegs":[1,5,6,8,9,10,11,15],"target":-1},{"boardName":"arrow","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,2,6],[1,2,3],[2,6,9],[3,2,1],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,9,10],[6,2,0],[7,6,5],[8,7,6],[9,6,2],[10,9,6]],"pegs":[0,2,6,7,9,10],"target":-1},{"boardName":"diamond5","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[1,3],[2,3],[3,3],[2,4]],"moves":[[0,2,6],[1,2,3],[1,5,9],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,10,12],[6,2,0],[7,6,5],[8,7,6],[9,10,11],[9,5,1],[10,6,2],[11,10,9],[11,7,3],[12,10,6]],"pegs":[2,4,5,6,7,8,10,11],"target":11},{"boardName":"plus5","type":"grid","cells":[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,1,4],[1,4,7],[2,3,4],[3,4,5],[4,5,6],[4,3,2],[4,7,8],[4,1,0],[5,4,3],[6,5,4],[7,4,1],[8,7,4]],"pegs":[0,1,3,4,6,7],"target":7},{"boardName":"square4","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3]],"moves":[[0,1,2],[0,4,8],[1,2,3],[1,5,9],[2,1,0],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[4,8,12],[5,6,7],[5,9,13],[6,5,4],[6,10,14],[7,6,5],[7,11,15],[8,9,10],[8,4,0],[9,10,11],[9,5,1],[10,9,8],[10,6,2],[11,10,9],[11,7,3],[12,13,14],[12,8,4],[13,14,15],[13,9,5],[14,13,12],[14,10,6],[15,14,13],[15,11,7]],"pegs":[1,4,5,6,7,8,9,10,11],"target":-1},{"boardName":"arrow","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,2,6],[1,2,3],[2,6,9],[3,2,1],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,9,10],[6,2,0],[7,6,5],[8,7,6],[9,6,2],[10,9,6]],"pegs":[0,2,4,5,7,8,9],"target":-1},{"boardName":"tee","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[2,2],[2,3]],"moves":[[0,1,2],[1,2,3],[2,3,4],[2,1,0],[2,6,8],[3,2,1],[4,3,2],[5,6,7],[6,8,9],[7,6,5],[8,6,2],[9,8,6]],"pegs":[0,2,3,5,6,9],"target":7},{"boardName":"diamond5","type":"grid","cells":[[2,0],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[1,3],[2,3],[3,3],[2,4]],"moves":[[0,2,6],[1,2,3],[1,5,9],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,10,12],[6,2,0],[7,6,5],[8,7,6],[9,10,11],[9,5,1],[10,6,2],[11,10,9],[11,7,3],[12,10,6]],"pegs":[0,1,2,5,6,7,10],"target":-1},{"boardName":"plus5","type":"grid","cells":[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]],"moves":[[0,1,4],[1,4,7],[2,3,4],[3,4,5],[4,5,6],[4,3,2],[4,7,8],[4,1,0],[5,4,3],[6,5,4],[7,4,1],[8,7,4]],"pegs":[2,3,4,5,7,8],"target":-1},{"boardName":"tee","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[2,2],[2,3]],"moves":[[0,1,2],[1,2,3],[2,3,4],[2,1,0],[2,6,8],[3,2,1],[4,3,2],[5,6,7],[6,8,9],[7,6,5],[8,6,2],[9,8,6]],"pegs":[1,2,4,6,7,9],"target":-1},{"boardName":"square4","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[0,3],[1,3],[2,3],[3,3]],"moves":[[0,1,2],[0,4,8],[1,2,3],[1,5,9],[2,1,0],[2,6,10],[3,2,1],[3,7,11],[4,5,6],[4,8,12],[5,6,7],[5,9,13],[6,5,4],[6,10,14],[7,6,5],[7,11,15],[8,9,10],[8,4,0],[9,10,11],[9,5,1],[10,9,8],[10,6,2],[11,10,9],[11,7,3],[12,13,14],[12,8,4],[13,14,15],[13,9,5],[14,13,12],[14,10,6],[15,14,13],[15,11,7]],"pegs":[1,2,4,6,7,9,12,14,15],"target":-1},{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[2,4,5,7,8,9,13,14,16,17,18,19],"target":-1},{"boardName":"square5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[2,7,12],[3,2,1],[3,8,13],[4,3,2],[4,9,14],[5,6,7],[5,10,15],[6,7,8],[6,11,16],[7,8,9],[7,6,5],[7,12,17],[8,7,6],[8,13,18],[9,8,7],[9,14,19],[10,11,12],[10,15,20],[10,5,0],[11,12,13],[11,16,21],[11,6,1],[12,13,14],[12,11,10],[12,17,22],[12,7,2],[13,12,11],[13,18,23],[13,8,3],[14,13,12],[14,19,24],[14,9,4],[15,16,17],[15,10,5],[16,17,18],[16,11,6],[17,18,19],[17,16,15],[17,12,7],[18,17,16],[18,13,8],[19,18,17],[19,14,9],[20,21,22],[20,15,10],[21,22,23],[21,16,11],[22,23,24],[22,21,20],[22,17,12],[23,22,21],[23,18,13],[24,23,22],[24,19,14]],"pegs":[0,1,3,8,9,11,13,14,16,18,23],"target":-1},{"boardName":"donut5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[3,2,1],[3,8,12],[4,3,2],[4,9,13],[5,6,7],[5,10,14],[6,7,8],[6,11,15],[7,8,9],[7,6,5],[8,7,6],[8,12,17],[9,8,7],[9,13,18],[10,14,19],[10,5,0],[11,15,20],[11,6,1],[12,17,22],[12,8,3],[13,18,23],[13,9,4],[14,15,16],[14,10,5],[15,16,17],[15,11,6],[16,17,18],[16,15,14],[17,16,15],[17,12,8],[18,17,16],[18,13,9],[19,20,21],[19,14,10],[20,21,22],[20,15,11],[21,22,23],[21,20,19],[22,21,20],[22,17,12],[23,22,21],[23,18,13]],"pegs":[4,6,7,8,9,11,15,16,17,20,21],"target":-1},{"boardName":"hex5","type":"grid","cells":[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]],"moves":[[0,1,2],[0,4,9],[1,5,10],[2,1,0],[2,6,11],[3,4,5],[3,8,13],[4,5,6],[4,9,14],[5,6,7],[5,4,3],[5,10,15],[6,5,4],[6,11,16],[7,6,5],[7,12,17],[8,9,10],[9,10,11],[9,14,18],[9,4,0],[10,11,12],[10,9,8],[10,15,19],[10,5,1],[11,10,9],[11,16,20],[11,6,2],[12,11,10],[13,14,15],[13,8,3],[14,15,16],[14,9,4],[15,16,17],[15,14,13],[15,10,5],[16,15,14],[16,11,6],[17,16,15],[17,12,7],[18,19,20],[18,14,9],[19,15,10],[20,19,18],[20,16,11]],"pegs":[0,3,4,6,8,10,12,13,14,15,16,18,19],"target":-1},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[4,5,7,10,11,12,14,15,16,17,23],"target":-1},{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[1,2,3,5,6,10,11,12,13,14,15,16,17],"target":3},{"boardName":"square5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[2,7,12],[3,2,1],[3,8,13],[4,3,2],[4,9,14],[5,6,7],[5,10,15],[6,7,8],[6,11,16],[7,8,9],[7,6,5],[7,12,17],[8,7,6],[8,13,18],[9,8,7],[9,14,19],[10,11,12],[10,15,20],[10,5,0],[11,12,13],[11,16,21],[11,6,1],[12,13,14],[12,11,10],[12,17,22],[12,7,2],[13,12,11],[13,18,23],[13,8,3],[14,13,12],[14,19,24],[14,9,4],[15,16,17],[15,10,5],[16,17,18],[16,11,6],[17,18,19],[17,16,15],[17,12,7],[18,17,16],[18,13,8],[19,18,17],[19,14,9],[20,21,22],[20,15,10],[21,22,23],[21,16,11],[22,23,24],[22,21,20],[22,17,12],[23,22,21],[23,18,13],[24,23,22],[24,19,14]],"pegs":[7,8,11,13,16,17,18,19,20,21,22,23],"target":3},{"boardName":"donut5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[3,2,1],[3,8,12],[4,3,2],[4,9,13],[5,6,7],[5,10,14],[6,7,8],[6,11,15],[7,8,9],[7,6,5],[8,7,6],[8,12,17],[9,8,7],[9,13,18],[10,14,19],[10,5,0],[11,15,20],[11,6,1],[12,17,22],[12,8,3],[13,18,23],[13,9,4],[14,15,16],[14,10,5],[15,16,17],[15,11,6],[16,17,18],[16,15,14],[17,16,15],[17,12,8],[18,17,16],[18,13,9],[19,20,21],[19,14,10],[20,21,22],[20,15,11],[21,22,23],[21,20,19],[22,21,20],[22,17,12],[23,22,21],[23,18,13]],"pegs":[5,6,8,10,11,14,15,16,17,20,22,23],"target":-1},{"boardName":"hex5","type":"grid","cells":[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]],"moves":[[0,1,2],[0,4,9],[1,5,10],[2,1,0],[2,6,11],[3,4,5],[3,8,13],[4,5,6],[4,9,14],[5,6,7],[5,4,3],[5,10,15],[6,5,4],[6,11,16],[7,6,5],[7,12,17],[8,9,10],[9,10,11],[9,14,18],[9,4,0],[10,11,12],[10,9,8],[10,15,19],[10,5,1],[11,10,9],[11,16,20],[11,6,2],[12,11,10],[13,14,15],[13,8,3],[14,15,16],[14,9,4],[15,16,17],[15,14,13],[15,10,5],[16,15,14],[16,11,6],[17,16,15],[17,12,7],[18,19,20],[18,14,9],[19,15,10],[20,19,18],[20,16,11]],"pegs":[1,3,4,6,9,10,11,12,14,16,17,20],"target":6},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[0,1,2,4,5,6,7,9,11,12,13,14,15,17],"target":-1},{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[2,5,6,7,8,10,11,14,15,17,19],"target":-1},{"boardName":"square5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[2,7,12],[3,2,1],[3,8,13],[4,3,2],[4,9,14],[5,6,7],[5,10,15],[6,7,8],[6,11,16],[7,8,9],[7,6,5],[7,12,17],[8,7,6],[8,13,18],[9,8,7],[9,14,19],[10,11,12],[10,15,20],[10,5,0],[11,12,13],[11,16,21],[11,6,1],[12,13,14],[12,11,10],[12,17,22],[12,7,2],[13,12,11],[13,18,23],[13,8,3],[14,13,12],[14,19,24],[14,9,4],[15,16,17],[15,10,5],[16,17,18],[16,11,6],[17,18,19],[17,16,15],[17,12,7],[18,17,16],[18,13,8],[19,18,17],[19,14,9],[20,21,22],[20,15,10],[21,22,23],[21,16,11],[22,23,24],[22,21,20],[22,17,12],[23,22,21],[23,18,13],[24,23,22],[24,19,14]],"pegs":[5,6,10,11,12,13,14,15,16,17,21,24],"target":-1},{"boardName":"donut5","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[0,4],[1,4],[2,4],[3,4],[4,4]],"moves":[[0,1,2],[0,5,10],[1,2,3],[1,6,11],[2,3,4],[2,1,0],[3,2,1],[3,8,12],[4,3,2],[4,9,13],[5,6,7],[5,10,14],[6,7,8],[6,11,15],[7,8,9],[7,6,5],[8,7,6],[8,12,17],[9,8,7],[9,13,18],[10,14,19],[10,5,0],[11,15,20],[11,6,1],[12,17,22],[12,8,3],[13,18,23],[13,9,4],[14,15,16],[14,10,5],[15,16,17],[15,11,6],[16,17,18],[16,15,14],[17,16,15],[17,12,8],[18,17,16],[18,13,9],[19,20,21],[19,14,10],[20,21,22],[20,15,11],[21,22,23],[21,20,19],[22,21,20],[22,17,12],[23,22,21],[23,18,13]],"pegs":[5,6,7,8,10,11,14,15,16,17,19,20,22],"target":-1},{"boardName":"hex5","type":"grid","cells":[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3],[1,4],[2,4],[3,4]],"moves":[[0,1,2],[0,4,9],[1,5,10],[2,1,0],[2,6,11],[3,4,5],[3,8,13],[4,5,6],[4,9,14],[5,6,7],[5,4,3],[5,10,15],[6,5,4],[6,11,16],[7,6,5],[7,12,17],[8,9,10],[9,10,11],[9,14,18],[9,4,0],[10,11,12],[10,9,8],[10,15,19],[10,5,1],[11,10,9],[11,16,20],[11,6,2],[12,11,10],[13,14,15],[13,8,3],[14,15,16],[14,9,4],[15,16,17],[15,14,13],[15,10,5],[16,15,14],[16,11,6],[17,16,15],[17,12,7],[18,19,20],[18,14,9],[19,15,10],[20,19,18],[20,16,11]],"pegs":[4,5,6,7,9,11,12,14,16,17,18,19],"target":-1},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[2,5,6,7,8,9,10,11,12,14,17,19,20],"target":-1},{"boardName":"cross6","type":"grid","cells":[[2,0],[3,0],[2,1],[3,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[2,5],[3,5]],"moves":[[0,2,6],[1,3,7],[2,6,12],[3,7,13],[4,5,6],[5,6,7],[6,7,8],[6,5,4],[6,12,16],[6,2,0],[7,8,9],[7,6,5],[7,13,17],[7,3,1],[8,7,6],[9,8,7],[10,11,12],[11,12,13],[12,13,14],[12,11,10],[12,16,18],[12,6,2],[13,14,15],[13,12,11],[13,17,19],[13,7,3],[14,13,12],[15,14,13],[16,12,6],[17,13,7],[18,16,12],[19,17,13]],"pegs":[0,1,3,5,6,8,10,12,13,14,15,16,17,18],"target":2},{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[1,4,11,12,13,14,15,16,17,18,23,25,27,29,30,32],"target":-1},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[6,7,9,10,11,12,13,14,15,16,17,18,20],"target":-1},{"boardName":"square6","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5]],"moves":[[0,1,2],[0,6,12],[1,2,3],[1,7,13],[2,3,4],[2,1,0],[2,8,14],[3,4,5],[3,2,1],[3,9,15],[4,3,2],[4,10,16],[5,4,3],[5,11,17],[6,7,8],[6,12,18],[7,8,9],[7,13,19],[8,9,10],[8,7,6],[8,14,20],[9,10,11],[9,8,7],[9,15,21],[10,9,8],[10,16,22],[11,10,9],[11,17,23],[12,13,14],[12,18,24],[12,6,0],[13,14,15],[13,19,25],[13,7,1],[14,15,16],[14,13,12],[14,20,26],[14,8,2],[15,16,17],[15,14,13],[15,21,27],[15,9,3],[16,15,14],[16,22,28],[16,10,4],[17,16,15],[17,23,29],[17,11,5],[18,19,20],[18,24,30],[18,12,6],[19,20,21],[19,25,31],[19,13,7],[20,21,22],[20,19,18],[20,26,32],[20,14,8],[21,22,23],[21,20,19],[21,27,33],[21,15,9],[22,21,20],[22,28,34],[22,16,10],[23,22,21],[23,29,35],[23,17,11],[24,25,26],[24,18,12],[25,26,27],[25,19,13],[26,27,28],[26,25,24],[26,20,14],[27,28,29],[27,26,25],[27,21,15],[28,27,26],[28,22,16],[29,28,27],[29,23,17],[30,31,32],[30,24,18],[31,32,33],[31,25,19],[32,33,34],[32,31,30],[32,26,20],[33,34,35],[33,32,31],[33,27,21],[34,33,32],[34,28,22],[35,34,33],[35,29,23]],"pegs":[0,1,2,6,7,8,9,10,11,15,18,25,27,31,34],"target":-1},{"boardName":"diamond7","type":"grid","cells":[[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6]],"moves":[[0,2,6],[1,2,3],[1,5,11],[2,6,12],[3,2,1],[3,7,13],[4,5,6],[4,10,16],[5,6,7],[5,11,17],[6,7,8],[6,5,4],[6,12,18],[6,2,0],[7,6,5],[7,13,19],[8,7,6],[8,14,20],[9,10,11],[10,11,12],[11,12,13],[11,10,9],[11,17,21],[11,5,1],[12,13,14],[12,11,10],[12,18,22],[12,6,2],[13,14,15],[13,12,11],[13,19,23],[13,7,3],[14,13,12],[15,14,13],[16,17,18],[16,10,4],[17,18,19],[17,11,5],[18,19,20],[18,17,16],[18,22,24],[18,12,6],[19,18,17],[19,13,7],[20,19,18],[20,14,8],[21,22,23],[21,17,11],[22,18,12],[23,22,21],[23,19,13],[24,22,18]],"pegs":[0,2,4,5,6,9,10,11,12,14,15,16,17,19,22],"target":-1},{"boardName":"tri5","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,3,1],[7,8,9],[7,4,2],[8,7,6],[8,4,1],[9,8,7],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5]],"pegs":[0,2,3,4,6,7,8,9,10,11,13],"target":-1},{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[1,2,3,7,10,12,14,15,17,19,23,25,27,29,31],"target":20},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[2,3,4,5,6,7,10,11,12,13,14,15,16,17],"target":6},{"boardName":"square6","type":"grid","cells":[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5]],"moves":[[0,1,2],[0,6,12],[1,2,3],[1,7,13],[2,3,4],[2,1,0],[2,8,14],[3,4,5],[3,2,1],[3,9,15],[4,3,2],[4,10,16],[5,4,3],[5,11,17],[6,7,8],[6,12,18],[7,8,9],[7,13,19],[8,9,10],[8,7,6],[8,14,20],[9,10,11],[9,8,7],[9,15,21],[10,9,8],[10,16,22],[11,10,9],[11,17,23],[12,13,14],[12,18,24],[12,6,0],[13,14,15],[13,19,25],[13,7,1],[14,15,16],[14,13,12],[14,20,26],[14,8,2],[15,16,17],[15,14,13],[15,21,27],[15,9,3],[16,15,14],[16,22,28],[16,10,4],[17,16,15],[17,23,29],[17,11,5],[18,19,20],[18,24,30],[18,12,6],[19,20,21],[19,25,31],[19,13,7],[20,21,22],[20,19,18],[20,26,32],[20,14,8],[21,22,23],[21,20,19],[21,27,33],[21,15,9],[22,21,20],[22,28,34],[22,16,10],[23,22,21],[23,29,35],[23,17,11],[24,25,26],[24,18,12],[25,26,27],[25,19,13],[26,27,28],[26,25,24],[26,20,14],[27,28,29],[27,26,25],[27,21,15],[28,27,26],[28,22,16],[29,28,27],[29,23,17],[30,31,32],[30,24,18],[31,32,33],[31,25,19],[32,33,34],[32,31,30],[32,26,20],[33,34,35],[33,32,31],[33,27,21],[34,33,32],[34,28,22],[35,34,33],[35,29,23]],"pegs":[3,4,5,9,10,11,14,16,19,21,23,24,26,28,30,34],"target":-1},{"boardName":"english7","type":"grid","cells":[[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],"moves":[[0,1,2],[0,3,8],[1,4,9],[2,1,0],[2,5,10],[3,4,5],[3,8,15],[4,9,16],[5,4,3],[5,10,17],[6,7,8],[6,13,20],[7,8,9],[7,14,21],[8,9,10],[8,7,6],[8,15,22],[8,3,0],[9,10,11],[9,8,7],[9,16,23],[9,4,1],[10,11,12],[10,9,8],[10,17,24],[10,5,2],[11,10,9],[11,18,25],[12,11,10],[12,19,26],[13,14,15],[14,15,16],[15,16,17],[15,14,13],[15,22,27],[15,8,3],[16,17,18],[16,15,14],[16,23,28],[16,9,4],[17,18,19],[17,16,15],[17,24,29],[17,10,5],[18,17,16],[19,18,17],[20,21,22],[20,13,6],[21,22,23],[21,14,7],[22,23,24],[22,21,20],[22,27,30],[22,15,8],[23,24,25],[23,22,21],[23,28,31],[23,16,9],[24,25,26],[24,23,22],[24,29,32],[24,17,10],[25,24,23],[25,18,11],[26,25,24],[26,19,12],[27,28,29],[27,22,15],[28,23,16],[29,28,27],[29,24,17],[30,31,32],[30,27,22],[31,28,23],[32,31,30],[32,29,24]],"pegs":[0,3,4,5,7,13,14,16,17,21,27,29,30,32],"target":-1},{"boardName":"tri6","type":"tri","cells":[[0,0],[-0.5,0.8660254],[0.5,0.8660254],[-1,1.7320508],[0,1.7320508],[1,1.7320508],[-1.5,2.5980762],[-0.5,2.5980762],[0.5,2.5980762],[1.5,2.5980762],[-2,3.4641016],[-1,3.4641016],[0,3.4641016],[1,3.4641016],[2,3.4641016],[-2.5,4.330127],[-1.5,4.330127],[-0.5,4.330127],[0.5,4.330127],[1.5,4.330127],[2.5,4.330127]],"moves":[[0,1,3],[0,2,5],[1,3,6],[1,4,8],[2,4,7],[2,5,9],[3,4,5],[3,6,10],[3,1,0],[3,7,12],[4,7,11],[4,8,13],[5,4,3],[5,8,12],[5,9,14],[5,2,0],[6,7,8],[6,10,15],[6,3,1],[6,11,17],[7,8,9],[7,11,16],[7,4,2],[7,12,18],[8,7,6],[8,12,17],[8,13,19],[8,4,1],[9,8,7],[9,13,18],[9,14,20],[9,5,2],[10,11,12],[10,6,3],[11,12,13],[11,7,4],[12,13,14],[12,11,10],[12,8,5],[12,7,3],[13,12,11],[13,8,4],[14,13,12],[14,9,5],[15,16,17],[15,10,6],[16,17,18],[16,11,7],[17,18,19],[17,16,15],[17,12,8],[17,11,6],[18,19,20],[18,17,16],[18,13,9],[18,12,7],[19,18,17],[19,13,8],[20,19,18],[20,14,9]],"pegs":[0,1,3,4,5,8,10,11,12,13,14,15,16,20],"target":-1}]};
+const SHAPE_NAMES = {
+  diamond5: 'ダイヤのいた', plus5: 'じゅうじのいた', tee: 'Tじのいた', square4: 'しかくのいた',
+  arrow: 'やじるしのいた', cross6: 'クロスのいた', square5: 'おおしかくのいた', donut5: 'ドーナツのいた',
+  hex5: 'ろっかくのいた', diamond7: 'おおダイヤのいた', english7: 'えいこくクロスのいた',
+  square6: 'ビッグしかくのいた', tri5: 'さんかくのいた', tri6: 'おおさんかくのいた'
+};
+const DIFF_LABEL = { easy: 'やさしい', normal: 'ふつう', hard: 'むずかしい', daily: 'デイリー' };
+const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+const SAVE_KEY = 'mizu-hoshitobashi-v1';
+
+/* ---------- セーブ ---------- */
+let save;
+try { save = JSON.parse(localStorage.getItem(SAVE_KEY)) || null; } catch (e) { save = null; }
+if (!save || typeof save !== 'object') save = { stars: { easy: {}, normal: {}, hard: {} }, daily: {}, sound: true };
+if (!save.stars) save.stars = { easy: {}, normal: {}, hard: {} };
+if (!save.daily) save.daily = {};
+if (save.sound === undefined) save.sound = true;
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+/* ---------- 乱数 (デイリー選択用) ---------- */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function fnv1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function dailySet() {
+  const rand = mulberry32(fnv1a('hoshi-daily-' + todayStr()));
+  const idxs = LEVELS.dailyPool.map((_, i) => i);
+  for (let i = idxs.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [idxs[i], idxs[j]] = [idxs[j], idxs[i]]; }
+  return idxs.slice(0, 10);
+}
+
+/* ---------- 効果音 (WebAudio) ---------- */
+let actx = null;
+function ensureAudio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function tone(freq, delay, dur, type, vol, slideTo) {
+  if (!save.sound || !actx) return;
+  const t0 = actx.currentTime + delay;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+const sfx = {
+  select() { tone(720, 0, 0.06, 'triangle', 0.10); },
+  jump() { tone(500, 0, 0.15, 'sine', 0.13, 940); tone(1500, 0.1, 0.1, 'triangle', 0.06); },
+  stuck() { tone(185, 0, 0.25, 'sawtooth', 0.05); tone(150, 0.16, 0.3, 'sawtooth', 0.05); },
+  error() { tone(230, 0, 0.1, 'square', 0.06); },
+  clear() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, 0.22, 'triangle', 0.12)); tone(1319, 0.48, 0.35, 'sine', 0.08); },
+};
+
+/* ---------- ソルバー (ヒント用: 現在の盤面から解を1つ探す) ---------- */
+function solveState(level, pegsSet) {
+  const bits = level.moves.map(([a, b, c]) => [1n << BigInt(a), 1n << BigInt(b), 1n << BigInt(c), a, b, c]);
+  let s = 0n;
+  pegsSet.forEach(p => { s |= 1n << BigInt(p); });
+  const dead = new Set(); const path = []; let nodes = 0;
+  function dfs(state, count) {
+    if (count === 1) return true;
+    if (dead.has(state)) return false;
+    if (++nodes > 600000) return false;
+    for (const [A, B, C, a, b, c] of bits) {
+      if ((state & A) && (state & B) && !(state & C)) {
+        path.push([a, b, c]);
+        if (dfs((state & ~A & ~B) | C, count - 1)) return true;
+        path.pop();
+      }
+    }
+    dead.add(state); return false;
+  }
+  return dfs(s, pegsSet.size) ? path.slice() : null;
+}
+function legalMoves(level, pegsSet) {
+  return level.moves.filter(([a, b, c]) => pegsSet.has(a) && pegsSet.has(b) && !pegsSet.has(c));
+}
+
+/* ---------- 画面管理 ---------- */
+const $ = (id) => document.getElementById(id);
+function showScreen(name) {
+  ['title', 'select', 'play'].forEach(n => $('screen-' + n).classList.toggle('hidden', n !== name));
+  window.scrollTo(0, 0);
+}
+let selDiff = 'easy';
+function renderSelect() {
+  document.querySelectorAll('#tabs .tab').forEach(t => t.classList.toggle('on', t.dataset.diff === selDiff));
+  const grid = $('stage-grid');
+  grid.innerHTML = '';
+  const isDaily = selDiff === 'daily';
+  $('daily-label').classList.toggle('hidden', !isDaily);
+  if (isDaily) {
+    const d = new Date();
+    $('daily-label').textContent = `📅 ${d.getMonth() + 1}月${d.getDate()}日 の デイリー (まいにち 10面)`;
+  }
+  const list = isDaily ? dailySet().map(i => LEVELS.dailyPool[i]) : LEVELS[selDiff];
+  list.forEach((lv, i) => {
+    const stars = isDaily ? ((save.daily[todayStr()] || {})[i] || 0) : (save.stars[selDiff][i] || 0);
+    const b = document.createElement('button');
+    b.className = 'stage-btn' + (stars > 0 ? ' cleared' : '');
+    b.innerHTML = `<span class="num">${i + 1}</span><span class="shape">${SHAPE_NAMES[lv.boardName] || ''}</span>` +
+      `<span class="stars">${stars > 0 ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : ''}</span>` +
+      (lv.target >= 0 ? '<span class="target-badge">目標</span>' : '');
+    b.addEventListener('click', () => { ensureAudio(); startLevel(selDiff, i); });
+    grid.appendChild(b);
+  });
+}
+
+/* ---------- プレイ ---------- */
+let cur = null; // {diff, idx, level, pegs:Set, selected, history:[], hintsUsed, busy}
+function levelOf(diff, idx) {
+  if (diff === 'daily') return LEVELS.dailyPool[dailySet()[idx]];
+  return LEVELS[diff][idx];
+}
+function startLevel(diff, idx) {
+  const level = levelOf(diff, idx);
+  cur = { diff, idx, level, pegs: new Set(level.pegs), selected: null, history: [], hintsUsed: 0, busy: false };
+  $('level-label').textContent = `${DIFF_LABEL[diff]} ${CIRCLED[idx]} ${SHAPE_NAMES[level.boardName] || ''}`;
+  $('clear-overlay').classList.add('hidden');
+  $('stuck-banner').classList.add('hidden');
+  showScreen('play');
+  setComment(level.target >= 0
+    ? '赤い わくの マスに 最後の 1個を 残すと パーフェクト！'
+    : '星を タップして えらんでね！');
+  render();
+}
+function setComment(t) { $('mizu-comment').textContent = t; }
+
+function starPath(cx, cy, R, r) {
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const ang = -Math.PI / 2 + i * Math.PI / 5;
+    const rad = i % 2 === 0 ? R : r;
+    pts.push((cx + rad * Math.cos(ang)).toFixed(3) + ',' + (cy + rad * Math.sin(ang)).toFixed(3));
+  }
+  return 'M' + pts.join(' L') + ' Z';
+}
+
+let pegEls = {};
+function render() {
+  const lv = cur.level;
+  const cells = lv.cells;
+  let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  cells.forEach(([x, y]) => { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); });
+  const pad = 0.85;
+  const vb = `${(minX - pad).toFixed(2)} ${(minY - pad).toFixed(2)} ${(maxX - minX + pad * 2).toFixed(2)} ${(maxY - minY + pad * 2).toFixed(2)}`;
+  let s = '';
+  // 盤 (木のボード)
+  if (lv.type === 'tri') {
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const exp = (x, y, k) => [cx + (x - cx) * k, cy + (y - cy) * k];
+    const top = cells.reduce((a, b) => (b[1] < a[1] ? b : a));
+    const bl = cells.reduce((a, b) => (b[1] > a[1] || (b[1] === a[1] && b[0] < a[0]) ? b : a));
+    const br = cells.reduce((a, b) => (b[1] > a[1] || (b[1] === a[1] && b[0] > a[0]) ? b : a));
+    const [tx, ty] = exp(top[0], top[1], 1.55), [lx, ly] = exp(bl[0], bl[1], 1.38), [rx, ry] = exp(br[0], br[1], 1.38);
+    s += `<path d="M${tx.toFixed(2)},${ty.toFixed(2)} L${rx.toFixed(2)},${ry.toFixed(2)} L${lx.toFixed(2)},${ly.toFixed(2)} Z" fill="url(#wood)" stroke="#6f4520" stroke-width="0.14" stroke-linejoin="round"/>`;
+  } else {
+    s += `<rect x="${(minX - 0.62).toFixed(2)}" y="${(minY - 0.62).toFixed(2)}" width="${(maxX - minX + 1.24).toFixed(2)}" height="${(maxY - minY + 1.24).toFixed(2)}" rx="0.35" fill="url(#wood)" stroke="#6f4520" stroke-width="0.07"/>`;
+    for (let x = Math.ceil(minX); x < maxX; x++) {
+      s += `<line x1="${x + 0.5}" y1="${(minY - 0.55).toFixed(2)}" x2="${x + 0.5}" y2="${(maxY + 0.55).toFixed(2)}" stroke="#8a5a2e" stroke-width="0.03" opacity="0.5"/>`;
+    }
+  }
+  // 目標マス
+  if (lv.target >= 0) {
+    const [x, y] = cells[lv.target];
+    s += `<circle class="target-ring" cx="${x}" cy="${y}" r="0.46" fill="none" stroke="#ff5964" stroke-width="0.055" stroke-dasharray="0.1 0.08"/>`;
+    s += `<path d="M${x + 0.18},${y - 0.52} l0.3,0.12 l-0.3,0.12 Z" fill="#ff5964"/>`;
+    s += `<line x1="${x + 0.18}" y1="${y - 0.52}" x2="${x + 0.18}" y2="${y - 0.3}" stroke="#ff5964" stroke-width="0.045"/>`;
+  }
+  // 穴
+  cells.forEach(([x, y], i) => {
+    s += `<circle cx="${x}" cy="${y}" r="0.30" fill="url(#holeGrad)"/><circle cx="${x}" cy="${y}" r="0.30" fill="none" stroke="rgba(46,27,9,.55)" stroke-width="0.03"/>`;
+  });
+  // 着地候補
+  if (cur.selected !== null) {
+    for (const [a, b, c] of legalMoves(lv, cur.pegs)) {
+      if (a !== cur.selected) continue;
+      const [x, y] = cells[c];
+      s += `<g class="landing-mark"><circle cx="${x}" cy="${y}" r="0.31" fill="#8bd450" opacity="0.65"/><circle cx="${x}" cy="${y}" r="0.12" fill="#fff" opacity="0.9"/></g>`;
+    }
+  }
+  // 駒 (星ペグ)
+  pegEls = {};
+  const tmp = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  cells.forEach(([x, y], i) => {
+    if (!cur.pegs.has(i)) return;
+    const cls = ['peg'];
+    if (cur.selected === i) cls.push('selected');
+    s += `<g class="${cls.join(' ')}" data-peg="${i}" transform="translate(${x},${y})"><g class="peg-in">` +
+      `<ellipse cx="0" cy="0.31" rx="0.24" ry="0.075" fill="rgba(46,27,9,.35)"/>` +
+      `<path d="${starPath(0, 0, 0.335, 0.145)}" fill="url(#starGold)" stroke="#c47f17" stroke-width="0.035" stroke-linejoin="round"/>` +
+      `<circle cx="-0.09" cy="-0.11" r="0.065" fill="#fff" opacity="0.85"/></g></g>`;
+  });
+  // タップ判定 (全マス)
+  cells.forEach(([x, y], i) => {
+    s += `<circle class="hit" data-cell="${i}" cx="${x}" cy="${y}" r="0.48" fill="rgba(0,0,0,0)"/>`;
+  });
+  const board = $('board');
+  board.setAttribute('viewBox', vb);
+  board.innerHTML = s;
+  board.querySelectorAll('.peg').forEach(el => { pegEls[+el.dataset.peg] = el; });
+  updateStatus();
+}
+function updateStatus() {
+  const n = cur.pegs.size;
+  let t = `のこり ★ ×${n}`;
+  if (cur.level.target >= 0) t += ' ｜ 目標: 赤いわくのマス';
+  $('status-line').textContent = t;
+  $('hint-left').textContent = `あと ${3 - cur.hintsUsed} 回`;
+  $('btn-hint').disabled = cur.hintsUsed >= 3;
+  $('btn-undo').disabled = cur.history.length === 0;
+  updateSoundBtn();
+}
+function updateSoundBtn() { $('btn-sound').textContent = save.sound ? '♪' : '♪̸'; $('btn-sound').style.opacity = save.sound ? '1' : '.45'; }
+
+function onCellTap(i) {
+  if (!cur || cur.busy) return;
+  ensureAudio();
+  if (cur.pegs.has(i)) {
+    cur.selected = (cur.selected === i) ? null : i;
+    if (cur.selected !== null) { sfx.select(); setComment('とびこえる 先の マスを タップ！'); }
+    render();
+    return;
+  }
+  if (cur.selected !== null) {
+    const mv = legalMoves(cur.level, cur.pegs).find(([a, b, c]) => a === cur.selected && c === i);
+    if (mv) { doMove(mv); return; }
+  }
+  sfx.error();
+}
+function doMove([a, b, c]) {
+  cur.busy = true;
+  const cells = cur.level.cells;
+  const [fx, fy] = cells[a], [tx, ty] = cells[c];
+  const pegEl = pegEls[a], overEl = pegEls[b];
+  try {
+    if (pegEl) pegEl.animate(
+      [{ transform: `translate(${fx}px,${fy}px)` }, { transform: `translate(${tx}px,${ty}px)` }],
+      { duration: 175, easing: 'ease-in-out' });
+    if (overEl) {
+      overEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 175, easing: 'ease-in' });
+      const inner = overEl.querySelector('.peg-in');
+      if (inner) inner.animate([{ transform: 'scale(1)' }, { transform: 'scale(.25)' }], { duration: 175, easing: 'ease-in' });
+    }
+  } catch (e) {}
+  sfx.jump();
+  setTimeout(() => {
+    cur.pegs.delete(a); cur.pegs.delete(b); cur.pegs.add(c);
+    cur.history.push([a, b, c]);
+    cur.selected = null; cur.busy = false;
+    render();
+    afterMove();
+  }, 185);
+}
+function afterMove() {
+  const n = cur.pegs.size;
+  if (n === 1) { onClear(); return; }
+  if (legalMoves(cur.level, cur.pegs).length === 0) {
+    $('stuck-banner').classList.remove('hidden');
+    sfx.stuck();
+    setComment('つんだ… もどすか、やりなおして みよう');
+    return;
+  }
+  const msgs = ['いい ちょうし！', 'その調子！', `あと ${n - 1} 回 とべば クリア`, 'ゆっくり 考えてね', '星が よろこんでるよ'];
+  setComment(msgs[Math.floor(Math.random() * msgs.length)]);
+}
+function onClear() {
+  const stars = cur.hintsUsed === 0 ? 3 : cur.hintsUsed === 1 ? 2 : 1;
+  const lastPeg = [...cur.pegs][0];
+  const perfect = cur.level.target >= 0 && lastPeg === cur.level.target;
+  if (cur.diff === 'daily') {
+    const key = todayStr();
+    if (!save.daily[key]) save.daily[key] = {};
+    save.daily[key][cur.idx] = Math.max(save.daily[key][cur.idx] || 0, stars);
+  } else {
+    save.stars[cur.diff][cur.idx] = Math.max(save.stars[cur.diff][cur.idx] || 0, stars);
+  }
+  persist();
+  sfx.clear();
+  $('clear-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('perfect-badge').classList.toggle('hidden', !perfect);
+  $('btn-next').style.display = cur.idx < 9 ? '' : 'none';
+  setTimeout(() => $('clear-overlay').classList.remove('hidden'), 380);
+}
+function undo() {
+  if (!cur || cur.busy || !cur.history.length) return;
+  const [a, b, c] = cur.history.pop();
+  cur.pegs.delete(c); cur.pegs.add(a); cur.pegs.add(b);
+  cur.selected = null;
+  $('stuck-banner').classList.add('hidden');
+  setComment('もどしたよ。別の 手を 考えよう');
+  render();
+}
+function retry() {
+  if (!cur || cur.busy) return;
+  cur.pegs = new Set(cur.level.pegs);
+  cur.history = []; cur.hintsUsed = 0; cur.selected = null;
+  $('stuck-banner').classList.add('hidden');
+  setComment('さいしょから。星を タップして えらんでね！');
+  render();
+}
+function useHint() {
+  if (!cur || cur.busy || cur.hintsUsed >= 3) return;
+  ensureAudio();
+  const sol = solveState(cur.level, cur.pegs);
+  if (!sol || !sol.length) {
+    setComment('この ままでは クリアできない みたい… もどして みよう');
+    sfx.error();
+    return;
+  }
+  cur.hintsUsed++;
+  const [a, b, c] = sol[0];
+  cur.selected = a;
+  render();
+  const pegEl = pegEls[a];
+  if (pegEl) pegEl.classList.add('hint-from');
+  const cells = cur.level.cells;
+  const [x, y] = cells[c];
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', '0.42');
+  ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#e2703a'); ring.setAttribute('stroke-width', '0.06');
+  ring.setAttribute('class', 'hint-ring');
+  $('board').appendChild(ring);
+  setComment('ヒント！ 光った 星を とばして、オレンジの わくへ！');
+  updateStatus();
+}
+
+/* ---------- イベント ---------- */
+$('board').addEventListener('click', (e) => {
+  const hit = e.target.closest('[data-cell]');
+  if (hit) { onCellTap(+hit.dataset.cell); return; }
+  const peg = e.target.closest('[data-peg]');
+  if (peg) onCellTap(+peg.dataset.peg);
+});
+$('btn-play').addEventListener('click', () => { ensureAudio(); renderSelect(); showScreen('select'); });
+$('btn-howto').addEventListener('click', () => $('howto-overlay').classList.remove('hidden'));
+$('btn-howto-close').addEventListener('click', () => $('howto-overlay').classList.add('hidden'));
+$('btn-back-title').addEventListener('click', () => showScreen('title'));
+document.querySelectorAll('#tabs .tab').forEach(t => t.addEventListener('click', () => { selDiff = t.dataset.diff; renderSelect(); }));
+$('btn-back-select').addEventListener('click', () => { renderSelect(); showScreen('select'); });
+$('btn-sound').addEventListener('click', () => { save.sound = !save.sound; persist(); updateSoundBtn(); if (save.sound) { ensureAudio(); sfx.select(); } });
+$('btn-hint').addEventListener('click', useHint);
+$('btn-undo').addEventListener('click', undo);
+$('btn-retry').addEventListener('click', retry);
+$('btn-stuck-undo').addEventListener('click', undo);
+$('btn-stuck-retry').addEventListener('click', retry);
+$('btn-tolist').addEventListener('click', () => { $('clear-overlay').classList.add('hidden'); selDiff = cur.diff; renderSelect(); showScreen('select'); });
+$('btn-replay').addEventListener('click', () => { $('clear-overlay').classList.add('hidden'); startLevel(cur.diff, cur.idx); });
+$('btn-next').addEventListener('click', () => { $('clear-overlay').classList.add('hidden'); if (cur.idx < 9) startLevel(cur.diff, cur.idx + 1); });
+
+/* テスト用ハンドル */
+window.HOSHI = {
+  LEVELS, dailySet, todayStr, solveState,
+  get cur() { return cur; },
+  startLevel,
+  debugSetPegs(arr) { if (!cur) return; cur.pegs = new Set(arr); cur.history = []; cur.selected = null; render(); afterMove(); },
+};
+</script>
+</body>
+</html>
