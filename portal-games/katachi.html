@@ -24,6 +24,7 @@
       html,body{ margin:0; padding:0; }
       body{
         background:var(--bg); color:var(--ink);
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132'%3E%3Cg fill='%23e8a94e' fill-opacity='0.10'%3E%3Cpath d='M18 22 L44 22 L31 44 Z'/%3E%3Crect x='86' y='66' width='20' height='20' rx='2'/%3E%3Cpath d='M96 14 L112 30 L96 46 L80 30 Z'/%3E%3Cpath d='M22 92 L40 92 L31 108 Z'/%3E%3C/g%3E%3C/svg%3E");
         font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",system-ui,sans-serif;
         -webkit-tap-highlight-color:transparent;
       }
@@ -32,8 +33,8 @@
       h1 .kata{ color:var(--accent-deep); }
       .sub{ color:var(--ink-soft); font-size:13px; margin:0 0 10px; line-height:1.6; }
       .family-hero{
-        background:var(--card); border:2px solid var(--line); border-radius:18px;
-        box-shadow:var(--shadow); padding:10px 6px 4px; margin-bottom:12px;
+        background:linear-gradient(180deg,#fff6df,#ffe9c2); border:2px solid #e9cf9d; border-radius:18px;
+        box-shadow:var(--shadow); padding:6px 4px 2px; margin-bottom:12px; overflow:hidden;
       }
       .family-hero svg{ display:block; width:100%; height:auto; }
       .row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -62,6 +63,10 @@
         border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,.18); line-height:1.3;
       }
       .stage-btn.done{ border-color:var(--sun); }
+      .stage-btn{ background:linear-gradient(180deg,#fffdf6 0%,#fdefd0 100%); border-color:#e9cf9d; }
+      @media (prefers-color-scheme: dark){
+        .stage-btn{ background:var(--card); border-color:var(--line); }
+      }
       .howto{
         margin-top:14px; background:var(--card); border:2px dashed var(--line); border-radius:14px;
         padding:10px 14px; font-size:12.5px; line-height:1.9; color:var(--ink-soft);
@@ -281,159 +286,202 @@ function starPts(cx, cy, r) {
   }
   return pts.join(" ");
 }
-/* ---------- ミズー一家（全身・描き起こし） ----------
+/* ---------- ミズー一家（全身・公式画風 描き起こし 2026-11-23） ----------
    ローカル座標: 原点=足元中央、上方向が負。身長は約100単位で描き、
    scaleで パパ＞ママ＞お兄ちゃん＞ミズー の順に背の差をつける。
-   顔: ハイライト入りの目・眉・鼻・口・ほっぺを全員に描く。ミズーにそばかすは付けない。 */
+   画風: 公式基準（2026-11-18決定の顔・ch-onii）に合わせ、輪郭線＋ベタ＋影の
+   ちびキャラ調で描く。ミズーは黒髪・白フーディー＋青ジャケット・縞の短パン・
+   リュック・青白スニーカー。お兄ちゃんは黒髪・水色ノースリーブ＋短パン・紫スニーカー。
+   ミズーにそばかすは付けない（ほっぺの照れ線は頬紅として可）。 */
+var OL = "#3b332a"; /* 輪郭色 */
 function headBase(cy, r) {
-  return '<circle cx="' + (-r) + '" cy="' + cy + '" r="3.1" fill="#ffe3c2"/>'
-       + '<circle cx="' + r + '" cy="' + cy + '" r="3.1" fill="#ffe3c2"/>'
-       + '<circle cx="0" cy="' + cy + '" r="' + r + '" fill="#ffe3c2"/>';
+  return '<circle cx="' + (-r) + '" cy="' + (cy + 1) + '" r="3.4" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.7"/>'
+       + '<circle cx="' + r + '" cy="' + (cy + 1) + '" r="3.4" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.7"/>'
+       + '<circle cx="0" cy="' + cy + '" r="' + r + '" fill="#ffe1c0" stroke="' + OL + '" stroke-width="2"/>';
 }
 function faceSVG(cy, opt) {
   opt = opt || {};
   var bc = opt.brow || "#4a3826";
   var mdy = (typeof opt.mouthDy === "number") ? opt.mouthDy : 5.6;
   var s = "";
-  s += '<ellipse cx="-5.6" cy="' + cy + '" rx="1.9" ry="2.7" fill="#33302b"/>';
-  s += '<ellipse cx="5.6" cy="' + cy + '" rx="1.9" ry="2.7" fill="#33302b"/>';
-  s += '<circle cx="-6.3" cy="' + (cy - 1.1) + '" r="0.85" fill="#ffffff"/>';
-  s += '<circle cx="4.9" cy="' + (cy - 1.1) + '" r="0.85" fill="#ffffff"/>';
-  if (opt.lashes) {
-    s += '<path d="M-8.3,' + (cy - 2.2) + ' l-2.3,-1.7 M-8.7,' + (cy - 0.4) + ' l-2.5,-0.4 M8.3,' + (cy - 2.2) + ' l2.3,-1.7 M8.7,' + (cy - 0.4) + ' l2.5,-0.4" stroke="#33302b" stroke-width="1.1" stroke-linecap="round" fill="none"/>';
+  if (opt.eyes === "happy") {
+    s += '<path d="M-8.6,' + (cy + 1.2) + ' q3,-3.6 6,0 M2.6,' + (cy + 1.2) + ' q3,-3.6 6,0" stroke="#33302b" stroke-width="1.9" stroke-linecap="round" fill="none"/>';
+  } else {
+    s += '<ellipse cx="-5.6" cy="' + cy + '" rx="2.1" ry="3.2" fill="#33302b"/>';
+    s += '<ellipse cx="5.6" cy="' + cy + '" rx="2.1" ry="3.2" fill="#33302b"/>';
+    s += '<circle cx="-6.3" cy="' + (cy - 1.2) + '" r="0.9" fill="#ffffff"/>';
+    s += '<circle cx="4.9" cy="' + (cy - 1.2) + '" r="0.9" fill="#ffffff"/>';
+    if (opt.lashes) {
+      s += '<path d="M-8.4,' + (cy - 2.4) + ' l-2.4,-1.8 M-8.8,' + (cy - 0.4) + ' l-2.6,-0.4 M8.4,' + (cy - 2.4) + ' l2.4,-1.8 M8.8,' + (cy - 0.4) + ' l2.6,-0.4" stroke="#33302b" stroke-width="1.1" stroke-linecap="round" fill="none"/>';
+    }
   }
-  s += '<path d="M-8.6,' + (cy - 6.2) + ' q2.9,-2 5.8,-0.5 M2.8,' + (cy - 6.7) + ' q2.9,-1.5 5.8,0.5" stroke="' + bc + '" stroke-width="1.4" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M-8.8,' + (cy - 6.4) + ' q3,-2.1 6,-0.5 M2.8,' + (cy - 6.9) + ' q3,-1.6 6,0.5" stroke="' + bc + '" stroke-width="1.6" stroke-linecap="round" fill="none"/>';
   s += '<path d="M0.3,' + (cy + 2.0) + ' q1.2,1.3 -0.1,2.4" stroke="#d89a6a" stroke-width="1.2" stroke-linecap="round" fill="none"/>';
-  s += '<path d="M-3.1,' + (cy + mdy) + ' q3.1,2.7 6.2,0" stroke="#b3543f" stroke-width="1.6" stroke-linecap="round" fill="none"/>';
-  s += '<ellipse cx="-10.8" cy="' + (cy + 4.4) + '" rx="3.1" ry="1.9" fill="#ffb3a0" opacity=".75"/>';
-  s += '<ellipse cx="10.8" cy="' + (cy + 4.4) + '" rx="3.1" ry="1.9" fill="#ffb3a0" opacity=".75"/>';
+  if (opt.mouth === "open") {
+    s += '<path d="M-3.6,' + (cy + mdy) + ' q3.6,1 7.2,0 q-0.6,5 -3.6,5 q-3,0 -3.6,-5 z" fill="#a34a38" stroke="#8c3a2c" stroke-width="0.8" stroke-linejoin="round"/>';
+    s += '<path d="M-3.3,' + (cy + mdy + 0.5) + ' q3.3,0.7 6.6,0 l-0.3,1.6 q-3,0.5 -6,0 z" fill="#ffffff"/>';
+    s += '<ellipse cx="0" cy="' + (cy + mdy + 4.1) + '" rx="2.1" ry="1.1" fill="#e87a6a"/>';
+  } else {
+    s += '<path d="M-3.1,' + (cy + mdy) + ' q3.1,2.7 6.2,0" stroke="#b3543f" stroke-width="1.7" stroke-linecap="round" fill="none"/>';
+  }
+  if (!opt.noBlush) {
+    s += '<ellipse cx="-10.8" cy="' + (cy + 4.4) + '" rx="3.1" ry="1.9" fill="#ffb3a0" opacity=".8"/>';
+    s += '<ellipse cx="10.8" cy="' + (cy + 4.4) + '" rx="3.1" ry="1.9" fill="#ffb3a0" opacity=".8"/>';
+  }
   return s;
+}
+/* ほっぺの照れ線（ミズー用・頬紅。そばかすではない） */
+function blushStreaks(cy) {
+  return '<path d="M-13.2,' + (cy + 5.2) + ' l3.4,-1.2 M-13.4,' + (cy + 7.6) + ' l3.4,-1.2 M13.2,' + (cy + 5.2) + ' l-3.4,-1.2 M13.4,' + (cy + 7.6) + ' l-3.4,-1.2" stroke="#f0a08c" stroke-width="1.1" stroke-linecap="round" fill="none"/>';
 }
 function charPapa() {
   var s = "";
-  /* ズボン（グレー）と靴 */
-  s += '<rect x="-11.5" y="-42" width="10" height="38" rx="3" fill="#8a8d94"/>';
-  s += '<rect x="1.5" y="-42" width="10" height="38" rx="3" fill="#8a8d94"/>';
-  s += '<rect x="-13.5" y="-5" width="13.5" height="5" rx="2.5" fill="#4a4038"/>';
-  s += '<rect x="0" y="-5" width="13.5" height="5" rx="2.5" fill="#4a4038"/>';
+  /* ズボン（グレー）と革靴 */
+  s += '<rect x="-11.5" y="-43" width="10" height="37" rx="3" fill="#7d8590" stroke="' + OL + '" stroke-width="1.8"/>';
+  s += '<rect x="1.5" y="-43" width="10" height="37" rx="3" fill="#7d8590" stroke="' + OL + '" stroke-width="1.8"/>';
+  s += '<rect x="-13.5" y="-5.5" width="13.5" height="5.5" rx="2.7" fill="#5a4632" stroke="' + OL + '" stroke-width="1.7"/>';
+  s += '<rect x="0" y="-5.5" width="13.5" height="5.5" rx="2.7" fill="#5a4632" stroke="' + OL + '" stroke-width="1.7"/>';
   /* 腕（黒ポロの半袖＋肌色の腕） */
-  s += '<rect x="-19.5" y="-72" width="7" height="14" rx="3" fill="#2e2a26"/>';
-  s += '<rect x="-19" y="-60" width="6" height="16" rx="3" fill="#ffe3c2"/>';
-  s += '<circle cx="-16" cy="-42" r="3.4" fill="#ffe3c2"/>';
-  s += '<rect x="12.5" y="-72" width="7" height="14" rx="3" fill="#2e2a26"/>';
-  s += '<rect x="13" y="-60" width="6" height="16" rx="3" fill="#ffe3c2"/>';
-  s += '<circle cx="16" cy="-42" r="3.4" fill="#ffe3c2"/>';
+  s += '<rect x="-19.5" y="-72" width="7.5" height="14" rx="3.2" fill="#2e2a26" stroke="' + OL + '" stroke-width="1.7"/>';
+  s += '<rect x="-19" y="-60" width="6" height="16" rx="3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="-16" cy="-42" r="3.4" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
+  s += '<rect x="12" y="-72" width="7.5" height="14" rx="3.2" fill="#2e2a26" stroke="' + OL + '" stroke-width="1.7"/>';
+  s += '<rect x="13" y="-60" width="6" height="16" rx="3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="16" cy="-42" r="3.4" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
   /* 黒いポロシャツ（襟・前立て・ボタン） */
-  s += '<path d="M-15,-70 q0,-4 4,-4 l22,0 q4,0 4,4 l0,28 q0,4 -4,4 l-22,0 q-4,0 -4,-4 z" fill="#2e2a26"/>';
+  s += '<path d="M-15,-70 q0,-4 4,-4 l22,0 q4,0 4,4 l0,28 q0,4 -4,4 l-22,0 q-4,0 -4,-4 z" fill="#2e2a26" stroke="' + OL + '" stroke-width="1.9" stroke-linejoin="round"/>';
   s += '<path d="M0,-68 l0,9" stroke="#17140f" stroke-width="1.6"/>';
   s += '<circle cx="0" cy="-55" r="1.2" fill="#cfd2d6"/><circle cx="0" cy="-49" r="1.2" fill="#cfd2d6"/>';
-  s += '<path d="M-7.5,-74.5 l7.5,6.5 l7.5,-6.5 l-2.6,-3.6 l-4.9,3.8 l-4.9,-3.8 z" fill="#17140f"/>';
-  /* 手に持つ星ピース */
-  s += '<polygon points="' + starPts(23, -38, 8.5) + '" fill="#ffc93c" stroke="#e0a800" stroke-width="1"/>';
+  s += '<path d="M-7.5,-74.5 l7.5,6.5 l7.5,-6.5 l-2.6,-3.6 l-4.9,3.8 l-4.9,-3.8 z" fill="#17140f" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  /* 手に持つ木の三角ピース（木目つき） */
+  s += '<polygon points="16,-21 36,-21 26,-41" fill="#d9a05b" stroke="#8a5a1e" stroke-width="1.8" stroke-linejoin="round"/>';
+  s += '<path d="M20,-26.5 q6,-2 12,0 M22.5,-31 q4.5,-1.6 9,0" stroke="#b57f36" stroke-width="1.1" fill="none" stroke-linecap="round"/>';
   /* 頭・黒髪・ひげ */
   s += headBase(-85, 15);
-  s += '<path d="M-11,-78.5 q0,10.5 11,10.5 q11,0 11,-10.5 q-2.8,4.5 -11,4.5 q-8.2,0 -11,-4.5 z" fill="#22201d"/>'; /* 顎ひげ */
-  s += '<path d="M-15,-84 C-15,-96 -8,-101 0,-101 C8,-101 15,-96 15,-84 C10,-87.5 5,-86.2 0,-87 C-5,-86.2 -10,-87.5 -15,-84 Z" fill="#22201d"/>'; /* 黒髪 */
-  s += faceSVG(-85, { brow: "#22201d", mouthDy: 9 });
-  s += '<path d="M-6.2,-80.8 q3.1,2.3 6.2,0.7 q3.1,-1.6 6.2,-0.7 q-0.9,3.1 -6.2,3.1 q-5.3,0 -6.2,-3.1 z" fill="#22201d"/>'; /* 口ひげ */
+  s += '<path d="M-11.5,-79 q0,11 11.5,11 q11.5,0 11.5,-11 q-3,4.8 -11.5,4.8 q-8.5,0 -11.5,-4.8 z" fill="#26221e"/>'; /* 顎ひげ */
+  s += '<path d="M-15.5,-83.5 C-15.5,-97 -8,-102 0,-102 C8,-102 15.5,-97 15.5,-83.5 C10.5,-89.8 5.5,-88.8 0.5,-89.4 C-4.5,-88.8 -10,-89.8 -15.5,-83.5 Z" fill="#26221e" stroke="' + OL + '" stroke-width="1.4" stroke-linejoin="round"/>'; /* 黒髪 */
+  s += '<path d="M-9,-97.5 q5,-3.4 11,-2.6" stroke="#57534b" stroke-width="1.6" fill="none" stroke-linecap="round"/>'; /* 髪のツヤ */
+  s += faceSVG(-85, { brow: "#26221e", mouthDy: 9 });
+  s += '<path d="M-6.2,-80.8 q3.1,2.3 6.2,0.7 q3.1,-1.6 6.2,-0.7 q-0.9,3.1 -6.2,3.1 q-5.3,0 -6.2,-3.1 z" fill="#26221e"/>'; /* 口ひげ */
   return s;
 }
 function charMama() {
   var s = "";
-  /* 胸栗色のロングヘア（後ろ・肩より下まで） */
-  s += '<path d="M-16.5,-84 a16.5,16.5 0 0 1 33,0 l2.5,52 q-7,5 -13,1 q-1,-8 -2,-14 l-8,0 q-1,6 -2,14 q-6,4 -13,-1 z" fill="#86592c"/>';
+  /* 胸栗色のロングヘア（後ろ・肩より下まで、毛先は波形） */
+  s += '<path d="M-17,-84 a17,16.5 0 0 1 34,0 l2.2,50 q-4.5,4.5 -9,1.8 q-1.5,-6 -2.5,-11.5 l-11,0 q-1,5.5 -2.5,11.5 q-4.5,2.7 -9,-1.8 z" fill="#8a5a2e" stroke="' + OL + '" stroke-width="1.8" stroke-linejoin="round"/>';
+  s += '<path d="M-12,-96 q-4,16 -2.5,34 M12,-96 q4,16 2.5,34" stroke="#b07f45" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>';
   /* 足と靴 */
-  s += '<rect x="-9" y="-16" width="6.5" height="12" fill="#ffe3c2"/>';
-  s += '<rect x="2.5" y="-16" width="6.5" height="12" fill="#ffe3c2"/>';
-  s += '<rect x="-10.5" y="-5" width="9.5" height="5" rx="2.4" fill="#7a4a26"/>';
-  s += '<rect x="1" y="-5" width="9.5" height="5" rx="2.4" fill="#7a4a26"/>';
-  /* スカート（茶） */
-  s += '<path d="M-12,-46 l24,0 l7,30 l-38,0 z" fill="#a9714b"/>';
+  s += '<rect x="-9" y="-16" width="6.5" height="12" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="2.5" y="-16" width="6.5" height="12" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="-10.5" y="-5.5" width="9.5" height="5.5" rx="2.6" fill="#7a4a26" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<rect x="1" y="-5.5" width="9.5" height="5.5" rx="2.6" fill="#7a4a26" stroke="' + OL + '" stroke-width="1.6"/>';
+  /* スカート（茶）＋工作エプロン（ポケットに小さい三角ピース） */
+  s += '<path d="M-12,-46 l24,0 l7,30 q-19,2.5 -38,0 z" fill="#a9714b" stroke="' + OL + '" stroke-width="1.8" stroke-linejoin="round"/>';
+  s += '<path d="M-8,-45 l16,0 l3.2,25 q-11.2,2.2 -22.4,0 z" fill="#fdf6e9" stroke="#d9c9a8" stroke-width="1.3" stroke-linejoin="round"/>';
+  s += '<rect x="-4.5" y="-30" width="9" height="7" rx="1.6" fill="#f3e5c8" stroke="#d9c9a8" stroke-width="1.1"/>';
+  s += '<polygon points="-2,-31.5 2.5,-31.5 0.2,-36" fill="#ff8fb1" stroke="#c2547a" stroke-width="0.9" stroke-linejoin="round"/>';
   /* 腕（半袖＋肌色） */
-  s += '<rect x="-17" y="-72" width="6" height="12" rx="3" fill="#8a5a3b"/>';
-  s += '<rect x="-16.5" y="-62" width="5.5" height="17" rx="2.7" fill="#ffe3c2"/>';
-  s += '<circle cx="-13.8" cy="-43" r="3.2" fill="#ffe3c2"/>';
-  s += '<rect x="11" y="-72" width="6" height="12" rx="3" fill="#8a5a3b"/>';
-  s += '<rect x="11" y="-62" width="5.5" height="17" rx="2.7" fill="#ffe3c2"/>';
-  s += '<circle cx="13.8" cy="-43" r="3.2" fill="#ffe3c2"/>';
-  /* トップス（茶） */
-  s += '<path d="M-13,-70 q0,-4 4,-4 l18,0 q4,0 4,4 l0,24 q0,3 -3,3 l-20,0 q-3,0 -3,-3 z" fill="#8a5a3b"/>';
+  s += '<rect x="-17" y="-72" width="6.5" height="12" rx="3" fill="#8a5a3b" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<rect x="-16.5" y="-62" width="5.5" height="17" rx="2.7" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
+  s += '<circle cx="-13.8" cy="-43" r="3.2" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="10.5" y="-72" width="6.5" height="12" rx="3" fill="#8a5a3b" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<rect x="11" y="-62" width="5.5" height="17" rx="2.7" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
+  s += '<circle cx="13.8" cy="-43" r="3.2" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  /* トップス（茶・Vネック） */
+  s += '<path d="M-13,-70 q0,-4 4,-4 l18,0 q4,0 4,4 l0,24 q0,3 -3,3 l-20,0 q-3,0 -3,-3 z" fill="#8a5a3b" stroke="' + OL + '" stroke-width="1.8" stroke-linejoin="round"/>';
+  s += '<path d="M-4,-73.5 l4,5 l4,-5 l-1.8,-1.8 l-2.2,2.4 l-2.2,-2.4 z" fill="#fdf6e9"/>';
   /* 手に持つ四角ピース */
-  s += '<rect x="14" y="-50" width="12" height="12" rx="2" fill="#4d96ff" stroke="#fff" stroke-width="1.4" transform="rotate(15 20 -44)"/>';
+  s += '<rect x="14" y="-50" width="12" height="12" rx="2" fill="#4d96ff" stroke="' + OL + '" stroke-width="1.6" transform="rotate(15 20 -44)"/>';
+  s += '<path d="M16.5,-47.5 l7,-1.8" stroke="#bcd8ff" stroke-width="1.4" stroke-linecap="round" transform="rotate(15 20 -44)"/>';
   /* 頭・前髪とサイドの毛束・金色の丸イヤリング */
   s += headBase(-85, 15);
-  s += '<circle cx="-15.8" cy="-76" r="1.9" fill="#f2b234" stroke="#d99a17" stroke-width="0.7"/>';
-  s += '<circle cx="15.8" cy="-76" r="1.9" fill="#f2b234" stroke="#d99a17" stroke-width="0.7"/>';
-  s += '<path d="M-15,-84 C-15,-96 -8,-101 0,-101 C8,-101 15,-96 15,-84 C10,-87.5 5,-86.2 0,-87 C-5,-86.2 -10,-87.5 -15,-84 Z" fill="#86592c"/>';
-  s += '<path d="M-15.5,-86 q-2.5,14 -0.5,24 l4.5,0 q-1.8,-12 -1,-22 z" fill="#86592c"/>';
-  s += '<path d="M15.5,-86 q2.5,14 0.5,24 l-4.5,0 q1.8,-12 1,-22 z" fill="#86592c"/>';
+  s += '<path d="M-15.5,-83.5 C-15.5,-97 -8,-102 0,-102 C8,-102 15.5,-97 15.5,-83.5 C11,-90.5 5.5,-92.3 -0.5,-92.3 C-6,-92.3 -11,-90.5 -15.5,-83.5 Z" fill="#8a5a2e" stroke="' + OL + '" stroke-width="1.4" stroke-linejoin="round"/>';
+  s += '<path d="M-15.8,-86 q-2.6,14 -0.6,24.5 l4.6,0 q-1.9,-12.5 -1,-22.5 z" fill="#8a5a2e" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  s += '<path d="M15.8,-86 q2.6,14 0.6,24.5 l-4.6,0 q1.9,-12.5 1,-22.5 z" fill="#8a5a2e" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  s += '<circle cx="-16" cy="-78.5" r="1.9" fill="#f2b234" stroke="#b57f16" stroke-width="0.8"/>';
+  s += '<circle cx="16" cy="-78.5" r="1.9" fill="#f2b234" stroke="#b57f16" stroke-width="0.8"/>';
   s += faceSVG(-85, { lashes: true, brow: "#5a3a1e" });
   return s;
 }
 function charOni() {
   var s = "";
-  /* 白スニーカー・足 */
-  s += '<rect x="-9.5" y="-18" width="6" height="13" fill="#ffe3c2"/>';
-  s += '<rect x="3.5" y="-18" width="6" height="13" fill="#ffe3c2"/>';
-  s += '<rect x="-12" y="-6" width="11.5" height="6" rx="3" fill="#ffffff" stroke="#d8d2c4" stroke-width="0.8"/>';
-  s += '<rect x="0.5" y="-6" width="11.5" height="6" rx="3" fill="#ffffff" stroke="#d8d2c4" stroke-width="0.8"/>';
+  /* 足・赤い靴下・紫スニーカー（緑のワンポイント） */
+  s += '<rect x="-9.5" y="-18" width="6" height="13" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="3.5" y="-18" width="6" height="13" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="-9.5" y="-10.5" width="6" height="4" fill="#e2483d"/>';
+  s += '<rect x="3.5" y="-10.5" width="6" height="4" fill="#e2483d"/>';
+  s += '<rect x="-12" y="-6.5" width="11.5" height="6.5" rx="3" fill="#7a6fd0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<rect x="0.5" y="-6.5" width="11.5" height="6.5" rx="3" fill="#7a6fd0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<rect x="-12" y="-2.2" width="11.5" height="2.2" rx="1.1" fill="#ffffff"/>';
+  s += '<rect x="0.5" y="-2.2" width="11.5" height="2.2" rx="1.1" fill="#ffffff"/>';
+  s += '<circle cx="-4.5" cy="-4.6" r="1.3" fill="#57c256"/>';
+  s += '<circle cx="8" cy="-4.6" r="1.3" fill="#57c256"/>';
   /* 水色の短パン */
-  s += '<path d="M-11,-32 l22,0 l0,15 l-9,0 l0,-6 l-4,0 l0,6 l-9,0 z" fill="#6db9d8"/>';
+  s += '<path d="M-11,-32 l22,0 l0,15 l-9,0 l0,-6 l-4,0 l0,6 l-9,0 z" fill="#6db9d8" stroke="' + OL + '" stroke-width="1.8" stroke-linejoin="round"/>';
+  s += '<path d="M-11,-32 l22,0 l0,3.4 l-22,0 z" fill="#57a8cc"/>';
   /* 腕は肌色で出す（ノースリーブ） */
-  s += '<rect x="-16.5" y="-58" width="6" height="22" rx="3" fill="#ffe3c2"/>';
-  s += '<circle cx="-13.5" cy="-34" r="3.3" fill="#ffe3c2"/>';
-  s += '<rect x="10.5" y="-58" width="6" height="22" rx="3" fill="#ffe3c2"/>';
-  s += '<circle cx="13.5" cy="-34" r="3.3" fill="#ffe3c2"/>';
+  s += '<rect x="-16.5" y="-58" width="6" height="22" rx="3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="-13.5" cy="-34" r="3.3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
+  s += '<rect x="10.5" y="-58" width="6" height="22" rx="3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="13.5" cy="-34" r="3.3" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.5"/>';
   /* 水色のノースリーブ */
-  s += '<path d="M-12,-56 q0,-4 4,-4 l16,0 q4,0 4,4 l0,22 q0,3 -3,3 l-18,0 q-3,0 -3,-3 z" fill="#7ec8e3"/>';
+  s += '<path d="M-12,-56 q0,-4 4,-4 l16,0 q4,0 4,4 l0,22 q0,3 -3,3 l-18,0 q-3,0 -3,-3 z" fill="#7ec8e3" stroke="' + OL + '" stroke-width="1.9" stroke-linejoin="round"/>';
+  s += '<path d="M7.5,-59.5 q4.5,1 4.5,5.5 l0,20 q0,2.5 -2.5,2.8 l-2,0 q1,-16 0,-33.3 z" fill="#5fb3d9" opacity=".55"/>';
   s += '<path d="M-8,-60 q8,4 16,0 l0,4 q-8,3 -16,0 z" fill="#a5dcf0"/>';
-  /* 手に持つ三角ピース */
-  s += '<polygon points="-24,-26 -12,-26 -18,-38" fill="#ffd93d" stroke="#fff" stroke-width="1.3"/>';
-  /* 頭（ちび体型・大きめ）・黒髪ギザギザ前髪 */
+  /* 手に持つ木の三角ピース（木目つき） */
+  s += '<polygon points="-26,-24 -10,-24 -18,-39" fill="#ffd93d" stroke="' + OL + '" stroke-width="1.7" stroke-linejoin="round"/>';
+  s += '<path d="M-22.5,-28.5 q4.5,-1.8 9,0" stroke="#d9a92c" stroke-width="1.1" fill="none" stroke-linecap="round"/>';
+  /* 頭（ちび体型・大きめ）・黒髪（短く丸い髪＋前髪） */
   s += headBase(-76, 18);
-  s += '<path d="M-18,-79.5 L-14,-79.2 L-10,-82.5 L-6,-79 L-2,-82.8 L2,-79 L6,-82.8 L10,-79 L14,-82.5 L18,-79 A18.6,18.6 0 0 0 -18,-79.5 Z" fill="#22252b"/>';
-  s += faceSVG(-76, { brow: "#22252b" });
+  s += '<path d="M-18.6,-77.5 C-19.2,-92 -10,-98 0,-98 C10,-98 19.2,-92 18.6,-77.5 L13,-80.3 L8,-77.6 L3,-80.6 L-2,-77.6 L-7,-80.6 L-12,-77.6 L-17,-80.3 Z" fill="#23262b" stroke="' + OL + '" stroke-width="1.5" stroke-linejoin="round"/>';
+  s += '<path d="M-10,-94.5 q6,-3.6 13,-2.8" stroke="#555a63" stroke-width="1.7" fill="none" stroke-linecap="round"/>';
+  s += faceSVG(-76, { brow: "#23262b", mouth: "open", mouthDy: 5 });
   return s;
 }
 function charMizu() {
   var s = "";
-  /* 茶色のリュック（本体＋横ポケット） */
-  s += '<rect x="-18" y="-58" width="36" height="34" rx="7" fill="#9a6a42"/>';
-  s += '<rect x="14" y="-42" width="9" height="13" rx="2.5" fill="#7d5433"/>';
-  s += '<rect x="14" y="-42" width="9" height="5" rx="2.5" fill="#6b4429"/>';
+  /* ベージュのリュック（本体＋横ポケット） */
+  s += '<rect x="-19" y="-60" width="38" height="36" rx="8" fill="#c8a87e" stroke="' + OL + '" stroke-width="1.8"/>';
+  s += '<rect x="15" y="-44" width="9" height="14" rx="3" fill="#b28c5c" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<path d="M-19,-52 l38,0" stroke="#a37f52" stroke-width="1.6"/>';
   /* 赤い靴下・青と白のスニーカー */
-  s += '<rect x="-9.5" y="-16" width="6" height="8" fill="#e2483d"/>';
-  s += '<rect x="3.5" y="-16" width="6" height="8" fill="#e2483d"/>';
-  s += '<path d="M-11,-8 l10,0 q2,0 2,3 l0,2 q0,2 -2,2 l-8,0 q-2,0 -2,-2 z" fill="#3a7bd5"/>';
-  s += '<path d="M1,-8 l10,0 q2,0 2,3 l0,2 q0,2 -2,2 l-8,0 q-2,0 -2,-2 z" fill="#3a7bd5"/>';
-  s += '<rect x="-11" y="-2.4" width="12" height="2.4" rx="1.2" fill="#ffffff"/>';
-  s += '<rect x="1" y="-2.4" width="12" height="2.4" rx="1.2" fill="#ffffff"/>';
-  /* 縞模様の白い短パン */
-  s += '<path d="M-11,-30 l22,0 l0,14 l-9,0 l0,-5 l-4,0 l0,5 l-9,0 z" fill="#ffffff" stroke="#d9d2c2" stroke-width="0.8"/>';
-  s += '<path d="M-10.6,-20.2 l8.2,0 M-10.6,-17.8 l8.2,0 M2.4,-20.2 l8.2,0 M2.4,-17.8 l8.2,0" stroke="#4d96ff" stroke-width="1.1"/>';
+  s += '<rect x="-9.5" y="-16" width="6" height="8" fill="#e2483d" stroke="' + OL + '" stroke-width="1.2"/>';
+  s += '<rect x="3.5" y="-16" width="6" height="8" fill="#e2483d" stroke="' + OL + '" stroke-width="1.2"/>';
+  s += '<path d="M-11.5,-8.5 l11,0 q2.2,0 2.2,3 l0,2.3 q0,2.2 -2.2,2.2 l-8.6,0 q-2.2,0 -2.2,-2.2 z" fill="#3a7bd5" stroke="' + OL + '" stroke-width="1.6" stroke-linejoin="round"/>';
+  s += '<path d="M0.5,-8.5 l11,0 q2.2,0 2.2,3 l0,2.3 q0,2.2 -2.2,2.2 l-8.6,0 q-2.2,0 -2.2,-2.2 z" fill="#3a7bd5" stroke="' + OL + '" stroke-width="1.6" stroke-linejoin="round"/>';
+  s += '<path d="M-11.5,-3.4 l13.9,0 M0.5,-3.4 l13.9,0" stroke="#ffffff" stroke-width="2.2"/>';
+  /* 縞模様の白い短パン（青と黄色の縦じま） */
+  s += '<path d="M-11,-30 l22,0 l0,14 l-9,0 l0,-5 l-4,0 l0,5 l-9,0 z" fill="#ffffff" stroke="' + OL + '" stroke-width="1.7" stroke-linejoin="round"/>';
+  s += '<path d="M-7.5,-29.5 l0,12.5 M-4,-29.5 l0,9 M4,-29.5 l0,9 M7.5,-29.5 l0,12.5" stroke="#6aa5e8" stroke-width="1.7"/>';
+  s += '<path d="M-5.8,-29.5 l0,10.8 M5.8,-29.5 l0,10.8" stroke="#f2c14e" stroke-width="1.4"/>';
   /* フード（首の後ろ） */
-  s += '<ellipse cx="0" cy="-59" rx="9" ry="5" fill="#ffffff" stroke="#ddd6c6" stroke-width="0.8"/>';
+  s += '<ellipse cx="0" cy="-59" rx="9.5" ry="5.2" fill="#ffffff" stroke="' + OL + '" stroke-width="1.5"/>';
   /* 袖（青ジャケット）＋手 */
-  s += '<rect x="-19" y="-62" width="7" height="24" rx="3" fill="#3a7bd5"/>';
-  s += '<circle cx="-15.5" cy="-35" r="3.2" fill="#ffe3c2"/>';
-  s += '<rect x="12" y="-62" width="7" height="24" rx="3" fill="#3a7bd5"/>';
-  s += '<circle cx="15.5" cy="-35" r="3.2" fill="#ffe3c2"/>';
+  s += '<rect x="-19" y="-62" width="7" height="24" rx="3" fill="#4a86d8" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="-15.5" cy="-35" r="3.2" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
+  s += '<rect x="12" y="-62" width="7" height="24" rx="3" fill="#4a86d8" stroke="' + OL + '" stroke-width="1.6"/>';
+  s += '<circle cx="15.5" cy="-35" r="3.2" fill="#ffe1c0" stroke="' + OL + '" stroke-width="1.4"/>';
   /* 白フーディー（中央）＋開いた青ジャケット */
   s += '<rect x="-5" y="-64" width="10" height="36" fill="#ffffff"/>';
-  s += '<rect x="-15" y="-64" width="10" height="36" fill="#3a7bd5"/>';
-  s += '<rect x="5" y="-64" width="10" height="36" fill="#3a7bd5"/>';
+  s += '<rect x="-15" y="-64" width="10" height="36" fill="#4a86d8"/>';
+  s += '<rect x="5" y="-64" width="10" height="36" fill="#4a86d8"/>';
+  s += '<path d="M-15,-64 l20,0 l0,36 l-20,0 z M5,-64 l10,0 l0,36 l-10,0 z" fill="none" stroke="' + OL + '" stroke-width="1.7" stroke-linejoin="round"/>';
+  s += '<path d="M-5,-44 l10,0" stroke="#ddd6c6" stroke-width="1.3"/>';
   s += '<path d="M-2.5,-60 l0,6 M2.5,-60 l0,6" stroke="#c9c2b2" stroke-width="1.3" stroke-linecap="round"/>';
   s += '<circle cx="-2.5" cy="-53" r="1.1" fill="#c9c2b2"/><circle cx="2.5" cy="-53" r="1.1" fill="#c9c2b2"/>';
   /* リュックの肩ストラップ */
-  s += '<path d="M-10.5,-62 L-7,-30" stroke="#8a5a33" stroke-width="3" stroke-linecap="round"/>';
-  s += '<path d="M10.5,-62 L7,-30" stroke="#8a5a33" stroke-width="3" stroke-linecap="round"/>';
-  /* 手に持つ三角ピース */
-  s += '<polygon points="13,-24 27,-24 20,-37" fill="#ff8fb1" stroke="#fff" stroke-width="1.3"/>';
-  /* 頭・茶髪（帽子なし・前髪とアホ毛）※そばかすなし */
+  s += '<path d="M-10.5,-62 L-7,-30" stroke="#a37f52" stroke-width="3.2" stroke-linecap="round"/>';
+  s += '<path d="M10.5,-62 L7,-30" stroke="#a37f52" stroke-width="3.2" stroke-linecap="round"/>';
+  /* 手に持つ平行四辺形ピース */
+  s += '<polygon points="11,-21 25,-21 30,-34 16,-34" fill="#ff8fb1" stroke="' + OL + '" stroke-width="1.6" stroke-linejoin="round"/>';
+  /* 頭・黒髪（毛束のある公式ヘア＋アホ毛）※そばかすなし */
   s += headBase(-76, 17.5);
-  s += '<path d="M-1,-92.5 q-1,-6.5 5,-8.5 q4,-1.6 6.2,1.6" stroke="#8a5a2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
-  s += '<path d="M-17.8,-78 a17.8,17.8 0 0 1 35.6,0 q-4.4,3.2 -8.9,0.4 q-4.5,3 -8.9,0 q-4.5,2.6 -8.9,-0.4 z" fill="#8a5a2b"/>';
-  s += faceSVG(-76, { brow: "#6e4520" });
+  s += '<path d="M-18.2,-79.5 C-18.8,-91 -13,-96.5 -6,-97.5 L-8.5,-101 L-2.5,-98 L0,-102.5 L3.5,-98.2 L8,-101 L9,-96.8 C15,-94.5 18.8,-89 18.2,-79.5 C14.5,-82 12,-79.6 9.2,-82 C6.4,-79.8 3.4,-82.4 0.4,-80 C-2.6,-82.4 -5.6,-79.8 -8.4,-82 C-11.2,-79.6 -14,-82 -18.2,-79.5 Z" fill="#26262a" stroke="' + OL + '" stroke-width="1.5" stroke-linejoin="round"/>';
+  s += '<path d="M-18.4,-84 q-1.8,7.5 -0.4,13.5 l4.2,-0.4 q-1.4,-7 -0.9,-12.6 z" fill="#26262a" stroke="' + OL + '" stroke-width="1.1" stroke-linejoin="round"/>';
+  s += '<path d="M18.4,-84 q1.8,7.5 0.4,13.5 l-4.2,-0.4 q1.4,-7 0.9,-12.6 z" fill="#26262a" stroke="' + OL + '" stroke-width="1.1" stroke-linejoin="round"/>';
+  s += '<path d="M0.5,-100.5 q-0.5,-6 4.5,-8.5" stroke="#26262a" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+  s += faceSVG(-76, { brow: "#26262a", mouth: "open", mouthDy: 5.2, noBlush: true });
+  s += blushStreaks(-76);
   return s;
 }
 /* ちびキャラ1人分。kind: papa / mama / oni / mizu（原点=足元中央） */
@@ -441,31 +489,69 @@ function charSVG(kind, x, y, s) {
   var inner = kind === "papa" ? charPapa() : kind === "mama" ? charMama() : kind === "oni" ? charOni() : charMizu();
   return '<g transform="translate(' + x + ',' + y + ') scale(' + s + ')">' + inner + '</g>';
 }
+var heroSeq = 0;
 function familySVG(w) {
-  return '<svg viewBox="0 0 360 202" width="' + (w || "100%") + '" role="img" aria-label="ミズー一家のイラスト">'
-    + '<ellipse cx="180" cy="188" rx="168" ry="8" fill="#000" opacity=".06"/>'
-    + '<polygon points="' + starPts(34, 24, 10) + '" fill="#ffc93c"/>'
-    + '<polygon points="' + starPts(328, 18, 8) + '" fill="#ffc93c"/>'
-    + '<polygon points="168,26 182,26 175,13" fill="#2bb3a3" opacity=".8"/>'
-    + charSVG("papa", 58, 184, 1.5)
-    + charSVG("mama", 148, 184, 1.38)
-    + charSVG("oni", 234, 184, 1.2)
-    + charSVG("mizu", 306, 184, 1.08)
-    + '<text x="58" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#6f6a5e">パパ</text>'
-    + '<text x="148" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#6f6a5e">ママ</text>'
-    + '<text x="234" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#6f6a5e">お兄ちゃん</text>'
-    + '<text x="306" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#6f6a5e">ミズー</text>'
-    + '</svg>';
+  heroSeq += 1;
+  var gid = "heroWall" + heroSeq;
+  var s = '<svg viewBox="0 0 360 216" width="' + (w || "100%") + '" role="img" aria-label="ミズー一家のイラスト">';
+  /* 工作室の壁（木の板壁）と床 */
+  s += '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">'
+     + '<stop offset="0" stop-color="#fff6de"/><stop offset="1" stop-color="#ffe9bf"/></linearGradient></defs>';
+  s += '<rect x="0" y="0" width="360" height="216" fill="url(#' + gid + ')"/>';
+  s += '<path d="M0,46 L360,46 M0,92 L360,92 M0,138 L360,138" stroke="#eccf9c" stroke-width="2" opacity=".65"/>';
+  s += '<path d="M28,24 q14,-4 26,0 M292,116 q14,-4 26,0 M196,66 q12,-3.5 22,0" stroke="#e8c184" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>';
+  s += '<rect x="0" y="176" width="360" height="40" fill="#f6ddab"/>';
+  s += '<path d="M0,176 L360,176" stroke="#e0ba76" stroke-width="2.4"/>';
+  s += '<path d="M64,178 L64,214 M156,178 L156,214 M252,178 L252,214 M322,178 L322,214" stroke="#e6c384" stroke-width="1.6" opacity=".7"/>';
+  /* 壁の額縁（かげの かたちの見本） */
+  s += '<g><rect x="5" y="5" width="27" height="25" rx="4" fill="#b9824e" stroke="#8a5a2e" stroke-width="1.8"/>'
+     + '<rect x="9" y="9" width="19" height="17" fill="#fff8ea"/>'
+     + '<polygon points="' + starPts(18.5, 17.5, 6.5) + '" fill="#5d7189"/></g>';
+  s += '<g><rect x="328" y="5" width="27" height="25" rx="4" fill="#b9824e" stroke="#8a5a2e" stroke-width="1.8"/>'
+     + '<rect x="332" y="9" width="19" height="17" fill="#fff8ea"/>'
+     + '<polygon points="336,21 343,12 347,17 351,12 351,21" fill="#5d7189"/></g>';
+  /* タングラムのガーランド */
+  s += '<path d="M96,5 Q180,27 264,5" stroke="#c89b62" stroke-width="2" fill="none"/>';
+  s += '<polygon points="114,12.5 126,12.5 120,22" fill="#2bb3a3" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  s += '<rect x="146" y="16" width="10.5" height="10.5" rx="1.6" fill="#ff7b6b" stroke="' + OL + '" stroke-width="1.2" transform="rotate(6 151 21)"/>';
+  s += '<polygon points="180,15 187.5,22.5 180,30 172.5,22.5" fill="#4d96ff" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  s += '<polygon points="204,16.5 216,16.5 210,26" fill="#ffd93d" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  s += '<polygon points="232,10 244,10 240,19.5 228,19.5" fill="#ff8fb1" stroke="' + OL + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  /* 足元の影と、床に散らばるピース */
+  s += '<ellipse cx="58" cy="188" rx="30" ry="4.6" fill="#8a5a1e" opacity=".13"/>';
+  s += '<ellipse cx="148" cy="188" rx="27" ry="4.4" fill="#8a5a1e" opacity=".13"/>';
+  s += '<ellipse cx="234" cy="188" rx="24" ry="4.2" fill="#8a5a1e" opacity=".13"/>';
+  s += '<ellipse cx="306" cy="188" rx="22" ry="4" fill="#8a5a1e" opacity=".13"/>';
+  s += '<polygon points="13,205 29,205 21,193" fill="#2bb3a3" stroke="' + OL + '" stroke-width="1.4" stroke-linejoin="round"/>';
+  s += '<polygon points="246,206 260,206 253,195" fill="#ffd93d" stroke="' + OL + '" stroke-width="1.4" stroke-linejoin="round"/>';
+  s += '<polygon points="322,206 338,206 343,197 327,197" fill="#ff8fb1" stroke="' + OL + '" stroke-width="1.4" stroke-linejoin="round"/>';
+  /* 家族 */
+  s += charSVG("papa", 58, 184, 1.5);
+  s += charSVG("mama", 148, 184, 1.38);
+  s += charSVG("oni", 234, 184, 1.2);
+  s += charSVG("mizu", 306, 184, 1.08);
+  /* 名前タグ（木の札） */
+  s += '<g font-size="10.5" font-weight="700" fill="#7a5a26" text-anchor="middle">'
+     + '<rect x="32" y="193" width="52" height="15" rx="7" fill="#fffdf4" opacity=".94" stroke="#dfc493" stroke-width="1.2"/><text x="58" y="204">パパ</text>'
+     + '<rect x="122" y="193" width="52" height="15" rx="7" fill="#fffdf4" opacity=".94" stroke="#dfc493" stroke-width="1.2"/><text x="148" y="204">ママ</text>'
+     + '<rect x="202" y="193" width="64" height="15" rx="7" fill="#fffdf4" opacity=".94" stroke="#dfc493" stroke-width="1.2"/><text x="234" y="204">お兄ちゃん</text>'
+     + '<rect x="280" y="193" width="52" height="15" rx="7" fill="#fffdf4" opacity=".94" stroke="#dfc493" stroke-width="1.2"/><text x="306" y="204">ミズー</text>'
+     + '</g>';
+  s += '</svg>';
+  return s;
 }
 function mizuFaceSVG(size) {
   return '<svg viewBox="-26 -44 52 62" width="' + size + '" height="' + size + '" role="img" aria-label="ミズー">'
-    + '<path d="M-20,18 q0,-14 20,-14 q20,0 20,14 z" fill="#3a7bd5"/>'
+    + '<path d="M-20,18 q0,-14 20,-14 q20,0 20,14 z" fill="#4a86d8" stroke="' + OL + '" stroke-width="1.6" stroke-linejoin="round"/>'
     + '<rect x="-5" y="6" width="10" height="12" fill="#ffffff"/>'
-    + '<path d="M-11,5 L-8,18 M11,5 L8,18" stroke="#8a5a33" stroke-width="3" stroke-linecap="round"/>'
+    + '<path d="M-11,5 L-8,18 M11,5 L8,18" stroke="#a37f52" stroke-width="3.2" stroke-linecap="round"/>'
     + headBase(-12, 17.5)
-    + '<path d="M-1,-28.5 q-1,-6.5 5,-8.5 q4,-1.6 6.2,1.6" stroke="#8a5a2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
-    + '<path d="M-17.8,-14 a17.8,17.8 0 0 1 35.6,0 q-4.4,3.2 -8.9,0.4 q-4.5,3 -8.9,0 q-4.5,2.6 -8.9,-0.4 z" fill="#8a5a2b"/>'
-    + faceSVG(-12, { brow: "#6e4520" })
+    + '<path d="M-18.2,-15.5 C-18.8,-27 -13,-32.5 -6,-33.5 L-8.5,-37 L-2.5,-34 L0,-38.5 L3.5,-34.2 L8,-37 L9,-32.8 C15,-30.5 18.8,-25 18.2,-15.5 C14.5,-18 12,-15.6 9.2,-18 C6.4,-15.8 3.4,-18.4 0.4,-16 C-2.6,-18.4 -5.6,-15.8 -8.4,-18 C-11.2,-15.6 -14,-18 -18.2,-15.5 Z" fill="#26262a" stroke="' + OL + '" stroke-width="1.5" stroke-linejoin="round"/>'
+    + '<path d="M-18.4,-20 q-1.8,7.5 -0.4,13.5 l4.2,-0.4 q-1.4,-7 -0.9,-12.6 z" fill="#26262a" stroke="' + OL + '" stroke-width="1.1" stroke-linejoin="round"/>'
+    + '<path d="M18.4,-20 q1.8,7.5 0.4,13.5 l-4.2,-0.4 q1.4,-7 0.9,-12.6 z" fill="#26262a" stroke="' + OL + '" stroke-width="1.1" stroke-linejoin="round"/>'
+    + '<path d="M0.5,-36.5 q-0.5,-6 4.5,-8.5" stroke="#26262a" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+    + faceSVG(-12, { brow: "#26262a", mouth: "open", mouthDy: 5.2, noBlush: true })
+    + blushStreaks(-12)
     + '</svg>';
 }
 
