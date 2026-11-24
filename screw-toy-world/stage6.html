@@ -207,7 +207,7 @@ body{overflow-x:hidden}main{height:var(--app-height,100dvh);min-height:0;display
   pushMesh(part,'train axle',trim,cylTris([cx,-.82,-.33],[cx,-.82,.33],.05,10));
  }
  // ---- Fasteners: 21 screws, 7 colours x 3 (one colour per part) ----
- const R=.065, HD=.047, SD=.14, SR=.025;
+ const R=.0658, HD=.0476, SD=.14, SR=.0253;
  const specs=[];
  const addScrew=(part,color,surface,normal)=>{
   const id=specs.length;
@@ -396,7 +396,7 @@ root.ScrewGame={SPECS,COLORS,CLEARANCE,idsForPart,partFor,colorFor,create,partUn
 const {COLORS,create,remove,valid}=ScrewGame,$=s=>document.querySelector(s),canvas=$('#scene'),ctx=canvas.getContext('2d');
 let deniedFeedback=null,lastHaptic=-Infinity,flight=null,trayQueue=[],trayFlash=null,peek=false,peekPart=null,terminalPending=false;
 let lastRemovalTap=null;
-const TAP_REPEAT_MS=240,TAP_REPEAT_RADIUS=4.25;
+const TAP_REPEAT_MS=150,TAP_REPEAT_RADIUS=3;
 const pose=window.MizuStage06Scene.initial;
 let effects=[];let state=create(),history=[],yaw=pose.yaw,pitch=pose.pitch,zoom=pose.zoom,particles=[],hintId=-1,drag=null,lastTime=0;
 const KEY='mizu-screw-stage06-train-v001',MOTION=window.MizuDirectMotion;
@@ -425,7 +425,7 @@ function drawEnvironment(){
 }
 
 function updateAngle(){}
-function draw(t){updateAngle();let dt=Math.min(40,t-lastTime);if(!window.MizuToolBusy&&drag&&!drag.moved&&fingers.size===1&&!flight&&!trayFlash&&!falling()){drag.held=(drag.held||0)+dt;if(drag.held>=200){let r=canvas.getBoundingClientRect(),x=drag.x-r.left,y=drag.y-r.top;peekPart=window.WebGLToy?.available&&window.MizuMeshPick?MizuMeshPick.pickPart(MIZU_TOY_MODEL,x,y,canvas.clientWidth,canvas.clientHeight,{yaw,pitch,zoom},state):null;if(peekPart!==null){peek=true;drag.moved=true;drag.inspect=true;toast("この部品を透過中 · 押したまま回せます");}}}advanceVisuals(dt);if(terminalPending&&!flight&&!trayFlash&&!falling())showTerminal();if(deniedFeedback){deniedFeedback.life-=dt;$("#tapFeedback").style.opacity=String(Math.max(0,deniedFeedback.life/550));if(deniedFeedback.life<=0){$("#tapFeedback").style.display="none";deniedFeedback=null;}}lastTime=t;ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);drawEnvironment();
+function draw(t){updateAngle();let dt=Math.min(40,t-lastTime);if(!window.MizuToolBusy&&drag&&!drag.moved&&fingers.size===1&&!flight&&!trayFlash&&!falling()){drag.held=(drag.held||0)+dt;if(drag.held>=320){let r=canvas.getBoundingClientRect(),x=drag.x-r.left,y=drag.y-r.top;peekPart=window.WebGLToy?.available&&window.MizuMeshPick?MizuMeshPick.pickPart(MIZU_TOY_MODEL,x,y,canvas.clientWidth,canvas.clientHeight,{yaw,pitch,zoom},state):null;if(peekPart!==null){peek=true;drag.moved=true;drag.inspect=true;toast("この部品を透過中 · 押したまま回せます");}}}advanceVisuals(dt);if(terminalPending&&!flight&&!trayFlash&&!falling())showTerminal();if(deniedFeedback){deniedFeedback.life-=dt;$("#tapFeedback").style.opacity=String(Math.max(0,deniedFeedback.life/550));if(deniedFeedback.life<=0){$("#tapFeedback").style.display="none";deniedFeedback=null;}}lastTime=t;ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);drawEnvironment();
 effects=effects.filter(e=>e.life>0);for(const e of effects){e.life-=dt;ctx.globalAlpha=Math.max(0,e.life/450);ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,18+(450-e.life)*.08,0,7);ctx.stroke();}ctx.globalAlpha=1;particles=particles.filter(p=>p.life>0);for(let p of particles){p.life-=dt;p.x+=p.vx*dt/16;p.y+=p.vy*dt/16;p.vy+=.1;ctx.globalAlpha=Math.max(0,p.life/600);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,5,5);}ctx.globalAlpha=1;requestAnimationFrame(draw);}
 // A tiny tool in the existing header conveys Mizu's action, never over the model.
 let mizuTurnAnimation=null;
@@ -480,7 +480,7 @@ try{const raw=localStorage.getItem(VIEW_KEY),v=JSON.parse(raw);if(v&&Number.isFi
 function setZoom(value){if(window.MizuToolBusy)return;if(!Number.isFinite(value))return;zoom=Math.max(.45,Math.min(3,value));$('#zoomLabel').textContent=Math.round(zoom*100)+'%';const slider=$('#zoomSlider');if(slider)slider.value=String(Math.round(zoom*100));$('#zoomIn').disabled=zoom>=3;$('#zoomOut').disabled=zoom<=.45;saveView();}
 function distance(){const [a,b]=[...fingers.values()];return Math.hypot(a.x-b.x,a.y-b.y);}
 canvas.addEventListener('pointerdown',e=>{if(window.MizuToolBusy)return;window.MizuAudio?.unlock();if(e.cancelable)e.preventDefault();if(fingers.size>=2)return;fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);if(fingers.size===2){peek=false;pinch={distance:Math.max(1,distance()),zoom};if(drag)drag.moved=true;return;}drag={pointerId:e.pointerId,x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY,moved:false};});
-canvas.addEventListener('pointermove',e=>{if(window.MizuToolBusy)return;if(!fingers.has(e.pointerId))return;if(e.cancelable)e.preventDefault();fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&fingers.size===2){setZoom(pinch.zoom*distance()/pinch.distance);return;}if(!drag||e.pointerId!==drag.pointerId)return;let dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>9){drag.moved=true;if(!drag.inspect)peek=false;}if(drag.moved){yaw+=dx*.011;pitch+=dy*.011;}drag.px=e.clientX;drag.py=e.clientY;});
+canvas.addEventListener('pointermove',e=>{if(window.MizuToolBusy)return;if(!fingers.has(e.pointerId))return;if(e.cancelable)e.preventDefault();fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&fingers.size===2){setZoom(pinch.zoom*distance()/pinch.distance);return;}if(!drag||e.pointerId!==drag.pointerId)return;let dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>16){drag.moved=true;if(!drag.inspect)peek=false;}if(drag.moved){yaw+=dx*.011;pitch+=dy*.011;}drag.px=e.clientX;drag.py=e.clientY;});
 function sameViewTap(p,t){
  if(!lastRemovalTap)return false;
  const cut=lastRemovalTap;
@@ -781,30 +781,34 @@ function findHint(model,w,h,v,state){for(let id=0;id<(root.ScrewGame?.SPECS.leng
 // Touch assist only considers a screw whose own center is visible, never hidden through a wall.
 const centerCache=new WeakMap();
 function screwCenters(model){if(centerCache.has(model))return centerCache.get(model);let groups=new Map();for(let m of model){if(m.screw<0)continue;if(model.some(q=>q.screw===m.screw&&q.name?.startsWith("round screw head"))&&!m.name?.startsWith("round screw head"))continue;let b=bounds(m),g=groups.get(m.screw)||{id:m.screw,lo:[Infinity,Infinity,Infinity],hi:[-Infinity,-Infinity,-Infinity]};for(let a=0;a<3;a++){g.lo[a]=Math.min(g.lo[a],b.lo[a]);g.hi[a]=Math.max(g.hi[a],b.hi[a]);}groups.set(m.screw,g);}let centers=[...groups.values()].map(g=>({id:g.id,p:g.lo.map((v,a)=>(v+g.hi[a])/2)}));centerCache.set(model,centers);return centers;}
-const TOUCH_CENTRAL=2.5, TOUCH_CLUSTER=16, TOUCH_MID_MARGIN=12, TOUCH_TIE=2.5;
-function pickTouch(model,x,y,w,h,v,state,radius=22){
- const direct=pick(model,x,y,w,h,v,state);
+// Phase 7 touch rules: one common hit radius for every screw in every stage.
+// A tap selects a screw when (a) the ray hits its head exactly, or (b) it is
+// the nearest screw whose own center is within the hit radius and whose
+// center ray picks the screw itself (so it is truly visible, never hidden
+// behind a part). Near-ties resolve deterministically to the nearest center
+// instead of swallowing the tap: the old tie/cluster guards returned null
+// and were a direct cause of "tapped but nothing happened" on device.
+const TOUCH_RADIUS=24;
+function pickTouch(model,x,y,w,h,v,state,radius=TOUCH_RADIUS){
  const near=screwCenters(model).filter(c=>root.ScrewGame.canRemove(state,c.id)).map(c=>({...c,q:project(c.p.map((p,i)=>p+(i===1?root.ScrewGame.offsetY(state,root.ScrewGame.partFor(c.id)):0)),w,h,v)}))
   .map(c=>({...c,d:Math.hypot(c.q[0]-x,c.q[1]-y)})).filter(c=>c.d<=radius&&c.q[0]>=0&&c.q[0]<=w&&c.q[1]>=0&&c.q[1]<=h).sort((a,b)=>a.d-b.d||a.id-b.id);
+ const visible=near.filter(c=>pick(model,...c.q,w,h,v,state)===c.id);
+ const direct=pick(model,x,y,w,h,v,state);
  if(direct!==null){
-  const own=near.find(c=>c.id===direct);
-  if(!own||own.d<=TOUCH_CENTRAL)return direct;
-  // A visible head center is a stronger target than a neighboring projected
-  // rim, only when the touch is tight and the center has its own unobscured ray.
-  const closest=near[0];
-  if(closest&&closest.id!==direct&&closest.d<=TOUCH_CENTRAL&&own.d-closest.d>=TOUCH_TIE
-      &&pick(model,...closest.q,w,h,v,state)===closest.id)return closest.id;
-  // At a real overlap/rim don't overrule the player's intention by guessing
-  // between two separately visible centers. The well-aimed center still works.
-  const dense=near.filter(c=>c.id!==direct&&c.d<=TOUCH_MID_MARGIN&&own.d<=TOUCH_MID_MARGIN
-      &&Math.abs(c.d-own.d)<TOUCH_TIE&&Math.hypot(c.q[0]-own.q[0],c.q[1]-own.q[1])<=TOUCH_CLUSTER);
-  if(dense.length&&pick(model,...own.q,w,h,v,state)===direct&&dense.some(c=>pick(model,...c.q,w,h,v,state)===c.id))return null;
+  // Rim graze correction: the ray clipped one head, but the tap sits much
+  // closer to another screw's visible center -- that center is the target.
+  const own=visible.find(c=>c.id===direct);
+  const closest=visible[0];
+  if(closest&&closest.id!==direct&&closest.d<=10&&(!own||own.d-closest.d>=4))return closest.id;
   return direct;
  }
- const hitPart=pick(model,x,y,w,h,v,state,true);
- const visible=near.filter(c=>(hitPart===null||root.ScrewGame.partFor(c.id)===hitPart)&&pick(model,...c.q,w,h,v,state)===c.id);
  if(!visible.length)return null;
- if(visible.length>1&&visible[1].d-visible[0].d<TOUCH_TIE)return null;
+ // Prefer a candidate on the part the tap actually landed on.
+ const hitPart=pick(model,x,y,w,h,v,state,true);
+ if(hitPart!==null){
+  const onPart=visible.find(c=>root.ScrewGame.partFor(c.id)===hitPart);
+  if(onPart)return onPart.id;
+ }
  return visible[0].id;
 }
 const api={pickBlocked:(model,x,y,w,h,v,s)=>{let id=pick(model,x,y,w,h,v,s,false,true);return id!==null&&root.ScrewGame?.blockedParts(s,id).length?id:null;},pickPart:(...args)=>pick(...args,true),pick,pickTouch,triangle,inverse,project,findHint};if(typeof module!=='undefined')module.exports=api;root.MizuMeshPick=api;
@@ -825,16 +829,10 @@ api.flightStart=id=>{let c=MIZU_SCREW_LAYOUT[id].headCenter.slice();c[1]+=api.ev
 api.pickBlocked=(x,y)=>MizuMeshPick.pickBlocked(MIZU_TOY_MODEL,x,y,canvas.clientWidth,canvas.clientHeight,MizuStudy.view(),MizuStudy.state());
 api.pick=(x,y)=>{
  const P=MizuMeshPick,w=canvas.clientWidth,h=canvas.clientHeight,v=MizuStudy.view(),s=MizuStudy.state();
- // Stage 2 has a tighter cluster than the dog stage. Keep a small finger
- // halo, but don't let a tap at a known empty slot skip to another screw.
- for(const id of s.removed){
-  const p=P.project(MIZU_SCREW_LAYOUT[id].headCenter,w,h,v);
-  if(Math.hypot(x-p[0],y-p[1])<=5){
-   if(P.pick(MIZU_TOY_MODEL,x,y,w,h,v,s)===null)return null;
-   break;
-  }
- }
- return P.pickTouch(MIZU_TOY_MODEL,x,y,w,h,v,s,14);
+ // Phase 7: one common 24px hit radius for every stage (see s05 pickTouch).
+ // The old removed-screw halo branch is gone; the tap-repeat guard in s03
+ // covers accidental immediate re-taps at the same spot.
+ return P.pickTouch(MIZU_TOY_MODEL,x,y,w,h,v,s,24);
 };
 api.findHint=()=>MizuMeshPick.findHint(MIZU_TOY_MODEL,canvas.clientWidth,canvas.clientHeight,MizuStudy.view(),MizuStudy.state());
 function depth(m,v){let c=m.center,z=-c[0]*Math.sin(v.yaw)+c[2]*Math.cos(v.yaw);return c[1]*Math.sin(v.pitch)+z*Math.cos(v.pitch);}
