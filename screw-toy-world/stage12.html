@@ -193,9 +193,10 @@ body{overflow-x:hidden}main{height:var(--app-height,100dvh);min-height:0;display
   return [[c[0],c[1],c[2]],[c[0],c[2],c[3]],[c[4],c[7],c[6]],[c[4],c[6],c[5]],[c[0],c[5],c[1]],[c[0],c[4],c[5]],[c[3],c[2],c[6]],[c[3],c[6],c[7]],[c[1],c[6],c[2]],[c[1],c[5],c[6]],[c[0],c[3],c[7]],[c[0],c[7],c[4]]];
  }
  // ---- Part 0: platform + keep (resting piece, stays) ----
+ // Phase 8: body meshes are part 11 (dependent part, comes off last, when every screwed part is off). Part 0 keeps only genuine base/stand meshes.
  const trim=[.32,.34,.40];
  pushMesh(0,'castle platform',[.55,.48,.38],boxTris(0,-.91,0,2.0,.28,1.2));
- pushMesh(0,'castle keep',[.80,.78,.72],boxTris(0,-.22,0,1.2,1.1,.8));
+ pushMesh(11,'castle keep',[.80,.78,.72],boxTris(0,-.22,0,1.2,1.1,.8));
  // ---- Part 1: left tower ----
  pushMesh(1,'castle tower L',[.28,.63,.86],cylTris([-.78,-.77,.25],[-.78,.45,.25],.21,16));
  // ---- Part 2: left tower roof ----
@@ -261,6 +262,7 @@ body{overflow-x:hidden}main{height:var(--app-height,100dvh);min-height:0;display
   if(part===8)return [-.30*ease,(floorY-mins.get(8))*b*b,.30*ease];
   if(part===9)return [.30*ease,(floorY-mins.get(9))*b*b,.30*ease];
   if(part===10)return [0,(floorY-mins.get(10))*b*b,.50*ease];
+  if(part===11)return [.45*ease,(floorY-mins.get(11))*b*b,.15*ease];
   return [0,0,0];
  }
 
@@ -308,7 +310,7 @@ body{overflow-x:hidden}main{height:var(--app-height,100dvh);min-height:0;display
  }
  window.MizuModel='castle12';
  window.MizuDirectMotion=Object.freeze({pull:180,fly:250,fall:570,tray:690,variant:'stage12-castle-v001'});
- window.MizuStage12Scene=Object.freeze({initial,floorY,groups,drop,screwTravel,clearanceFraction});
+ window.MizuStage12Scene=Object.freeze({initial,floorY,groups,drop,screwTravel,clearanceFraction,bodyPart:11});
  window.MIZU_SCREW_LAYOUT=specs;
  window.MIZU_TOY_MODEL=indexed;
 })();
@@ -366,16 +368,19 @@ root.MizuAudio={unlock,play,stop,status,setMuted(v){muted=!!v;if(muted)stop();le
 })(typeof window!=='undefined'?window:globalThis);
 </script><script>(function(root){
 'use strict';
-const SPECS=root.MIZU_SCREW_LAYOUT, groups=root.MizuStage12Scene.groups;
+const SPECS=root.MIZU_SCREW_LAYOUT, scene=root.MizuStage12Scene, groups=scene.groups, BODY=scene.bodyPart||0;
+// Phase 8: BODY (scene.bodyPart) is the toy's main body: a dependent part with no
+// screws of its own. It comes off when every screw group is unfastened. Part 0
+// keeps only genuine base/stand meshes and stays on the table.
 const COLORS=['#ed6c68','#4ba9de','#68b59b','#efbe54','#9e78d9','#f28c3c','#f580b0','#4fc2d9','#a9805a','#9ec94f'];
 const CLEARANCE={}; // Real visibility controls access; no invented locking pieces.
 const idsForPart=p=>SPECS.filter(q=>q.part===p).map(q=>q.id);
 const partFor=id=>SPECS[id]?.part;
 const colorFor=id=>SPECS[id]?.color;
 function create(){return {version:12,level:12,removed:[],buffer:[],boxes:[{color:0,count:0},{color:1,count:0}],queue:[2,3,4,5,6,7,8,9],moves:0,won:false,lost:false,capacity:5,stash:[],broken:[],completed:[0,0,0,0,0,0,0,0,0,0],actions:[]};}function partUnfastened(s,p){return groups.find(g=>g.leg===p)?.screws.every(id=>s.removed.includes(id))??(p===0&&SPECS.every(q=>s.removed.includes(q.id)));}
-function partGone(s,p){return Number.isInteger(p)&&p>=1&&partUnfastened(s,p)===true;}
+function partGone(s,p){if(BODY>=1&&p===BODY)return groups.every(g=>partUnfastened(s,g.leg));return Number.isInteger(p)&&p>=1&&partUnfastened(s,p)===true;}
 function restingPart(s,p){return p===0&&partUnfastened(s,p);}
-function detachedParts(a,b){return groups.filter(g=>!partGone(a,g.leg)&&partGone(b,g.leg)).map(g=>g.leg);}
+function detachedParts(a,b){const out=groups.filter(g=>!partGone(a,g.leg)&&partGone(b,g.leg)).map(g=>g.leg);if(BODY>=1&&!partGone(a,BODY)&&partGone(b,BODY))out.push(BODY);return out;}
 function canRemove(s,id){return Number.isInteger(id)&&id>=0&&id<SPECS.length&&!s.removed.includes(id);}
 function settle(s,events){
  const snap=()=>({boxes:JSON.parse(JSON.stringify(s.boxes)),buffer:s.buffer.slice(),stash:[]});
@@ -484,7 +489,7 @@ function advanceVisuals(dt){
 function falling(){return !!window.WebGLToy?.isFalling?.();}
 let celebrated=false;
 function celebrate(){if(celebrated)return;celebrated=true;window.MizuAudio?.play('fanfare');if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const box=document.createElement('div');box.className='confetti';const colors=['#ed6c68','#4ba9de','#68b59b','#efbe54','#9d78e0','#f58c3c','#fff6d8'];for(let i=0;i<90;i++){const p=document.createElement('i');const sz=5+Math.random()*6;p.style.left=Math.random()*100+'%';p.style.width=sz+'px';p.style.height=(Math.random()<.35?sz:sz*1.9)+'px';p.style.background=colors[i%colors.length];p.style.setProperty('--x',(Math.random()*160-80)+'px');p.style.setProperty('--r',(Math.random()*720-360)+'deg');p.style.animationDuration=(2.1+Math.random()*1.6)+'s';p.style.animationDelay=(Math.random()*.5)+'s';if(Math.random()<.3)p.style.borderRadius='50%';box.append(p);}document.body.append(box);setTimeout(()=>box.remove(),5200);}
-function showTerminal(){if(flight||trayFlash)return;if(falling()){terminalPending=true;return;}terminalPending=false;if(state.won){celebrate();modal('<h2>お城を分解できた！</h2><p>ネジ30本を片づけ、左右の塔と屋根、中央の塔と屋根、門、左右の胸壁、跳ね橋がすべて外れました。城壁は置いたままです。</p><p>もう一度遊ぶには「やり直す」を選んでね。</p>');}else if(state.lost)modal('<h2>一時おきばがいっぱい</h2><p>「ひとつ戻す」で順番を変えてみよう。箱の色を先に集めるのがコツ。</p>');}
+function showTerminal(){if(flight||trayFlash)return;if(falling()){terminalPending=true;return;}terminalPending=false;if(state.won){celebrate();modal('<h2>お城を分解できた！</h2><p>ネジ30本を片づけ、左右の塔と屋根、中央の塔と屋根、門、左右の胸壁、跳ね橋がすべて外れました。城壁も最後に外れて、残ったのは土台だけです。</p><p>もう一度遊ぶには「やり直す」を選んでね。</p>');}else if(state.lost)modal('<h2>一時おきばがいっぱい</h2><p>「ひとつ戻す」で順番を変えてみよう。箱の色を先に集めるのがコツ。</p>');}
 function deniedTap(o,reason){const blocked=!state.removed.includes(o.id)&&ScrewGame.blockedParts(state,o.id).length>0;deniedFeedback={id:o.id,reason,life:550,bump:blocked};if(blocked&&window.WebGLToy?.available)window.WebGLToy.onBump?.(o.id);const badge=$('#tapFeedback');badge.textContent='🔒';badge.style.left=o.center[0]+'px';badge.style.top=o.center[1]+'px';badge.style.display='grid';badge.style.opacity='1';badge.style.animation='none';void badge.offsetWidth;badge.style.animation='deniedTap .35s ease-out';toast(reason);const now=typeof performance!=='undefined'?performance.now():Date.now();if(now-lastHaptic>=250){lastHaptic=now;try{if(typeof navigator!=='undefined'&&typeof navigator.vibrate==='function')navigator.vibrate(18);}catch{}}}
 const coverName={};
 function blockedMessage(id){
@@ -537,7 +542,7 @@ canvas.addEventListener('pointerup',e=>finishPointer(e,false));canvas.addEventLi
 $('#undo').onclick=()=>{if(window.MizuToolBusy)return;if(history.length){cancelVisuals();state=JSON.parse(history.pop());hintId=-1;render();toast('ひとつ戻したよ。違う順番を試そう');}};
 $('#restart').onclick=()=>{if(window.MizuToolBusy)return;modal('<h2>はじめから遊ぶ？</h2><p>今の模型の進み具合をリセットします。</p><button id="confirmRestart">はじめから</button>');};document.addEventListener('click',e=>{if(window.MizuToolBusy)return;if(e.target.id==='confirmRestart'){cancelVisuals();state=create();history=[];hintId=-1;render();$('#modal').close();toast('同じ色を3つ、箱にあつめよう');}});
 $('#hint').onclick=()=>{if(window.MizuToolBusy)return;if(falling()){toast('パーツが外れたら次のネジを探せます');return;}if(window.WebGLToy?.available){let chosen=window.WebGLToy.findHint();hintId=chosen?chosen.id:-1;toast(chosen?'光っているネジが、今の箱に入るよ':'模型を回して、直接見えるネジを探そう');return;}toast('この環境は3D表示に対応していません');};
-$('#settings').onclick=()=>{if(window.MizuToolBusy)return;modal('<h2>あそびかた</h2><ol><li>横にスワイプして360度回転。指を離して何度でも回せます。左右の矢印でも90度ずつ回せます。</li><li>上下にも360度回せます。逆さになったら◎で正面へ戻せます。上下の矢印は90度ずつ回します。</li><li>2本指を広げて拡大、近づけて縮小。＋/−でも45〜300%に調整できます。◎で車の見やすい角度と倍率に戻ります。模型ごとに向きと拡大率を保存し、再開時に復元します。</li><li>模型画面の見たい部品を長押しすると、その部品だけ半透明に。透かしている間はネジ頭だけで位置を見せます。押したまま指を動かして回せます。離すと元に戻ります。確認中はネジを外せません。</li><li>見えているネジをタップ。</li><li>同じ色3本で箱が入れ替わる。</li><li>違う色は5本まで一時おきばへ。</li></ol><p>この試遊はお城の1面。パーツ1つにつきネジが3本。3本とも外すと、そのパーツだけ外れます。城壁は置いたままです。道具や広告なしで最後まで遊べます。</p>');};$('#closeModal').onclick=()=>$('#modal').close();$('#turnLeft').onclick=()=>{if(window.MizuToolBusy)return;yaw-=Math.PI/2;toast('左へ90度まわしたよ');updateAngle();saveView();};$('#turnRight').onclick=()=>{if(window.MizuToolBusy)return;yaw+=Math.PI/2;toast('右へ90度まわしたよ');updateAngle();saveView();};$('#tiltUp').onclick=()=>{if(window.MizuToolBusy)return;pitch-=Math.PI/2;toast('上へ90度まわしたよ。◎で正面へ戻せます');updateAngle();saveView();};$('#tiltDown').onclick=()=>{if(window.MizuToolBusy)return;pitch+=Math.PI/2;toast('下へ90度まわしたよ。◎で正面へ戻せます');updateAngle();saveView();};$('#zoomIn').onclick=()=>setZoom(zoom*1.25);$('#zoomOut').onclick=()=>setZoom(zoom/1.25);$('#resetView').onclick=()=>{if(window.MizuToolBusy)return;yaw=pose.yaw;pitch=pose.pitch;setZoom(pose.zoom);};setZoom(zoom);
+$('#settings').onclick=()=>{if(window.MizuToolBusy)return;modal('<h2>あそびかた</h2><ol><li>横にスワイプして360度回転。指を離して何度でも回せます。左右の矢印でも90度ずつ回せます。</li><li>上下にも360度回せます。逆さになったら◎で正面へ戻せます。上下の矢印は90度ずつ回します。</li><li>2本指を広げて拡大、近づけて縮小。＋/−でも45〜300%に調整できます。◎で車の見やすい角度と倍率に戻ります。模型ごとに向きと拡大率を保存し、再開時に復元します。</li><li>模型画面の見たい部品を長押しすると、その部品だけ半透明に。透かしている間はネジ頭だけで位置を見せます。押したまま指を動かして回せます。離すと元に戻ります。確認中はネジを外せません。</li><li>見えているネジをタップ。</li><li>同じ色3本で箱が入れ替わる。</li><li>違う色は5本まで一時おきばへ。</li></ol><p>この試遊はお城の1面。パーツ1つにつきネジが3本。3本とも外すと、そのパーツだけ外れます。城壁は、全部のパーツが外れると最後に外れます。残るのは土台だけです。道具や広告なしで最後まで遊べます。</p>');};$('#closeModal').onclick=()=>$('#modal').close();$('#turnLeft').onclick=()=>{if(window.MizuToolBusy)return;yaw-=Math.PI/2;toast('左へ90度まわしたよ');updateAngle();saveView();};$('#turnRight').onclick=()=>{if(window.MizuToolBusy)return;yaw+=Math.PI/2;toast('右へ90度まわしたよ');updateAngle();saveView();};$('#tiltUp').onclick=()=>{if(window.MizuToolBusy)return;pitch-=Math.PI/2;toast('上へ90度まわしたよ。◎で正面へ戻せます');updateAngle();saveView();};$('#tiltDown').onclick=()=>{if(window.MizuToolBusy)return;pitch+=Math.PI/2;toast('下へ90度まわしたよ。◎で正面へ戻せます');updateAngle();saveView();};$('#zoomIn').onclick=()=>setZoom(zoom*1.25);$('#zoomOut').onclick=()=>setZoom(zoom/1.25);$('#resetView').onclick=()=>{if(window.MizuToolBusy)return;yaw=pose.yaw;pitch=pose.pitch;setZoom(pose.zoom);};setZoom(zoom);
 let viewportSignature=null;
 function resize(){
  const d=Math.min(devicePixelRatio||1,2),r=canvas.getBoundingClientRect();
