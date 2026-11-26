@@ -1609,4 +1609,116 @@ window.MizuAds = (function () {
 
 </script>
 </body>
+<script>
+/* ================= WEB: BGM playback layer (oyatsu, web build) =================
+   The 60-stage master ships silent: the user-approved BGM (title /
+   map / play, the game's own three songs) only ever lived in the
+   v0 prototype and never reached the DOT v21 line. This layer adds
+   the same tracks with the same scene assignment to the WEB build,
+   played with HTMLAudio elements unlocked by the first tap (the
+   browser autoplay rule). The mp3 files sit next to index.html
+   (bgm-title.mp3 / bgm-map.mp3 / bgm-play.mp3).
+
+   Native shell: this layer stands down completely — inside
+   Capacitor the store layer (MizuNBGM, NativeAudio) owns BGM, and
+   if that layer is present in the page at all (store www opened in
+   a plain browser) this layer yields to it, so the two never play
+   at once. Wiring wraps the game's own global functions from this
+   appended block; the game code itself is never edited.
+
+   Scene mapping (the game routes through routeScreen()):
+     route "title"        -> title track
+     route "map"          -> map track
+     route "game"         -> play track
+     route "daily"/"mini" -> map track (sub-screens of the map)
+     stage end (result)   -> map track (finishStageOne hook below) */
+(function () {
+  "use strict";
+  try { if (window.Capacitor) return; } catch (e) {}
+  var FILES = { title: "bgm-title.mp3", map: "bgm-map.mp3", play: "bgm-play.mp3" };
+  var wantScene = "title"; /* the game always boots to the title screen */
+  var audios = {}, unlocked = false, cur = null, dead = false;
+
+  function storeOwns() { try { return !!window.MizuNBGM; } catch (e) { return false; } }
+  function audio(k) {
+    if (!audios[k]) {
+      var a = new Audio(FILES[k]);
+      a.loop = true;
+      a.preload = "auto";
+      audios[k] = a;
+    }
+    return audios[k];
+  }
+  function stopAll() {
+    for (var k in audios) { try { audios[k].pause(); } catch (e) {} }
+    cur = null;
+  }
+  function sync() {
+    if (dead) return;
+    if (storeOwns()) { dead = true; stopAll(); return; }
+    try { if (window.Capacitor) { dead = true; stopAll(); return; } } catch (e) {}
+    if (!unlocked) return;
+    if (document.hidden) { if (cur) { try { audios[cur].pause(); } catch (e) {} } return; }
+    if (!wantScene) { stopAll(); return; }
+    if (cur && cur !== wantScene) { try { audios[cur].pause(); } catch (e) {} }
+    cur = wantScene;
+    var a = audio(cur);
+    if (a.paused) { var p = a.play(); if (p && p.catch) p.catch(function () {}); }
+  }
+  try {
+    document.addEventListener("pointerdown", function () {
+      if (!unlocked) { unlocked = true; sync(); }
+    }, true);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { if (cur) { try { audios[cur].pause(); } catch (e) {} } }
+      else { sync(); }
+    });
+    window.addEventListener("pageshow", function () { sync(); });
+  } catch (e) {}
+
+  window.MizuWebBGM = {
+    active: function () { return !dead; },
+    scene: function () { return wantScene; },
+    playing: function () { return (unlocked && cur && audios[cur] && !audios[cur].paused) ? cur : null; }
+  };
+  function playScene(name) {
+    wantScene = (name && Object.prototype.hasOwnProperty.call(FILES, name)) ? name : null;
+    sync();
+  }
+
+  /* ---- wiring onto the game's own choke points ---- */
+  function sceneForRoute(route) {
+    if (route === "title") return "title";
+    if (route === "game") return "play";
+    return "map"; /* map / daily / mini */
+  }
+  try {
+    var origRoute = window.routeScreen;
+    if (typeof origRoute === "function") {
+      window.routeScreen = function (route) {
+        var r = origRoute.apply(null, arguments);
+        try { playScene(sceneForRoute(route)); } catch (e) {}
+        return r;
+      };
+    }
+  } catch (e) {}
+  try {
+    var origFinish = window.finishStageOne;
+    if (typeof origFinish === "function") {
+      window.finishStageOne = function () {
+        var r = origFinish.apply(null, arguments);
+        try {
+          /* finishStageOne early-returns unless the stage really ended;
+             switch only when the result screen state was reached. */
+          if (typeof S !== "undefined" && S && S.screen === "over") {
+            playScene("map"); /* result screen */
+          }
+        } catch (e) {}
+        return r;
+      };
+    }
+  } catch (e) {}
+})();
+</script>
+
 </html>
