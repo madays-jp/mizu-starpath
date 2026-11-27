@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ミズーのほしぞらマッチ（試作v0）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    background:
+      radial-gradient(1.8px 1.8px at 12% 18%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 32% 8%, #ffeeb0 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 58% 22%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 78% 10%, #cfe4ff 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 90% 30%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 45% 34%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 68% 40%, #ffeeb0 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 22% 44%, #cfe4ff 50%, transparent 51%),
+      linear-gradient(180deg,#0d1a38 0%,#1d3461 58%,#2c4a7c 100%);
+    color:#eaf2ff; overflow:hidden; touch-action:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  #app { width:100%; max-width:430px; height:100%; display:flex; flex-direction:column; align-items:center; padding:8px 10px 10px; }
+  header { width:100%; display:flex; align-items:center; gap:8px; }
+  h1 { font-size:16px; letter-spacing:.02em; flex:1; white-space:nowrap; }
+  h1 .sub { font-size:10px; color:#9db8dd; display:block; font-weight:normal; }
+  .stages { display:flex; gap:6px; }
+  .stage-btn {
+    border:2px solid #7fa8d8; background:rgba(255,255,255,.12); color:#dceaff; border-radius:999px;
+    font-size:13px; font-weight:bold; padding:5px 12px; cursor:pointer;
+  }
+  .stage-btn.active { background:#ff9f2e; color:#fff; border-color:#ff9f2e; }
+  .stage-btn.cleared { border-color:#57b25e; }
+  #hud {
+    width:100%; display:flex; align-items:stretch; gap:8px; margin-top:8px;
+  }
+  .hud-box {
+    background:rgba(13,26,56,.62); border:2px solid #46679c; border-radius:12px;
+    padding:5px 10px; text-align:center; min-width:76px;
+  }
+  .hud-box .label { font-size:10px; color:#9db8dd; }
+  .hud-box .value { font-size:19px; font-weight:bold; line-height:1.15; }
+  #movesBox .value { color:#ff9d9d; }
+  #scoreBox { flex:1; }
+  #scoreBarWrap { height:6px; background:#2c4a7c; border-radius:3px; margin-top:3px; overflow:hidden; }
+  #scoreBar { height:100%; width:0%; background:linear-gradient(90deg,#ffc93c,#ff9f2e); border-radius:3px; transition:width .3s; }
+  #mizuBox {
+    display:flex; align-items:center; gap:6px; background:rgba(13,26,56,.62);
+    border:2px solid #46679c; border-radius:12px; padding:4px 8px 4px 4px; max-width:150px;
+  }
+  #mizuFace { width:44px; height:44px; flex:none; }
+  #mizuMsg { font-size:11px; line-height:1.3; color:#dceaff; }
+  #boardWrap { margin-top:10px; background:rgba(10,22,48,.72); border:3px solid #46679c; border-radius:18px; padding:6px; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  #board { position:relative; }
+  .block {
+    position:absolute; border-radius:22%; display:flex; align-items:center; justify-content:center;
+    transition:transform .18s ease-in-out, opacity .15s, scale .15s;
+    cursor:pointer; will-change:transform;
+  }
+  .block svg { width:82%; height:82%; pointer-events:none; }
+  .block.selected { outline:3px solid #ff9f2e; outline-offset:-3px; scale:1.08; z-index:5; }
+  .block.clearing { opacity:0; scale:.3; }
+  .t0 { background:#fff0b8; box-shadow:inset 0 -3px 0 #f2cf6b, inset 0 2px 0 #fffbe8; }
+  .t1 { background:#dfe6ff; box-shadow:inset 0 -3px 0 #a9bcf2, inset 0 2px 0 #f4f7ff; }
+  .t2 { background:#d8f3ff; box-shadow:inset 0 -3px 0 #93d2f2, inset 0 2px 0 #f2fbff; }
+  .t3 { background:#d9f6cf; box-shadow:inset 0 -3px 0 #95d67f, inset 0 2px 0 #f4ffec; }
+  .t4 { background:#ffe0ef; box-shadow:inset 0 -3px 0 #f5a3c8, inset 0 2px 0 #fff2f8; }
+  #toast {
+    margin-top:10px; min-height:22px; font-size:13px; font-weight:bold; color:#ffd94d;
+    opacity:0; transition:opacity .25s;
+  }
+  #toast.show { opacity:1; }
+  #hint { margin-top:2px; font-size:11px; color:#9db8dd; text-align:center; }
+  .overlay {
+    position:fixed; inset:0; background:rgba(30,50,80,.45); display:none;
+    align-items:center; justify-content:center; z-index:50;
+  }
+  .overlay.show { display:flex; }
+  .card {
+    background:#fff; border-radius:20px; padding:26px 30px; text-align:center;
+    box-shadow:0 12px 32px rgba(0,0,0,.25); max-width:82vw;
+  }
+  .card .big { font-size:26px; font-weight:bold; margin-bottom:6px; }
+  .card .detail { font-size:13px; color:#567; margin-bottom:16px; line-height:1.6; }
+  .card button {
+    border:none; background:#ff9f2e; color:#fff; font-size:15px; font-weight:bold;
+    border-radius:999px; padding:10px 22px; cursor:pointer; margin:0 4px;
+  }
+  .card button.sub { background:#e8eef4; color:#456; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ミズーのほしぞらマッチ<span class="sub">試作 v0 ・ てざわり確認用</span></h1>
+    <div class="stages" id="stageBtns"></div>
+  </header>
+
+  <div id="hud">
+    <div class="hud-box" id="movesBox">
+      <div class="label">のこり手数</div>
+      <div class="value" id="movesVal">--</div>
+    </div>
+    <div class="hud-box" id="scoreBox">
+      <div class="label">スコア / 目標 <span id="targetVal">--</span></div>
+      <div class="value" id="scoreVal">0</div>
+      <div id="scoreBarWrap"><div id="scoreBar"></div></div>
+    </div>
+    <div id="mizuBox">
+      <div id="mizuFace"></div>
+      <div id="mizuMsg">がんばれ！</div>
+    </div>
+  </div>
+
+  <div id="boardWrap"><div id="board"></div></div>
+  <div id="toast"></div>
+  <div id="hint">ブロックをタップ→となりをタップ、またはドラッグで入れ替え。<br>3つそろうと消えるよ。マッチしない入れ替えは手数を消費しないよ。</div>
+</div>
+
+<div class="overlay" id="clearOverlay">
+  <div class="card">
+    <div class="big">🎉 クリア！</div>
+    <div class="detail" id="clearDetail"></div>
+    <button id="nextBtn">つぎの面へ</button>
+    <button class="sub" id="replayBtn1">もう一度</button>
+  </div>
+</div>
+
+<div class="overlay" id="failOverlay">
+  <div class="card">
+    <div class="big">手数がなくなった…</div>
+    <div class="detail" id="failDetail"></div>
+    <button id="retryBtn">もう一度挑戦</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ 基本設定 ============ */
+const COLS = 7, ROWS = 8, TYPES = 5;
+const STAGES = [
+  { moves: 20, target: 600  },
+  { moves: 22, target: 900  },
+  { moves: 25, target: 1300 },
+];
+const NAMES = ["ほし","つき","ちきゅう","UFO","わくせい"];
+
+/* ============ ブロックの絵（SVG・絵文字なし／ほしぞらで統一） ============ */
+function svgFor(t){
+  switch(t){
+    /* 0: ほし（黄色の星） */
+    case 0: return '<svg viewBox="0 0 100 100"><polygon points="50,5 62,37 96,37 68,57 79,92 50,71 21,92 32,57 4,37 38,37" fill="#ffc93c" stroke="#d99400" stroke-width="4" stroke-linejoin="round"/></svg>';
+    /* 1: つき（クリーム色の三日月） */
+    case 1: return '<svg viewBox="0 0 100 100"><path d="M66,14 A40,40 0 1,0 66,86 A37,37 0 0,1 66,14 Z" fill="#ffe9a8" stroke="#d99400" stroke-width="4" stroke-linejoin="round"/><polygon points="66,24 68.5,30.5 75.5,30.5 70,34.8 72,41.5 66,37.4 60,41.5 62,34.8 56.5,30.5 63.5,30.5" fill="#ffc93c" stroke="#d99400" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+    /* 2: ちきゅう（青と緑の丸い地球・輪なし） */
+    case 2: return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#3d9be9" stroke="#1f6fc2" stroke-width="4"/><g fill="#57b25e"><path d="M24,40 C19,29 29,19 39,21 C49,23 51,33 45,39 C39,45 28,48 24,40 Z"/><path d="M53,64 C53,54 63,48 71,52 C79,56 79,68 71,72 C63,76 53,72 53,64 Z"/><path d="M61,25 C65,19 75,19 77,25 C79,31 71,35 65,33 C59,31 58,29 61,25 Z"/><ellipse cx="31" cy="65" rx="6" ry="4.4"/></g><ellipse cx="36" cy="33" rx="9" ry="5" fill="#bfe3ff" opacity=".55"/></svg>';
+    /* 3: UFO（円盤＋ドーム＋ライト。わくせいの輪とは形も色も別） */
+    case 3: return '<svg viewBox="0 0 100 100"><path d="M27,56 A23,33 0 0,1 73,56 Z" fill="#cdeffd" stroke="#5ea9cf" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="44" r="7.5" fill="#69c24a"/><circle cx="47.3" cy="43" r="1.8" fill="#20401c"/><circle cx="52.7" cy="43" r="1.8" fill="#20401c"/><ellipse cx="50" cy="65" rx="45" ry="17" fill="#d9e1e6" stroke="#8fa3ad" stroke-width="4"/><circle cx="25" cy="65" r="4.2" fill="#35d461" stroke="#1e9e46" stroke-width="2"/><circle cx="50" cy="71.5" r="4.2" fill="#ffd93c" stroke="#d9a400" stroke-width="2"/><circle cx="75" cy="65" r="4.2" fill="#35d461" stroke="#1e9e46" stroke-width="2"/></svg>';
+    /* 4: わくせい（ピンク色の土星型＝丸＋輪） */
+    case 4: return '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="44" ry="14" transform="rotate(-16 50 50)" fill="none" stroke="#e75480" stroke-width="7"/><circle cx="50" cy="48" r="25" fill="#f78fb8" stroke="#cf4d8b" stroke-width="4"/><path d="M12.5,59.5 A44,14 -16 0,0 87.5,40.5" fill="none" stroke="#e75480" stroke-width="7" stroke-linecap="round"/><ellipse cx="41" cy="39" rx="8" ry="5" fill="#ffd3e6" opacity=".85"/></svg>';
+  }
+  return "";
+}
+
+/* ============ ミズーの顔（簡易SVG・v0用） ============ */
+function mizuFaceSVG(joy){
+  const eyes = joy
+    ? '<path d="M14,27 Q18,22 22,27" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round"/><path d="M28,27 Q32,22 36,27" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round"/>'
+    : '<ellipse cx="18" cy="26" rx="2.2" ry="3" fill="#333"/><ellipse cx="32" cy="26" rx="2.2" ry="3" fill="#333"/>';
+  const mouth = joy
+    ? '<ellipse cx="25" cy="34" rx="4.4" ry="3.4" fill="#a34a3a"/>'
+    : '<path d="M20,33 Q25,37.5 30,33" fill="none" stroke="#a34a3a" stroke-width="2.2" stroke-linecap="round"/>';
+  return '<svg viewBox="0 0 50 50">'
+    + '<circle cx="25" cy="26" r="19" fill="#ffe3c2"/>'
+    + '<path d="M6,25 A19,19 0 0,1 44,25 L44,19 A19,15 0 0,0 6,19 Z" fill="#33302e"/>'
+    + '<path d="M6,22 L13,27 L18,21 L24,27 L30,20 L36,26 L44,20 L44,25 A19,19 0 0,0 6,25 Z" fill="#33302e"/>'
+    + eyes + mouth
+    + '<circle cx="12" cy="32" r="3" fill="#ffb3a0" opacity=".65"/><circle cx="38" cy="32" r="3" fill="#ffb3a0" opacity=".65"/>'
+    + '</svg>';
+}
+
+/* ============ ゲーム本体 ============ */
+const boardEl = document.getElementById("board");
+const movesVal = document.getElementById("movesVal");
+const scoreVal = document.getElementById("scoreVal");
+const targetVal = document.getElementById("targetVal");
+const scoreBar = document.getElementById("scoreBar");
+const mizuFaceEl = document.getElementById("mizuFace");
+const mizuMsgEl = document.getElementById("mizuMsg");
+const toastEl = document.getElementById("toast");
+
+let cell = 48;               // 1マスのpx（レイアウト時に決める）
+let grid = [];               // grid[r][c] = block {id,type,r,c,el} | null
+let nextId = 1;
+let stage = 0;
+let score = 0, movesLeft = 0;
+let busy = false;
+let selected = null;         // {r,c} | null
+let clearedStages = new Set();
+
+const wait = ms => new Promise(res => setTimeout(res, ms));
+const rnd = n => Math.floor(Math.random() * n);
+const key = (r,c) => r + "," + c;
+
+function layout(){
+  const wrapW = Math.min(window.innerWidth - 32, 400);
+  cell = Math.floor(wrapW / COLS);
+  boardEl.style.width = (cell * COLS) + "px";
+  boardEl.style.height = (cell * ROWS) + "px";
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    const b = grid[r] && grid[r][c];
+    if (b) place(b, false);
+  }
+}
+function place(b, animate){
+  if (!animate) b.el.style.transition = "none";
+  b.el.style.transform = "translate(" + (b.c * cell) + "px," + (b.r * cell) + "px)";
+  if (!animate){ void b.el.offsetWidth; b.el.style.transition = ""; }
+}
+function makeBlock(type, r, c){
+  const el = document.createElement("div");
+  el.className = "block t" + type;
+  el.style.width = cell + "px";
+  el.style.height = cell + "px";
+  el.innerHTML = svgFor(type);
+  const b = { id: nextId++, type, r, c, el };
+  el.dataset.r = r; el.dataset.c = c;
+  boardEl.appendChild(el);
+  return b;
+}
+function setBlockPos(b, r, c){
+  b.r = r; b.c = c;
+  b.el.dataset.r = r; b.el.dataset.c = c;
+  place(b, true);
+}
+
+/* ---------- マッチ検出 ---------- */
+function findMatches(){
+  const hit = new Set();
+  for (let r = 0; r < ROWS; r++){
+    let run = 1;
+    for (let c = 1; c <= COLS; c++){
+      if (c < COLS && grid[r][c] && grid[r][c-1] && grid[r][c].type === grid[r][c-1].type) run++;
+      else { if (run >= 3) for (let k = 1; k <= run; k++) hit.add(key(r, c-k)); run = 1; }
+    }
+  }
+  for (let c = 0; c < COLS; c++){
+    let run = 1;
+    for (let r = 1; r <= ROWS; r++){
+      if (r < ROWS && grid[r][c] && grid[r-1][c] && grid[r][c].type === grid[r-1][c].type) run++;
+      else { if (run >= 3) for (let k = 1; k <= run; k++) hit.add(key(r-k, c)); run = 1; }
+    }
+  }
+  return hit;
+}
+function swapInGrid(a, b){
+  const ba = grid[a.r][a.c], bb = grid[b.r][b.c];
+  grid[a.r][a.c] = bb; grid[b.r][b.c] = ba;
+  if (bb){ bb.r = a.r; bb.c = a.c; }
+  if (ba){ ba.r = b.r; ba.c = b.c; }
+  return [ba, bb];
+}
+function findValidMoves(){
+  const res = [];
+  const dirs = [[0,1],[1,0]];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    for (const [dr,dc] of dirs){
+      const r2 = r+dr, c2 = c+dc;
+      if (r2 >= ROWS || c2 >= COLS) continue;
+      swapInGrid({r,c},{r:r2,c:c2});
+      if (findMatches().size > 0) res.push({a:{r,c}, b:{r:r2,c:c2}});
+      swapInGrid({r,c},{r:r2,c:c2});
+    }
+  }
+  return res;
+}
+function findInvalidSwap(){
+  const dirs = [[0,1],[1,0]];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    for (const [dr,dc] of dirs){
+      const r2 = r+dr, c2 = c+dc;
+      if (r2 >= ROWS || c2 >= COLS) continue;
+      swapInGrid({r,c},{r:r2,c:c2});
+      const ok = findMatches().size > 0;
+      swapInGrid({r,c},{r:r2,c:c2});
+      if (!ok) return {a:{r,c}, b:{r:r2,c:c2}};
+    }
+  }
+  return null;
+}
+
+/* ---------- 盤面生成（初期マッチなし＋有効手3手以上を保証） ---------- */
+function genBoard(){
+  for (let attempt = 0; attempt < 300; attempt++){
+    grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      let t;
+      do { t = rnd(TYPES); }
+      while (
+        (c >= 2 && grid[r][c-1] && grid[r][c-2] && grid[r][c-1].type === t && grid[r][c-2].type === t) ||
+        (r >= 2 && grid[r-1][c] && grid[r-2][c] && grid[r-1][c].type === t && grid[r-2][c].type === t)
+      );
+      grid[r][c] = { id: 0, type: t, r, c, el: null };
+    }
+    if (findValidMoves().length >= 3) return;
+  }
+}
+
+/* ---------- シャッフル（詰み回避） ---------- */
+function shuffleBoard(){
+  const types = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) types.push(grid[r][c].type);
+  for (let attempt = 0; attempt < 300; attempt++){
+    for (let i = types.length - 1; i > 0; i--){ const j = rnd(i+1); [types[i],types[j]] = [types[j],types[i]]; }
+    let i = 0;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const b = grid[r][c];
+      b.type = types[i++];
+      b.el.className = "block t" + b.type;
+      b.el.innerHTML = svgFor(b.type);
+    }
+    if (findMatches().size === 0 && findValidMoves().length >= 1) return;
+  }
+}
+
+/* ---------- HUD ---------- */
+function say(msg, joy){
+  mizuMsgEl.textContent = msg;
+  mizuFaceEl.innerHTML = mizuFaceSVG(!!joy);
+}
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(() => toastEl.classList.remove("show"), 1600);
+}
+function updateHUD(){
+  movesVal.textContent = movesLeft;
+  scoreVal.textContent = score;
+  targetVal.textContent = STAGES[stage].target;
+  scoreBar.style.width = Math.min(100, score / STAGES[stage].target * 100) + "%";
+  document.querySelectorAll(".stage-btn").forEach((el, i) => {
+    el.classList.toggle("active", i === stage);
+    el.classList.toggle("cleared", clearedStages.has(i));
+  });
+}
+
+/* ---------- 消去・落下・補充 ---------- */
+async function resolveBoard(){
+  let chain = 1;
+  while (true){
+    const hit = findMatches();
+    if (hit.size === 0) break;
+    score += hit.size * 10 * chain;
+    if (chain >= 2){ say(chain + "れんさ！すごい！", true); toast(chain + " れんさ！"); }
+    for (const k of hit){
+      const [r,c] = k.split(",").map(Number);
+      if (grid[r][c]) grid[r][c].el.classList.add("clearing");
+    }
+    updateHUD();
+    await wait(180);
+    for (const k of hit){
+      const [r,c] = k.split(",").map(Number);
+      if (grid[r][c]){ grid[r][c].el.remove(); grid[r][c] = null; }
+    }
+    /* 落下＋補充 */
+    for (let c = 0; c < COLS; c++){
+      let write = ROWS - 1;
+      for (let r = ROWS - 1; r >= 0; r--){
+        if (grid[r][c]){
+          const b = grid[r][c];
+          if (write !== r){ grid[write][c] = b; grid[r][c] = null; setBlockPos(b, write, c); }
+          write--;
+        }
+      }
+      const missing = write + 1;
+      for (let r = write; r >= 0; r--){
+        const b = makeBlock(rnd(TYPES), r, c);
+        grid[r][c] = b;
+        b.el.style.transition = "none";
+        b.el.style.transform = "translate(" + (c * cell) + "px," + ((r - missing) * cell) + "px)";
+        void b.el.offsetWidth;
+        b.el.style.transition = "";
+        place(b, true);
+      }
+    }
+    await wait(200);
+    chain++;
+  }
+}
+
+/* ---------- 入れ替え ---------- */
+async function trySwap(a, b){
+  if (busy) return false;
+  if (!grid[a.r][a.c] || !grid[b.r][b.c]) return false;
+  busy = true;
+  deselect();
+  const [ba, bb] = swapInGrid(a, b);
+  if (ba) place(ba, true);
+  if (bb) place(bb, true);
+  await wait(190);
+  if (findMatches().size === 0){
+    const [ca, cb] = swapInGrid(a, b);
+    if (ca) place(ca, true);
+    if (cb) place(cb, true);
+    await wait(190);
+    busy = false;
+    return false;   /* マッチなし: 手数を消費せず戻る */
+  }
+  movesLeft--;
+  updateHUD();
+  await resolveBoard();
+  if (score >= STAGES[stage].target){ await onClear(); busy = false; return true; }
+  if (movesLeft <= 0){ onFail(); busy = false; return true; }
+  if (findValidMoves().length === 0){
+    toast("手がなくなったのでシャッフル！");
+    say("シャッフルするね！");
+    shuffleBoard();
+    await wait(60);
+  }
+  say("がんばれ！");
+  busy = false;
+  return true;
+}
+
+/* ---------- クリア/失敗 ---------- */
+async function onClear(){
+  const bonus = movesLeft * 50;
+  score += bonus;
+  updateHUD();
+  clearedStages.add(stage);
+  say("クリア！やったね！", true);
+  document.getElementById("clearDetail").innerHTML =
+    "スコア " + score + " 点<br>のこり手数ボーナス +" + bonus + " 点";
+  document.getElementById("nextBtn").style.display = stage < STAGES.length - 1 ? "" : "none";
+  document.getElementById("clearOverlay").classList.add("show");
+  updateHUD();
+}
+function onFail(){
+  say("つぎはできるよ！");
+  document.getElementById("failDetail").innerHTML =
+    "スコア " + score + " 点（目標 " + STAGES[stage].target + " 点）";
+  document.getElementById("failOverlay").classList.add("show");
+}
+
+/* ---------- 選択・入力 ---------- */
+function select(r, c){
+  deselect();
+  selected = { r, c };
+  const b = grid[r][c];
+  if (b) b.el.classList.add("selected");
+}
+function deselect(){
+  if (selected){
+    const b = grid[selected.r] && grid[selected.r][selected.c];
+    if (b) b.el.classList.remove("selected");
+  }
+  selected = null;
+}
+function cellFromEvent(e){
+  const rect = boardEl.getBoundingClientRect();
+  const x = (e.clientX - rect.left), y = (e.clientY - rect.top);
+  const c = Math.floor(x / cell), r = Math.floor(y / cell);
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return null;
+  return { r, c };
+}
+let pStart = null, pDragged = false;
+boardEl.addEventListener("pointerdown", e => {
+  if (busy) return;
+  const p = cellFromEvent(e);
+  if (!p) return;
+  pStart = { p, x: e.clientX, y: e.clientY };
+  pDragged = false;
+});
+boardEl.addEventListener("pointermove", e => {
+  if (!pStart || busy || pDragged) return;
+  const dx = e.clientX - pStart.x, dy = e.clientY - pStart.y;
+  if (Math.hypot(dx, dy) < cell * 0.45) return;
+  pDragged = true;
+  const dir = Math.abs(dx) > Math.abs(dy) ? { r: 0, c: Math.sign(dx) } : { r: Math.sign(dy), c: 0 };
+  const a = pStart.p, b = { r: a.r + dir.r, c: a.c + dir.c };
+  pStart = null;
+  if (b.r >= 0 && b.r < ROWS && b.c >= 0 && b.c < COLS) trySwap(a, b);
+});
+boardEl.addEventListener("pointerup", e => {
+  if (!pStart) return;
+  const wasDrag = pDragged;
+  const p = pStart.p;
+  pStart = null; pDragged = false;
+  if (wasDrag || busy) return;
+  /* タップ式 */
+  if (!selected){ select(p.r, p.c); return; }
+  if (selected.r === p.r && selected.c === p.c){ deselect(); return; }
+  const dist = Math.abs(selected.r - p.r) + Math.abs(selected.c - p.c);
+  if (dist === 1){ const a = selected; deselect(); trySwap(a, p); }
+  else select(p.r, p.c);
+});
+boardEl.addEventListener("pointercancel", () => { pStart = null; pDragged = false; });
+
+/* ---------- ステージ開始 ---------- */
+function startStage(i){
+  stage = i;
+  score = 0;
+  movesLeft = STAGES[i].moves;
+  selected = null;
+  boardEl.innerHTML = "";
+  genBoard();
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    const t = grid[r][c].type;
+    grid[r][c] = makeBlock(t, r, c);
+    place(grid[r][c], false);
+  }
+  document.getElementById("clearOverlay").classList.remove("show");
+  document.getElementById("failOverlay").classList.remove("show");
+  say("がんばれ！");
+  updateHUD();
+}
+const btnWrap = document.getElementById("stageBtns");
+STAGES.forEach((s, i) => {
+  const btn = document.createElement("button");
+  btn.className = "stage-btn";
+  btn.textContent = "面" + (i + 1);
+  btn.addEventListener("click", () => { if (!busy) startStage(i); });
+  btnWrap.appendChild(btn);
+});
+document.getElementById("nextBtn").addEventListener("click", () => startStage(Math.min(stage + 1, STAGES.length - 1)));
+document.getElementById("replayBtn1").addEventListener("click", () => startStage(stage));
+document.getElementById("retryBtn").addEventListener("click", () => startStage(stage));
+window.addEventListener("resize", layout);
+
+say("がんばれ！");
+layout();
+startStage(0);
+
+/* ---------- 検証用デバッグAPI ---------- */
+window.POKO = {
+  state(){
+    return {
+      stage, score, movesLeft,
+      target: STAGES[stage].target,
+      types: grid.map(row => row.map(b => b ? b.type : -1)),
+      filled: grid.flat().filter(Boolean).length,
+    };
+  },
+  findValidMoves,
+  findInvalidSwap,
+  cellPoint(r, c){
+    const rect = boardEl.getBoundingClientRect();
+    return { x: rect.left + (c + 0.5) * cell, y: rect.top + (r + 0.5) * cell };
+  },
+  boardRect(){
+    const rect = boardEl.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, cell };
+  },
+  isBusy: () => busy,
+};
+</script>
+</body>
+</html>
