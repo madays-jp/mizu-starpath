@@ -1,0 +1,2415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ミズーのほしぞらマッチ（試作v1）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body {
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    background:
+      radial-gradient(1.8px 1.8px at 12% 18%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 32% 8%, #ffeeb0 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 58% 22%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 78% 10%, #cfe4ff 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 90% 30%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 45% 34%, #ffffff 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 68% 40%, #ffeeb0 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 22% 44%, #cfe4ff 50%, transparent 51%),
+      linear-gradient(180deg,#0d1a38 0%,#1d3461 58%,#2c4a7c 100%);
+    color:#eaf2ff; overflow:hidden; touch-action:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  #app { width:100%; max-width:430px; height:100%; display:flex; flex-direction:column; align-items:center; padding:8px 10px 10px; }
+  header { width:100%; display:flex; align-items:center; gap:8px; }
+  h1 { font-size:16px; letter-spacing:.02em; flex:1; white-space:nowrap; }
+  h1 .sub { font-size:10px; color:#9db8dd; display:block; font-weight:normal; }
+  .stages { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  .stage-btn {
+    border:2px solid #7fa8d8; background:rgba(255,255,255,.12); color:#dceaff; border-radius:999px;
+    font-size:12px; font-weight:bold; padding:5px 10px; cursor:pointer;
+  }
+  .stage-btn.active { background:#ff9f2e; color:#fff; border-color:#ff9f2e; }
+  .stage-btn.cleared { border-color:#57b25e; }
+  #hud {
+    width:100%; display:flex; align-items:stretch; gap:8px; margin-top:8px;
+  }
+  .hud-box {
+    background:rgba(13,26,56,.62); border:2px solid #46679c; border-radius:12px;
+    padding:5px 10px; text-align:center; min-width:76px;
+  }
+  .hud-box .label { font-size:10px; color:#9db8dd; }
+  .hud-box .value { font-size:19px; font-weight:bold; line-height:1.15; }
+  #movesBox .value { color:#ff9d9d; }
+  #scoreBox { flex:1; }
+  #scoreBarWrap { height:6px; background:#2c4a7c; border-radius:3px; margin-top:3px; overflow:hidden; }
+  #scoreBar { height:100%; width:0%; background:linear-gradient(90deg,#ffc93c,#ff9f2e); border-radius:3px; transition:width .3s; }
+  #goalLine { font-size:11px; font-weight:bold; color:#ffd94d; margin-top:3px; white-space:nowrap; overflow:hidden; }
+  #mizuBox {
+    display:flex; align-items:center; gap:6px; background:rgba(13,26,56,.62);
+    border:2px solid #46679c; border-radius:12px; padding:4px 8px 4px 4px; max-width:150px;
+  }
+  #mizuFace { width:44px; height:44px; flex:none; }
+  #mizuMsg { font-size:11px; line-height:1.3; color:#dceaff; }
+  #boardWrap { position:relative; margin-top:10px; background:rgba(10,22,48,.72); border:3px solid #46679c; border-radius:18px; padding:6px; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  #board { position:relative; }
+  .block {
+    position:absolute; border-radius:22%; display:flex; align-items:center; justify-content:center;
+    transition:transform .18s ease-in-out, opacity .15s, scale .15s;
+    cursor:pointer; will-change:transform; z-index:1;
+  }
+  /* --- 石板（障害物） --- */
+  .slate {
+    position:absolute; z-index:0; display:flex; align-items:center; justify-content:center;
+    transition:opacity .2s, scale .2s;
+  }
+  .slate svg { width:95%; height:95%; pointer-events:none; }
+  .slate.breaking { opacity:0; scale:.4; }
+  /* --- ヒント表示 --- */
+  .block.hint { animation:hintpulse .8s ease-in-out infinite alternate; }
+  @keyframes hintpulse {
+    from { filter:brightness(1); }
+    to { filter:brightness(1.3); box-shadow:0 0 14px 5px rgba(255,217,61,.9); }
+  }
+  /* --- プレイアイテム --- */
+  #itemBar { display:flex; gap:8px; margin-top:10px; }
+  .item-btn {
+    display:flex; align-items:center; gap:6px;
+    border:2px solid #7fa8d8; background:rgba(255,255,255,.12); color:#dceaff; border-radius:999px;
+    font-size:13px; font-weight:bold; padding:6px 14px; cursor:pointer;
+  }
+  .item-btn svg { width:18px; height:18px; pointer-events:none; }
+  .item-btn.active { background:#ff9f2e; color:#fff; border-color:#ff9f2e; }
+  .block svg { width:82%; height:82%; pointer-events:none; }
+  .block.selected { outline:3px solid #ff9f2e; outline-offset:-3px; scale:1.08; z-index:5; }
+  .block.clearing { opacity:0; scale:1.28; }
+  .t0 { background:#fff0b8; box-shadow:inset 0 -3px 0 #f2cf6b, inset 0 2px 0 #fffbe8; }
+  .t1 { background:#dfe6ff; box-shadow:inset 0 -3px 0 #a9bcf2, inset 0 2px 0 #f4f7ff; }
+  .t2 { background:#d8f3ff; box-shadow:inset 0 -3px 0 #93d2f2, inset 0 2px 0 #f2fbff; }
+  .t3 { background:#d9f6cf; box-shadow:inset 0 -3px 0 #95d67f, inset 0 2px 0 #f4ffec; }
+  .t4 { background:#ffe0ef; box-shadow:inset 0 -3px 0 #f5a3c8, inset 0 2px 0 #fff2f8; }
+  /* --- りんごブロック（消すと手数が増える） --- */
+  .block.apple { background:#ffe9e4; box-shadow:inset 0 -3px 0 #f0a58e, inset 0 2px 0 #fff5f0; }
+  .apple-num {
+    position:absolute; left:50%; top:57%; transform:translate(-50%,-50%);
+    font-size:19px; font-weight:bold; color:#fff;
+    text-shadow:0 1px 3px rgba(160,30,0,.7); pointer-events:none;
+  }
+  /* --- ターゲットパネル（本家形式: 目標ブロックの絵＋残り個数、達成でチェック） --- */
+  #targetChips { display:flex; gap:7px; justify-content:center; align-items:center; min-height:34px; }
+  .tchip { display:flex; align-items:center; gap:1px; }
+  .tchip .ticon { width:31px; height:31px; flex:none; }
+  .tchip .ticon svg { width:100%; height:100%; }
+  .tchip .tnum { font-size:21px; font-weight:bold; color:#fff; }
+  .tchip.done .tnum { color:#57e389; }
+  /* --- 開始前パネル（本家形式: 手数と目標を絵で提示） --- */
+  #introMoves { font-size:14px; color:#567; margin-bottom:8px; }
+  #introMoves b { font-size:27px; color:#e2543e; margin-left:4px; }
+  #introGoals { display:flex; gap:9px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+  .gchip {
+    display:flex; align-items:center; gap:5px; background:#f4f8ff; border:2px solid #cfe0f5;
+    border-radius:999px; padding:4px 14px 4px 7px; font-weight:bold; color:#345; font-size:17px;
+  }
+  .gchip .ticon { width:34px; height:34px; flex:none; }
+  .gchip .ticon svg { width:100%; height:100%; }
+  .item-btn:disabled { opacity:.38; cursor:default; }
+  /* --- STAGE CLEAR の大きな表示と「タップして早送り」 --- */
+  #stageClearBanner {
+    position:absolute; left:50%; top:33%; transform:translate(-50%,-50%);
+    font-size:43px; font-weight:bold; letter-spacing:.03em; color:#ffd93c; white-space:nowrap;
+    text-shadow:0 3px 0 #b85c1e, 0 0 22px rgba(255,157,46,.9), 0 4px 10px rgba(0,0,0,.6);
+    opacity:0; pointer-events:none; z-index:41;
+  }
+  #stageClearBanner.show { animation:clearpop 1.15s ease forwards; }
+  @keyframes clearpop {
+    0% { opacity:0; transform:translate(-50%,-50%) scale(.4); }
+    18% { opacity:1; transform:translate(-50%,-50%) scale(1.15); }
+    30% { transform:translate(-50%,-50%) scale(1); }
+    80% { opacity:1; }
+    100% { opacity:0; transform:translate(-50%,-58%) scale(1); }
+  }
+  #ffLabel {
+    position:absolute; left:50%; bottom:12px; transform:translateX(-50%);
+    background:rgba(13,26,56,.82); border:2px solid #7fa8d8; color:#dceaff;
+    font-size:13px; font-weight:bold; border-radius:999px; padding:5px 14px;
+    display:none; pointer-events:none; z-index:41; white-space:nowrap;
+  }
+  #ffLabel.show { display:block; }
+  /* --- 特殊ブロックの見た目 --- */
+  .block .mark { position:absolute; pointer-events:none; }
+  .mark.full { width:97%; height:97%; left:1.5%; top:1.5%; }
+  .mark.badge { width:76%; height:76%; right:-14%; top:-14%; z-index:3; }
+  .block.sp-rainbow {
+    background:linear-gradient(135deg,#ff8a8a 0%,#ffd93c 30%,#7be495 55%,#6ec6ff 80%,#c39bff 100%);
+    box-shadow:inset 0 -3px 0 rgba(120,60,160,.45), inset 0 2px 0 #ffffff, 0 0 12px #ffd93c;
+  }
+  .block.born { animation:bornpop 1.2s ease; z-index:6; }
+  @keyframes bornpop {
+    0% { scale:.3; box-shadow:0 0 0 0 rgba(255,217,61,0); }
+    20% { scale:1.24; box-shadow:0 0 0 4px #ffd93c, 0 0 22px 10px rgba(255,217,61,.95); }
+    45% { scale:1; box-shadow:0 0 0 4px #ffd93c, 0 0 22px 10px rgba(255,217,61,.95); }
+    100% { scale:1; box-shadow:0 0 0 0 rgba(255,217,61,0); }
+  }
+  /* 爆弾は通常ブロックと一目で見分けがつくよう、太い枠＋光で区別する */
+  .block.sp-arrow, .block.sp-double, .block.sp-bee {
+    box-shadow:inset 0 0 0 3px #ff9f2e, inset 0 -3px 0 rgba(0,0,0,.16), 0 0 12px 3px rgba(255,159,46,.85);
+  }
+  /* --- 発動エフェクト（消去と同時に流れる。待たせない） --- */
+  .fx { position:absolute; pointer-events:none; z-index:20; }
+  .fx-line { border-radius:10px; opacity:0; animation:fxband .45s ease-out forwards; }
+  .fx-h { background:linear-gradient(90deg, rgba(255,180,60,0) 0%, rgba(255,214,110,.95) 50%, rgba(255,180,60,0) 100%); }
+  .fx-v { background:linear-gradient(180deg, rgba(255,180,60,0) 0%, rgba(255,214,110,.95) 50%, rgba(255,180,60,0) 100%); }
+  @keyframes fxband { 0% { opacity:0; } 25% { opacity:1; } 100% { opacity:0; } }
+  .fx-ring { border:6px solid #ff7847; border-radius:50%; opacity:.95; animation:fxring .45s ease-out forwards; }
+  .fx-ring.fx-rainbow { border-color:#c39bff; }
+  @keyframes fxring {
+    0% { transform:translate(-50%,-50%) scale(.12); opacity:.95; }
+    100% { transform:translate(-50%,-50%) scale(1); opacity:0; }
+  }
+  /* --- 発動予告（一拍）: 特殊ブロックが消える前に、消える範囲を短く光らせる。
+     「どの特殊が・どこを消すか」の因果を目で追えるようにするための表示。
+     通常マッチの波には出ない（テンポは変えない）。 --- */
+  .tele { position:absolute; pointer-events:none; z-index:19; animation:telepulse .16s ease-in-out infinite alternate; }
+  .tele-line { border-radius:10px; background:rgba(255,196,64,.38); box-shadow:inset 0 0 0 3px rgba(255,170,30,.95), 0 0 14px 2px rgba(255,170,30,.55); }
+  .tele-area { border-radius:14px; background:rgba(255,120,60,.20); box-shadow:inset 0 0 0 3px rgba(255,110,50,.9), 0 0 16px 2px rgba(255,110,50,.45); }
+  .tele-cell { border-radius:10px; background:rgba(200,150,255,.32); box-shadow:inset 0 0 0 3px rgba(170,110,255,.95), 0 0 10px 1px rgba(170,110,255,.5); }
+  @keyframes telepulse { from { filter:brightness(1); } to { filter:brightness(1.4); } }
+  /* 発動する特殊ブロック本体も予告中は脈打って光る */
+  .block.firing { z-index:9; animation:firingpulse .16s ease-in-out infinite alternate; }
+  @keyframes firingpulse { from { scale:1; filter:brightness(1.2); } to { scale:1.15; filter:brightness(1.55); } }
+  /* --- 消去の演出（音と合わせて短く。待ち時間は増やさない） ---
+     本家寄せ: ブロックが潰れて伸びて変形してから、膨らんで弾けて消える */
+  .block.pop { animation:squashpop .18s ease-out; z-index:8; }
+  @keyframes squashpop {
+    0% { scale:1 1; }
+    30% { scale:1.3 .74; }
+    55% { scale:.82 1.26; }
+    78% { scale:1.12 .92; }
+    100% { scale:1.06 1.06; }
+  }
+  /* 消去パーティクル: 小さな白い四角片（本家寄せ。星型はやめた） */
+  .particle {
+    position:absolute; pointer-events:none; z-index:22;
+    border-radius:2px;
+    transform:translate(-50%,-50%);
+  }
+  /* 消えたマスに残る白い渦巻き／煙 */
+  .smoke {
+    position:absolute; pointer-events:none; z-index:21;
+    transform:translate(-50%,-50%);
+  }
+  .smoke svg { width:100%; height:100%; display:block; }
+  .score-pop {
+    position:absolute; pointer-events:none; z-index:26;
+    font-weight:bold; color:#ffd93c; white-space:nowrap;
+    text-shadow:0 1px 0 #b85c1e, 0 0 8px rgba(255,157,46,.8), 0 2px 4px rgba(0,0,0,.5);
+    transform:translate(-50%,-50%);
+    animation:scorefloat .85s ease-out forwards;
+  }
+  @keyframes scorefloat {
+    0% { opacity:0; transform:translate(-50%,-30%) scale(.6); }
+    18% { opacity:1; transform:translate(-50%,-60%) scale(1.15); }
+    100% { opacity:0; transform:translate(-50%,-200%) scale(1); }
+  }
+  #boardWrap.shake { animation:boardshake .22s linear; }
+  @keyframes boardshake {
+    0% { transform:translate(0,0); }
+    25% { transform:translate(2.5px,-1.5px); }
+    50% { transform:translate(-2.5px,1.5px); }
+    75% { transform:translate(1.5px,2px); }
+    100% { transform:translate(0,0); }
+  }
+  /* --- 連鎖・クリアボーナスの大きな表示 --- */
+  #chainBanner {
+    position:absolute; left:50%; top:36%; transform:translate(-50%,-50%);
+    font-size:42px; font-weight:bold; color:#ffd93c; white-space:nowrap;
+    text-shadow:0 2px 0 #b85c1e, 0 0 18px rgba(255,157,46,.85), 0 3px 8px rgba(0,0,0,.55);
+    opacity:0; pointer-events:none; z-index:40;
+  }
+  #chainBanner.show { animation:chainpop .95s ease forwards; }
+  @keyframes chainpop {
+    0% { opacity:0; transform:translate(-50%,-50%) scale(.5); }
+    18% { opacity:1; transform:translate(-50%,-50%) scale(1.18); }
+    32% { transform:translate(-50%,-50%) scale(1); }
+    78% { opacity:1; }
+    100% { opacity:0; transform:translate(-50%,-62%) scale(1); }
+  }
+  #bonusBanner {
+    position:absolute; left:50%; top:10%; transform:translateX(-50%);
+    font-size:27px; font-weight:bold; color:#ff9f2e; white-space:nowrap;
+    text-shadow:0 2px 0 #7a2d00, 0 0 16px rgba(255,159,46,.9), 0 3px 8px rgba(0,0,0,.55);
+    display:none; pointer-events:none; z-index:40;
+  }
+  #bonusBanner.show { display:block; animation:bonuspulse .45s ease-in-out infinite alternate; }
+  @keyframes bonuspulse { from { transform:translateX(-50%) scale(1); } to { transform:translateX(-50%) scale(1.07); } }
+  .block.flying { transition:transform .45s ease-in-out !important; z-index:30; }
+  #toast {
+    margin-top:10px; min-height:22px; font-size:13px; font-weight:bold; color:#ffd94d;
+    opacity:0; transition:opacity .25s;
+  }
+  #toast.show { opacity:1; }
+  #hint { margin-top:2px; font-size:11px; color:#9db8dd; text-align:center; }
+  /* --- マップ画面（下から上へ道が続く一本道） --- */
+  #mapScreen { position:fixed; inset:0; z-index:30; display:none; flex-direction:column; background:rgba(9,18,40,.35); }
+  #mapScreen.show { display:flex; }
+  #mapHead {
+    width:100%; max-width:430px; margin:0 auto; display:flex; align-items:center; gap:8px;
+    padding:12px 14px 8px; flex:none;
+  }
+  #mapHead .map-title { font-size:17px; font-weight:bold; flex:1; }
+  #mapHead .map-title .sub { font-size:10px; color:#9db8dd; display:block; font-weight:normal; }
+  #mapStarTotal { font-size:14px; font-weight:bold; color:#ffd93c; display:flex; align-items:center; gap:4px; }
+  #mapStarTotal svg { width:18px; height:18px; }
+  #mapScroll { flex:1; width:100%; max-width:430px; margin:0 auto; overflow-y:auto; touch-action:pan-y; position:relative; }
+  #mapWorld { position:relative; width:100%; }
+  #mapWorld svg.path { position:absolute; left:0; top:0; pointer-events:none; }
+  .map-node {
+    position:absolute; transform:translate(-50%,-50%); width:64px; height:64px; border-radius:50%;
+    border:3px solid #7fa8d8; background:rgba(255,255,255,.14); color:#dceaff;
+    font-size:20px; font-weight:bold; font-family:inherit; cursor:pointer; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .map-node.cleared { background:#57b25e; border-color:#8fe08f; color:#fff; }
+  .map-node.next { background:#ff9f2e; border-color:#ffd93c; color:#fff; animation:nodepulse 1.1s ease-in-out infinite alternate; }
+  @keyframes nodepulse {
+    from { box-shadow:0 0 6px 2px rgba(255,217,61,.5); }
+    to { box-shadow:0 0 0 6px rgba(255,217,61,.25), 0 0 18px 8px rgba(255,217,61,.8); }
+  }
+  .map-node.locked { opacity:.45; cursor:default; }
+  .map-node.denied { animation:nodeshake .3s ease; }
+  @keyframes nodeshake {
+    0%,100% { transform:translate(-50%,-50%); }
+    25% { transform:translate(calc(-50% - 4px),-50%); }
+    75% { transform:translate(calc(-50% + 4px),-50%); }
+  }
+  .map-node .mini-stars {
+    position:absolute; left:50%; bottom:-17px; transform:translateX(-50%);
+    display:flex; gap:1px; pointer-events:none;
+  }
+  .map-node .mini-stars svg { width:15px; height:15px; }
+  .map-mizu { position:absolute; transform:translate(-50%,-100%); width:40px; height:40px; z-index:3; pointer-events:none; }
+  /* --- スタート前ブースター --- */
+  .boost-note { font-size:11px; color:#89a; margin:2px 0 8px; }
+  .boost-row { display:flex; gap:8px; justify-content:center; margin-bottom:16px; flex-wrap:wrap; }
+  .boost-btn {
+    border:2px solid #7fa8d8; background:#eef4fb; color:#456; font-size:13px; font-weight:bold;
+    font-family:inherit; border-radius:999px; padding:8px 14px; cursor:pointer;
+  }
+  .boost-btn.active { background:#ff9f2e; border-color:#ff9f2e; color:#fff; }
+  /* --- クリア画面のほし評価 --- */
+  #clearStars { display:flex; gap:6px; justify-content:center; margin-bottom:8px; min-height:46px; }
+  #clearStars .cstar { width:44px; height:44px; opacity:.28; }
+  #clearStars .cstar.lit { opacity:1; animation:starpop .45s ease; }
+  @keyframes starpop {
+    0% { transform:scale(.3) rotate(-30deg); }
+    60% { transform:scale(1.25) rotate(8deg); }
+    100% { transform:scale(1) rotate(0deg); }
+  }
+  .overlay {
+    position:fixed; inset:0; background:rgba(30,50,80,.45); display:none;
+    align-items:center; justify-content:center; z-index:50;
+  }
+  .overlay.show { display:flex; }
+  .card {
+    background:#fff; border-radius:20px; padding:26px 30px; text-align:center;
+    box-shadow:0 12px 32px rgba(0,0,0,.25); max-width:82vw;
+  }
+  .card .big { font-size:26px; font-weight:bold; margin-bottom:6px; }
+  .card .detail { font-size:13px; color:#567; margin-bottom:16px; line-height:1.6; }
+  .card button {
+    border:none; background:#ff9f2e; color:#fff; font-size:15px; font-weight:bold;
+    border-radius:999px; padding:10px 22px; cursor:pointer; margin:0 4px;
+  }
+  .card button.sub { background:#e8eef4; color:#456; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ミズーのほしぞらマッチ<span class="sub">試作 v1 ・ 本家式の爆弾とスコア</span></h1>
+    <button class="stage-btn" id="mapBackBtn">マップへ</button>
+  </header>
+
+  <div id="hud">
+    <div class="hud-box" id="movesBox">
+      <div class="label">のこり手数</div>
+      <div class="value" id="movesVal">--</div>
+    </div>
+    <div class="hud-box" id="scoreBox">
+      <div class="label">スコア</div>
+      <div class="value" id="scoreVal">0</div>
+      <div id="scoreBarWrap"><div id="scoreBar"></div></div>
+      <div id="goalLine"></div>
+    </div>
+    <div class="hud-box" id="targetPanel" style="display:none">
+      <div class="label">ターゲット</div>
+      <div id="targetChips"></div>
+    </div>
+    <div id="mizuBox">
+      <div id="mizuFace"></div>
+      <div id="mizuMsg">がんばれ！</div>
+    </div>
+  </div>
+
+  <div id="boardWrap"><div id="board"></div><div id="chainBanner"></div><div id="bonusBanner">クリアボーナス！</div><div id="stageClearBanner">STAGE CLEAR</div><div id="ffLabel">タップして早送り</div></div>
+  <div id="itemBar">
+    <button class="item-btn" id="hammerBtn"><svg viewBox="0 0 100 100"><rect x="36" y="6" width="42" height="21" rx="6" fill="#e07b39"/><rect x="27" y="6" width="15" height="21" rx="6" fill="#b85c1e"/><rect x="45" y="22" width="11" height="64" rx="5" transform="rotate(16 50 54)" fill="#c98d4e"/></svg>ハンマー</button>
+    <button class="item-btn" id="shuffleBtn"><svg viewBox="0 0 100 100"><path d="M10,30 C35,30 55,68 84,68" fill="none" stroke="#6ec6ff" stroke-width="8" stroke-linecap="round"/><polygon points="84,54 84,82 66,68" fill="#6ec6ff"/><path d="M10,68 C35,68 55,30 84,30" fill="none" stroke="#ffd93c" stroke-width="8" stroke-linecap="round"/><polygon points="84,16 84,44 66,30" fill="#ffd93c"/></svg>シャッフル</button>
+    <button class="item-btn" id="muteBtn" aria-label="音のオン・オフ"></button>
+  </div>
+  <div id="toast"></div>
+  <div id="hint">ブロックをタップ→となりをタップ、またはドラッグで入れ替え。<br>3つそろうと消えるよ。4つ以上そろえると爆弾ができて、爆弾は入れ替えると発動するよ！<br>石板は、となりでブロックが消えると壊れるよ。</div>
+</div>
+
+<div id="mapScreen">
+  <div id="mapHead">
+    <div class="map-title">ミズーのほしぞらマッチ<span class="sub">マップ ・ 面をタップしてスタート</span></div>
+    <div id="mapStarTotal"></div>
+  </div>
+  <div id="mapScroll"><div id="mapWorld"></div></div>
+</div>
+
+<div class="overlay" id="clearOverlay">
+  <div class="card">
+    <div class="big">🎉 クリア！</div>
+    <div id="clearStars"></div>
+    <div class="detail" id="clearDetail"></div>
+    <button id="nextBtn">つぎの面へ</button>
+    <button class="sub" id="replayBtn1">もう一度</button>
+    <button class="sub" id="mapBtn">マップへ</button>
+  </div>
+</div>
+
+<div class="overlay" id="failOverlay">
+  <div class="card">
+    <div class="big">手数がなくなった…</div>
+    <div class="detail" id="failDetail"></div>
+    <button id="retryBtn">もう一度挑戦</button>
+    <button class="sub" id="mapBtn2">マップへ</button>
+  </div>
+</div>
+
+<div class="overlay" id="introOverlay">
+  <div class="card">
+    <div class="big" id="introTitle">ステージ 1</div>
+    <div id="introMoves"></div>
+    <div id="introGoals"></div>
+    <div class="detail" id="introDetail"></div>
+    <div id="introBoostArea">
+      <div class="boost-note">スタート前ブースター（試作では無料・何回でも）</div>
+      <div class="boost-row">
+        <button type="button" class="boost-btn" id="boostBomb">はじめから爆弾</button>
+        <button type="button" class="boost-btn" id="boostMoves">手数+3</button>
+      </div>
+    </div>
+    <button id="startBtn">スタート</button>
+  </div>
+</div>
+
+<div class="overlay" id="continueOverlay">
+  <div class="card">
+    <div class="big">手数がなくなった…</div>
+    <div class="detail" id="continueDetail"></div>
+    <button id="continueBtn">広告を見て +5手</button>
+    <button class="sub" id="giveUpBtn">やめる</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ 基本設定 ============ */
+const TYPES = 5;
+const NAMES = ["ほし","つき","ちきゅう","UFO","わくせい"];
+/* 盤面の大きさ・使う色・欠けマス（マスク）は面ごとに違う（本家準拠）。
+   実行時は boardRows/boardCols/stageTypes/maskGrid が「現在の面の形」を持つ。 */
+let boardRows = 8, boardCols = 7;
+let stageTypes = [0, 1, 2, 3, 4];
+let maskGrid = [];
+function makeMask(rows, cols, holes){
+  const m = Array.from({length: rows}, () => Array(cols).fill(true));
+  for (const h of holes || []){
+    const p = String(h).split(",");
+    const r = +p[0], c = +p[1];
+    if (r >= 0 && r < rows && c >= 0 && c < cols) m[r][c] = false;
+  }
+  return m;
+}
+/* 面の形を切り替える。石板・りんごの配列も形に合わせて作り直す */
+function setGeometry(def){
+  boardRows = def.rows || 8;
+  boardCols = def.cols || 7;
+  stageTypes = def.typeSet || [0, 1, 2, 3, 4];
+  maskGrid = makeMask(boardRows, boardCols, def.mask);
+  slates = Array.from({length: boardRows}, () => Array(boardCols).fill(0));
+  slateEls = Array.from({length: boardRows}, () => Array(boardCols).fill(null));
+  apples = Array.from({length: boardRows}, () => Array(boardCols).fill(0));
+}
+function isPlayable(r, c){
+  return r >= 0 && r < boardRows && c >= 0 && c < boardCols && !!maskGrid[r] && !!maskGrid[r][c];
+}
+function randomType(){ return stageTypes[rnd(stageTypes.length)]; }
+maskGrid = makeMask(8, 7, null);
+/* 石板の配置（仮置き）: 面4は下部のピラミッド状に20枚、面6は中央下に10枚。
+   石板のある列は落下の区切りになるため、固まりすぎると縦マッチが作れなくなる。
+   上部は開けてマッチを作れる形にしてある。 */
+const SLATES_20 = [
+  [3,3],
+  [4,2],[4,3],[4,4],
+  [5,1],[5,2],[5,3],[5,4],[5,5],
+  [6,1],[6,2],[6,3],[6,4],[6,5],
+  [7,0],[7,1],[7,2],[7,3],[7,4],[7,5],
+];
+const SLATES_10 = [
+  [4,3],
+  [5,3],
+  [6,2],[6,3],[6,4],
+  [7,1],[7,2],[7,3],[7,4],[7,5],
+];
+/* ステージ定義（2026-11-28: 本家『LINE ポコポコ』のステージ1・2の構造・数値を再現）
+   面1: 5×5・4色（UFOなし）・目標は「ほし9個」だけ・17手（本家ステージ1と同構造）
+   面2: 7×7四隅欠け・4色・目標2種15個ずつ・20手・りんご（消すと手数+1）を2列配置・アイテム使用不可（本家ステージ2と同構造）
+   面3以降は従来の試作ステージ（旧1〜6）をそのまま後ろに置く。 */
+const STAGES = [
+  { rows: 5, cols: 5, typeSet: [0, 1, 2, 4], moves: 17,
+    goals: [{ kind: "collect", type: 0, target: 9 }], starBase: 1500 },
+  { rows: 7, cols: 7, typeSet: [0, 1, 2, 4], moves: 20,
+    goals: [{ kind: "collect", type: 0, target: 15 }, { kind: "collect", type: 2, target: 15 }],
+    mask: ["0,0", "0,6", "6,0", "6,6"],
+    apples: [
+      { r: 1, c: 1, v: 1 }, { r: 1, c: 2, v: 1 }, { r: 1, c: 3, v: 1 }, { r: 1, c: 4, v: 1 }, { r: 1, c: 5, v: 1 },
+      { r: 5, c: 1, v: 1 }, { r: 5, c: 2, v: 1 }, { r: 5, c: 3, v: 1 }, { r: 5, c: 4, v: 1 }, { r: 5, c: 5, v: 1 },
+    ],
+    noItems: true, starBase: 2500 },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 17, goals: [{ kind: "score", target: 1500 }] },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 25, goals: [{ kind: "score", target: 2400 }] },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 5,  goals: [{ kind: "score", target: 2800 }] },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 15, goals: [{ kind: "slate", target: 20 }], slates: SLATES_20, starBase: 3000 },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 20, goals: [{ kind: "collect", type: 0, target: 35 }], starBase: 2800 },
+  { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4], moves: 20, goals: [{ kind: "score", target: 2000 }, { kind: "slate", target: 10 }], slates: SLATES_10 },
+];
+
+/* ============ 仮置きした規則（検証ドキュメントで未確定の点） ============
+   ・特殊ブロックの生成位置: 動かしたブロックの到着マス（T/L字は交点）。
+     連鎖中の生成はライン中央寄りで代替。到着マスが既に特殊なら同グループ内の通常マスへ。
+   ・6つ以上の一直線はレインボー扱い。複数条件が同時成立した時の優先順位は
+     レインボー > ダブル(T/L) > やじるし > ハチ(2×2)。
+   ・ダブル×ダブルの範囲（7×7角丸→9×9角丸）はドキュメントに数値がないため仮置き。
+   ・ハチの飛び先はランダム（本家は優先順位が未確認）。
+   ・特殊ブロックが通常マッチに含まれたら、その効果が発動する（本家は未確認）。
+   ・プレイ中の爆発で巻き込んだブロック/爆弾自体の得点は連鎖ティア単価で統一
+     （本家は未確認。クリアボーナス時だけ爆弾1000点・巻き込み80点が確定値）。
+   ・クリアボーナスで置く爆弾の種類はやじるし/ダブルからランダム。
+   【P1で仮置きした規則】
+   ・石板の配置は面4=下部ピラミッド20枚、面6=中央下10枚（本家の配置は未確認）。硬さは1段階のみ。
+   ・石板の得点は検証ドキュメント§4の連鎖ティア別表（500/500/500/750/2000）。
+     クリアボーナス中に壊れた石板は500点で統一（本家は未確認）。
+   ・コンティニューは試作のため回数制限なし。ミズー版の正式仕様は広告で+5手・1面1回想定。
+   ・ヒントの遅延は3秒（本家は「しばらく」で数値未確認）。全ステージで有効
+     （本家は序盤のみの可能性あり）。
+   ・ハンマーで特殊ブロックを消しても効果は発動しない（単純除去）。得点は通常単価（1連鎖80点）。
+   ・ハチの飛び先は従来どおりランダムで、石板は対象に含めない。
+   ・面5（指定消去35個/20手）・面6の数値は本家実例を目安にした仮置きで、
+     クリア率は今後のボット試行で調整する。
+   【P3で仮置きした規則】
+   ・ほし評価のしきい値: 目標スコア（スコア目標のない面は starBase）の
+     1倍=ほし1、1.5倍=ほし2、2.2倍=ほし3。面4の starBase=3000、面5は2800（仮置き）。
+     進捗（クリア・ほし）は localStorage の pokoProgress に保存する。
+   ・マップの解放は一本道: 前の面をクリアすると次の面が開く。
+   ・スタート前ブースターは試作のため無料・回数制限なし（正式版では経済に載せる想定）。
+*/
+
+/* ============ ブロックの絵（SVG・絵文字なし／ほしぞらで統一） ============ */
+function svgFor(t){
+  switch(t){
+    /* 0: ほし（黄色の星） */
+    case 0: return '<svg viewBox="0 0 100 100"><polygon points="50,5 62,37 96,37 68,57 79,92 50,71 21,92 32,57 4,37 38,37" fill="#ffc93c" stroke="#d99400" stroke-width="4" stroke-linejoin="round"/></svg>';
+    /* 1: つき（クリーム色の三日月） */
+    case 1: return '<svg viewBox="0 0 100 100"><path d="M66,14 A40,40 0 1,0 66,86 A37,37 0 0,1 66,14 Z" fill="#ffe9a8" stroke="#d99400" stroke-width="4" stroke-linejoin="round"/><polygon points="66,24 68.5,30.5 75.5,30.5 70,34.8 72,41.5 66,37.4 60,41.5 62,34.8 56.5,30.5 63.5,30.5" fill="#ffc93c" stroke="#d99400" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+    /* 2: ちきゅう（青と緑の丸い地球・輪なし） */
+    case 2: return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#3d9be9" stroke="#1f6fc2" stroke-width="4"/><g fill="#57b25e"><path d="M24,40 C19,29 29,19 39,21 C49,23 51,33 45,39 C39,45 28,48 24,40 Z"/><path d="M53,64 C53,54 63,48 71,52 C79,56 79,68 71,72 C63,76 53,72 53,64 Z"/><path d="M61,25 C65,19 75,19 77,25 C79,31 71,35 65,33 C59,31 58,29 61,25 Z"/><ellipse cx="31" cy="65" rx="6" ry="4.4"/></g><ellipse cx="36" cy="33" rx="9" ry="5" fill="#bfe3ff" opacity=".55"/></svg>';
+    /* 3: UFO（円盤＋ドーム＋ライト。わくせいの輪とは形も色も別） */
+    case 3: return '<svg viewBox="0 0 100 100"><path d="M27,56 A23,33 0 0,1 73,56 Z" fill="#cdeffd" stroke="#5ea9cf" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="44" r="7.5" fill="#69c24a"/><circle cx="47.3" cy="43" r="1.8" fill="#20401c"/><circle cx="52.7" cy="43" r="1.8" fill="#20401c"/><ellipse cx="50" cy="65" rx="45" ry="17" fill="#d9e1e6" stroke="#8fa3ad" stroke-width="4"/><circle cx="25" cy="65" r="4.2" fill="#35d461" stroke="#1e9e46" stroke-width="2"/><circle cx="50" cy="71.5" r="4.2" fill="#ffd93c" stroke="#d9a400" stroke-width="2"/><circle cx="75" cy="65" r="4.2" fill="#35d461" stroke="#1e9e46" stroke-width="2"/></svg>';
+    /* 4: わくせい（ピンク色の土星型＝丸＋輪） */
+    case 4: return '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="44" ry="14" transform="rotate(-16 50 50)" fill="none" stroke="#e75480" stroke-width="7"/><circle cx="50" cy="48" r="25" fill="#f78fb8" stroke="#cf4d8b" stroke-width="4"/><path d="M12.5,59.5 A44,14 -16 0,0 87.5,40.5" fill="none" stroke="#e75480" stroke-width="7" stroke-linecap="round"/><ellipse cx="41" cy="39" rx="8" ry="5" fill="#ffd3e6" opacity=".85"/></svg>';
+  }
+  return "";
+}
+
+/* ============ 特殊ブロックの印 ============ */
+function spName(kind){
+  return kind === "arrow" ? "やじるし爆弾"
+       : kind === "double" ? "ダブル爆弾"
+       : kind === "bee" ? "ハチ爆弾" : "レインボー爆弾";
+}
+function rainbowSVG(){
+  return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#ffffff" opacity=".9"/>'
+    + '<path d="M14,68 A40,40 0 0,1 86,68" fill="none" stroke="#ff5252" stroke-width="8"/>'
+    + '<path d="M22,72 A33,33 0 0,1 78,72" fill="none" stroke="#ff9800" stroke-width="8"/>'
+    + '<path d="M30,75 A26,26 0 0,1 70,75" fill="none" stroke="#4caf50" stroke-width="8"/>'
+    + '<path d="M38,77 A19,19 0 0,1 62,77" fill="none" stroke="#2196f3" stroke-width="8"/>'
+    + '<polygon points="50,14 55,29 71,29 58.5,38.5 63,53 50,44 37,53 41.5,38.5 29,29 45,29" fill="#ffd93c" stroke="#d99400" stroke-width="2.6" stroke-linejoin="round"/></svg>';
+}
+function markSVG(b){
+  if (!b.special) return "";
+  if (b.special === "arrow"){
+    const rot = b.arrowDir === "v" ? ' transform="rotate(90 50 50)"' : "";
+    return '<svg class="mark full" viewBox="0 0 100 100"><g' + rot + '><polygon points="2,50 30,25 30,39 70,39 70,25 98,50 70,75 70,61 30,61 30,75" fill="#ff3d00" stroke="#ffffff" stroke-width="5" stroke-linejoin="round"/></g></svg>';
+  }
+  if (b.special === "double"){
+    return '<svg class="mark badge" viewBox="0 0 100 100"><polygon points="50,2 59,32 88,15 68,42 97,46 68,58 87,87 58,67 50,97 42,67 13,87 32,58 3,46 32,42 12,15 41,32" fill="#ff7847" stroke="#d43d00" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="50" r="11" fill="#ffd93c" stroke="#d43d00" stroke-width="3"/></svg>';
+  }
+  if (b.special === "bee"){
+    return '<svg class="mark badge" viewBox="0 0 100 100"><ellipse cx="40" cy="32" rx="17" ry="11" transform="rotate(-24 40 32)" fill="#ffffff" opacity=".92"/><ellipse cx="65" cy="29" rx="14" ry="9" transform="rotate(18 65 29)" fill="#ffffff" opacity=".92"/><ellipse cx="50" cy="61" rx="27" ry="22" fill="#ffd93c" stroke="#8a6d00" stroke-width="3.5"/><path d="M38,43 q-4,18 0,36 M57,41 q-5,20 0,40" stroke="#333333" stroke-width="6" fill="none"/><circle cx="42" cy="57" r="3" fill="#333333"/><circle cx="58" cy="57" r="3" fill="#333333"/><path d="M44,67 q6,4 12,0" stroke="#333333" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+  }
+  return "";
+}
+function renderBlock(b){
+  if (b.apple){
+    b.el.className = "block apple";
+    b.el.innerHTML = appleSVG() + '<div class="apple-num">' + b.apple + "</div>";
+    return;
+  }
+  b.el.className = "block t" + b.type + (b.special ? " sp-" + b.special : "");
+  b.el.innerHTML = b.special === "rainbow" ? rainbowSVG() : svgFor(b.type) + markSVG(b);
+}
+
+/* ============ ミズーの顔（簡易SVG・v0用） ============ */
+function mizuFaceSVG(joy){
+  const eyes = joy
+    ? '<path d="M14,27 Q18,22 22,27" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round"/><path d="M28,27 Q32,22 36,27" fill="none" stroke="#333" stroke-width="2.4" stroke-linecap="round"/>'
+    : '<ellipse cx="18" cy="26" rx="2.2" ry="3" fill="#333"/><ellipse cx="32" cy="26" rx="2.2" ry="3" fill="#333"/>';
+  const mouth = joy
+    ? '<ellipse cx="25" cy="34" rx="4.4" ry="3.4" fill="#a34a3a"/>'
+    : '<path d="M20,33 Q25,37.5 30,33" fill="none" stroke="#a34a3a" stroke-width="2.2" stroke-linecap="round"/>';
+  return '<svg viewBox="0 0 50 50">'
+    + '<circle cx="25" cy="26" r="19" fill="#ffe3c2"/>'
+    + '<path d="M6,25 A19,19 0 0,1 44,25 L44,19 A19,15 0 0,0 6,19 Z" fill="#33302e"/>'
+    + '<path d="M6,22 L13,27 L18,21 L24,27 L30,20 L36,26 L44,20 L44,25 A19,19 0 0,0 6,25 Z" fill="#33302e"/>'
+    + eyes + mouth
+    + '<circle cx="12" cy="32" r="3" fill="#ffb3a0" opacity=".65"/><circle cx="38" cy="32" r="3" fill="#ffb3a0" opacity=".65"/>'
+    + '</svg>';
+}
+
+/* ============ ゲーム本体 ============ */
+const boardEl = document.getElementById("board");
+const movesVal = document.getElementById("movesVal");
+const scoreVal = document.getElementById("scoreVal");
+const goalLineEl = document.getElementById("goalLine");
+const scoreBar = document.getElementById("scoreBar");
+const hammerBtn = document.getElementById("hammerBtn");
+const muteBtn = document.getElementById("muteBtn");
+const mizuFaceEl = document.getElementById("mizuFace");
+const mizuMsgEl = document.getElementById("mizuMsg");
+const toastEl = document.getElementById("toast");
+const chainBannerEl = document.getElementById("chainBanner");
+const bonusBannerEl = document.getElementById("bonusBanner");
+
+let cell = 48;               // 1マスのpx（レイアウト時に決める）
+let grid = [];               // grid[r][c] = block {id,type,special,arrowDir,r,c,el} | null
+let nextId = 1;
+let stage = 0;
+let score = 0, movesLeft = 0;
+let busy = false;
+let selected = null;         // {r,c} | null
+let clearedStages = new Set();
+let pendingStage2 = [];      // ダブル爆弾の2段階目 {r,c,rad}
+let slates = [];      // 石板の硬さ（0=なし）。面の形に合わせて setGeometry で作り直す
+let slateEls = [];
+let apples = [];      // りんごブロックの配置（0=なし、N=消すと手数+N）
+let slatesBroken = 0;        // この面で壊した石板の数
+let collected = [0, 0, 0, 0, 0];  // 種類ごとに消した数（指定消去の目標用）
+let hammerMode = false;
+let lastActionAt = Date.now();
+let hintPair = null;         // ヒントで光っている {a,b} | null
+let bonusActive = false, bonusFast = false;   // クリアボーナス中か／早送りが押されたか
+let stageClearCount = 0;     // 検証用: STAGE CLEAR 表示の回数
+/* 検証用: クリアボーナスの実行記録（実施回数・ランダム消去数・連鎖消去数・入れ替え回数・各回の内訳） */
+let bonusStats = { rounds: 0, randomClears: 0, chainedClears: 0, swaps: 0, log: [] };
+let blocksClearedTotal = 0;  // 検証用: clearWave で実際に消えたブロックの総数
+
+const wait = ms => new Promise(res => setTimeout(res, ms));
+/* クリアボーナスの早送り中は演出の待ちを飛ばす（流れを最後まで一気に進める） */
+const fxWait = ms => wait(bonusActive && bonusFast ? 0 : ms);
+const rnd = n => Math.floor(Math.random() * n);
+const key = (r,c) => r + "," + c;
+
+/* 演出専用の乱数（ゲーム本体の Math.random を消費しないための独立系列） */
+let vSeed = 987654321;
+function vrnd(){
+  vSeed = (vSeed * 1103515245 + 12345) & 0x7fffffff;
+  return vSeed / 0x7fffffff;
+}
+
+/* ============ 効果音（Web Audio合成・ファイル不要） ============
+   AudioContext は初回のタップ（ユーザー操作）で生成・再開する。
+   音まわりで例外が出てもゲーム本体に影響しないよう、全体を try/catch で守る。 */
+const Snd = (() => {
+  let ctx = null, master = null, plays = 0, noiseBuf = null;
+  let muted = false;
+  try { muted = localStorage.getItem("pokoMuted") === "1"; } catch (e) {}
+  function ensure(){
+    if (ctx){
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      return true;
+    }
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : 0.5;
+      master.connect(ctx.destination);
+      return true;
+    } catch (e) { return false; }
+  }
+  function tone(o){
+    if (muted || !ensure()) return;
+    try {
+      const dur = o.t || 0.15;
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = o.type || "sine";
+      osc.frequency.setValueAtTime(o.f0, t0);
+      if (o.f1) osc.frequency.exponentialRampToValueAtTime(Math.max(o.f1, 1), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(o.vol || 0.2, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(master);
+      osc.start(t0); osc.stop(t0 + dur + 0.05);
+      plays++;
+    } catch (e) {}
+  }
+  function noise(o){
+    if (muted || !ensure()) return;
+    try {
+      if (!noiseBuf){
+        noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = vrnd() * 2 - 1;
+      }
+      const dur = o.t || 0.25;
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+      const flt = ctx.createBiquadFilter();
+      flt.type = o.type || "bandpass"; flt.Q.value = o.q || 1;
+      flt.frequency.setValueAtTime(o.fFrom || 800, t0);
+      flt.frequency.exponentialRampToValueAtTime(Math.max(o.fTo || 800, 10), t0 + dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(o.vol || 0.2, t0 + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(flt); flt.connect(g); g.connect(master);
+      src.start(t0); src.stop(t0 + dur + 0.05);
+      plays++;
+    } catch (e) {}
+  }
+  return {
+    get muted(){ return muted; },
+    get plays(){ return plays; },
+    get hasCtx(){ return !!ctx; },
+    unlock(){ ensure(); },
+    toggleMute(){
+      muted = !muted;
+      try { localStorage.setItem("pokoMuted", muted ? "1" : "0"); } catch (e) {}
+      if (master && ctx) master.gain.setTargetAtTime(muted ? 0 : 0.5, ctx.currentTime, 0.01);
+      return muted;
+    },
+    select(){ tone({ type: "triangle", f0: 660, f1: 520, t: 0.06, vol: 0.10 }); },
+    swap(){ tone({ type: "triangle", f0: 420, f1: 640, t: 0.09, vol: 0.14 }); },
+    invalid(){ tone({ type: "sine", f0: 170, f1: 110, t: 0.14, vol: 0.18 }); },
+    /* 消去音: 連鎖が進むごとに半音ずつ音程が上がる */
+    pop(chain){
+      const semis = Math.min(Math.max(chain - 1, 0), 8);
+      const base = 520 * Math.pow(2, semis / 12);
+      tone({ type: "sine", f0: base * 1.7, f1: base, t: 0.11, vol: 0.20 });
+      tone({ type: "triangle", f0: base * 2.6, f1: base * 2.0, t: 0.07, vol: 0.07 });
+    },
+    born(){
+      tone({ type: "sine", f0: 1180, t: 0.07, vol: 0.10 });
+      tone({ type: "sine", f0: 1770, t: 0.10, vol: 0.09, delay: 0.06 });
+    },
+    arrow(){ noise({ t: 0.22, vol: 0.16, fFrom: 700, fTo: 3400, type: "bandpass", q: 1.2 }); },
+    boom(){
+      noise({ t: 0.36, vol: 0.22, fFrom: 900, fTo: 120, type: "lowpass" });
+      tone({ type: "sine", f0: 130, f1: 45, t: 0.34, vol: 0.26 });
+    },
+    bee(){
+      tone({ type: "sawtooth", f0: 520, f1: 940, t: 0.20, vol: 0.045 });
+      tone({ type: "sine", f0: 780, f1: 1240, t: 0.20, vol: 0.08 });
+    },
+    hammer(){ tone({ type: "square", f0: 220, f1: 90, t: 0.09, vol: 0.10 }); },
+    clear(){
+      [523, 659, 784, 1047].forEach((f, i) =>
+        tone({ type: "triangle", f0: f, t: 0.16, vol: 0.16, delay: i * 0.09 }));
+    },
+    fail(){
+      [392, 330, 262].forEach((f, i) =>
+        tone({ type: "triangle", f0: f, t: 0.18, vol: 0.14, delay: i * 0.11 }));
+    },
+  };
+})();
+
+function layout(){
+  const wrapW = Math.min(window.innerWidth - 32, 400);
+  cell = Math.floor(wrapW / boardCols);
+  boardEl.style.width = (cell * boardCols) + "px";
+  boardEl.style.height = (cell * boardRows) + "px";
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    const b = grid[r] && grid[r][c];
+    if (b) place(b, false);
+    const se = slateEls[r] && slateEls[r][c];
+    if (se){
+      se.style.width = cell + "px";
+      se.style.height = cell + "px";
+      se.style.transform = "translate(" + (c * cell) + "px," + (r * cell) + "px)";
+    }
+  }
+}
+function place(b, animate){
+  if (!animate) b.el.style.transition = "none";
+  b.el.style.transform = "translate(" + (b.c * cell) + "px," + (b.r * cell) + "px)";
+  if (!animate){ void b.el.offsetWidth; b.el.style.transition = ""; }
+}
+function makeBlock(type, r, c){
+  const el = document.createElement("div");
+  el.style.width = cell + "px";
+  el.style.height = cell + "px";
+  const b = { id: nextId++, type, special: null, arrowDir: null, r, c, el };
+  el.dataset.r = r; el.dataset.c = c;
+  boardEl.appendChild(el);
+  renderBlock(b);
+  return b;
+}
+/* りんごブロック: マッチしない（type=-1）。消すと手数が +v 増える */
+function appleSVG(){
+  return '<svg viewBox="0 0 100 100"><path d="M50,32 C50,21 57,12 69,10 C71,21 64,31 54,34 Z" fill="#57b25e"/><path d="M50,35 C38,23 14,29 13,51 C12,73 32,93 50,93 C68,93 88,73 87,51 C86,29 62,23 50,35 Z" fill="#ff5252" stroke="#d43d00" stroke-width="3.5"/><ellipse cx="31" cy="49" rx="7.5" ry="12" fill="#ffb3ab" opacity=".7"/></svg>';
+}
+function makeAppleBlock(v, r, c){
+  const el = document.createElement("div");
+  el.style.width = cell + "px";
+  el.style.height = cell + "px";
+  const b = { id: nextId++, type: -1, apple: v, special: null, arrowDir: null, r, c, el };
+  el.dataset.r = r; el.dataset.c = c;
+  boardEl.appendChild(el);
+  renderBlock(b);
+  return b;
+}
+
+/* ---------- 石板 ---------- */
+function isSlate(r, c){
+  return r >= 0 && r < boardRows && c >= 0 && c < boardCols && slates[r][c] > 0;
+}
+function slateSVG(){
+  return '<svg viewBox="0 0 100 100">'
+    + '<rect x="5" y="5" width="90" height="90" rx="15" fill="#93a1ae"/>'
+    + '<path d="M5,58 L95,58 L95,80 A15,15 0 0,1 80,95 L20,95 A15,15 0 0,1 5,80 Z" fill="#7c8a97"/>'
+    + '<path d="M30,12 L42,34 L34,52 L48,74 L44,90" fill="none" stroke="#5d6a76" stroke-width="4" stroke-linecap="round"/>'
+    + '<path d="M70,10 L62,30 L74,48" fill="none" stroke="#5d6a76" stroke-width="3.4" stroke-linecap="round"/>'
+    + '<circle cx="24" cy="26" r="3.4" fill="#aeb9c4"/><circle cx="76" cy="70" r="3" fill="#aeb9c4"/><circle cx="58" cy="84" r="2.6" fill="#67737f"/>'
+    + '</svg>';
+}
+function makeSlateEl(r, c){
+  const el = document.createElement("div");
+  el.className = "slate";
+  el.style.width = cell + "px";
+  el.style.height = cell + "px";
+  el.style.transform = "translate(" + (c * cell) + "px," + (r * cell) + "px)";
+  el.innerHTML = slateSVG();
+  boardEl.appendChild(el);
+  return el;
+}
+function initSlates(list){
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    if (slateEls[r][c]){ slateEls[r][c].remove(); slateEls[r][c] = null; }
+    slates[r][c] = 0;
+  }
+  slatesBroken = 0;
+  for (const pos of list){
+    slates[pos[0]][pos[1]] = 1;
+    slateEls[pos[0]][pos[1]] = makeSlateEl(pos[0], pos[1]);
+  }
+}
+/* 石板の得点（連鎖ティア別表。検証ドキュメント§4） */
+function slateUnit(chain){
+  return chain <= 3 ? 500 : chain === 4 ? 750 : 2000;
+}
+/* 消えたブロック群に隣接する石板＋直接ヒットした石板の集合 */
+function collectSlateHits(keys){
+  const hits = new Set();
+  for (const k of keys){
+    const parts = k.split(",");
+    const r = +parts[0], c = +parts[1];
+    if (isSlate(r, c)){ hits.add(k); continue; }
+    if (!grid[r] || !grid[r][c]) continue;
+    for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nr = r + dr, nc = c + dc;
+      if (isSlate(nr, nc)) hits.add(key(nr, nc));
+    }
+  }
+  return hits;
+}
+function applySlateDamage(hits, chain, mode){
+  for (const k of hits){
+    const parts = k.split(",");
+    const r = +parts[0], c = +parts[1];
+    if (!isSlate(r, c)) continue;
+    slates[r][c]--;
+    score += mode === "bonus" ? 500 : slateUnit(chain);
+    if (slates[r][c] <= 0){
+      slates[r][c] = 0;
+      slatesBroken++;
+      const el = slateEls[r][c];
+      if (el){
+        el.classList.add("breaking");
+        setTimeout(() => el.remove(), 220);
+        slateEls[r][c] = null;
+      }
+      toast("石板が壊れた！");
+    }
+  }
+  if (hits.size) updateHUD();
+}
+
+/* ---------- 目標 ---------- */
+function goalCurrent(g){
+  if (g.kind === "score") return score;
+  if (g.kind === "collect") return collected[g.type];
+  if (g.kind === "slate") return slatesBroken;
+  return 0;
+}
+function goalsMet(){
+  return STAGES[stage].goals.every(g => goalCurrent(g) >= g.target);
+}
+function goalText(g){
+  const cur = Math.min(goalCurrent(g), g.target);
+  if (g.kind === "score") return "スコア " + cur + "/" + g.target;
+  if (g.kind === "collect") return NAMES[g.type] + " " + cur + "/" + g.target;
+  if (g.kind === "slate") return "石板 " + cur + "/" + g.target;
+  return "";
+}
+function goalLongText(g){
+  if (g.kind === "score") return "スコア " + g.target + " 点をめざそう";
+  if (g.kind === "collect") return NAMES[g.type] + "を " + g.target + " 個消そう";
+  if (g.kind === "slate") return "石板を " + g.target + " 枚壊そう";
+  return "";
+}
+function anyOverlayOpen(){
+  return ["clearOverlay", "failOverlay", "continueOverlay", "introOverlay"]
+    .some(id => document.getElementById(id).classList.contains("show"));
+}
+
+/* ---------- マッチ検出（3つ以上のラン） ---------- */
+function findMatches(){
+  const hit = new Set();
+  for (let r = 0; r < boardRows; r++){
+    let run = 1;
+    for (let c = 1; c <= boardCols; c++){
+      if (c < boardCols && grid[r][c] && grid[r][c-1] && grid[r][c].type >= 0 && grid[r][c].type === grid[r][c-1].type) run++;
+      else { if (run >= 3) for (let k = 1; k <= run; k++) hit.add(key(r, c-k)); run = 1; }
+    }
+  }
+  for (let c = 0; c < boardCols; c++){
+    let run = 1;
+    for (let r = 1; r <= boardRows; r++){
+      if (r < boardRows && grid[r][c] && grid[r-1][c] && grid[r][c].type >= 0 && grid[r][c].type === grid[r-1][c].type) run++;
+      else { if (run >= 3) for (let k = 1; k <= run; k++) hit.add(key(r-k, c)); run = 1; }
+    }
+  }
+  return hit;
+}
+function findSquares(){
+  const sq = [];
+  for (let r = 0; r < boardRows - 1; r++) for (let c = 0; c < boardCols - 1; c++){
+    const a = grid[r][c], b = grid[r][c+1], d = grid[r+1][c], e = grid[r+1][c+1];
+    if (a && b && d && e && a.type >= 0 && a.type === b.type && a.type === d.type && a.type === e.type)
+      sq.push({ type: a.type, cells: [{r,c},{r,c:c+1},{r:r+1,c},{r:r+1,c:c+1}] });
+  }
+  return sq;
+}
+
+/* ---------- マッチ解析（ラン＋2×2をグループ化し、特殊ブロック生成を判定） ---------- */
+function analyzeMatches(){
+  const items = [];
+  for (let r = 0; r < boardRows; r++){
+    let c = 0;
+    while (c < boardCols){
+      const b = grid[r][c];
+      if (!b || b.type < 0){ c++; continue; }
+      let len = 1;
+      while (c + len < boardCols && grid[r][c+len] && grid[r][c+len].type === b.type) len++;
+      if (len >= 3) items.push({ kind: "run", dir: "h", type: b.type,
+        cells: Array.from({length: len}, (_, i) => ({ r, c: c + i })) });
+      c += len;
+    }
+  }
+  for (let c = 0; c < boardCols; c++){
+    let r = 0;
+    while (r < boardRows){
+      const b = grid[r][c];
+      if (!b || b.type < 0){ r++; continue; }
+      let len = 1;
+      while (r + len < boardRows && grid[r+len][c] && grid[r+len][c].type === b.type) len++;
+      if (len >= 3) items.push({ kind: "run", dir: "v", type: b.type,
+        cells: Array.from({length: len}, (_, i) => ({ r: r + i, c })) });
+      r += len;
+    }
+  }
+  for (const sq of findSquares()) items.push({ kind: "square", type: sq.type, cells: sq.cells });
+  if (!items.length) return [];
+
+  /* セルを共有する同種アイテムをグループ化（Union-Find） */
+  const parent = items.map((_, i) => i);
+  const findRoot = (x) => { while (parent[x] !== x){ parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+  const owner = new Map();
+  items.forEach((it, i) => {
+    for (const cl of it.cells){
+      const k = key(cl.r, cl.c);
+      if (owner.has(k)){
+        const ri = findRoot(i), rj = findRoot(owner.get(k));
+        if (ri !== rj) parent[ri] = rj;
+      } else owner.set(k, i);
+    }
+  });
+  const byRoot = new Map();
+  items.forEach((it, i) => {
+    const root = findRoot(i);
+    if (!byRoot.has(root)) byRoot.set(root, []);
+    byRoot.get(root).push(it);
+  });
+
+  const groups = [];
+  for (const members of byRoot.values()){
+    const cellMap = new Map();
+    for (const m of members) for (const cl of m.cells) cellMap.set(key(cl.r, cl.c), cl);
+    const runs = members.filter(m => m.kind === "run");
+    const squares = members.filter(m => m.kind === "square");
+    const hRuns = runs.filter(x => x.dir === "h"), vRuns = runs.filter(x => x.dir === "v");
+    let kind = null, arrowDir = null, genRunCells = null, intersection = null, squareCells = null;
+    const longRun = runs.find(x => x.cells.length >= 5);
+    if (longRun){
+      kind = "rainbow"; genRunCells = longRun.cells;
+    } else if (hRuns.length && vRuns.length){
+      kind = "double";
+      const hSet = new Set(hRuns.flatMap(x => x.cells.map(cl => key(cl.r, cl.c))));
+      for (const vr of vRuns){
+        for (const cl of vr.cells) if (hSet.has(key(cl.r, cl.c))){ intersection = cl; break; }
+        if (intersection) break;
+      }
+    } else {
+      const r4 = runs.find(x => x.cells.length === 4);
+      if (r4){ kind = "arrow"; arrowDir = r4.dir === "h" ? "v" : "h"; genRunCells = r4.cells; }
+      else if (squares.length){ kind = "bee"; squareCells = squares[0].cells; }
+    }
+    groups.push({ type: members[0].type, cellsList: [...cellMap.values()],
+                  kind, arrowDir, genRunCells, intersection, squareCells });
+  }
+  return groups;
+}
+function pickGenCell(g, pref){
+  const free = (cl) => { const b = grid[cl.r][cl.c]; return !!b && !b.special; };
+  const inList = (list, cl) => list.some(x => x.r === cl.r && x.c === cl.c);
+  let ordered = [];
+  if (g.kind === "double"){
+    if (g.intersection) ordered.push(g.intersection);
+  } else if (g.kind === "rainbow" || g.kind === "arrow"){
+    const run = g.genRunCells;
+    if (pref) for (const p of pref) if (inList(run, p)) ordered.push(p);
+    ordered.push(run[Math.floor(run.length / 2)]);
+    ordered = ordered.concat(run);
+  } else if (g.kind === "bee"){
+    const sq = g.squareCells;
+    if (pref) for (const p of pref) if (inList(sq, p)) ordered.push(p);
+    ordered = ordered.concat(sq);
+  }
+  ordered = ordered.concat(g.cellsList);
+  for (const cl of ordered) if (free(cl)) return cl;
+  return null;
+}
+function hasGroup(){ return analyzeMatches().length > 0; }
+function boardHasSpecial(){
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++)
+    if (grid[r][c] && grid[r][c].special) return true;
+  return false;
+}
+function swapInGrid(a, b){
+  const ba = grid[a.r][a.c], bb = grid[b.r][b.c];
+  grid[a.r][a.c] = bb; grid[b.r][b.c] = ba;
+  if (bb){ bb.r = a.r; bb.c = a.c; }
+  if (ba){ ba.r = b.r; ba.c = b.c; }
+  return [ba, bb];
+}
+function findValidMoves(){
+  const res = [];
+  const dirs = [[0,1],[1,0]];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    if (!grid[r][c]) continue;   /* 石板マスは対象外 */
+    for (const [dr,dc] of dirs){
+      const r2 = r+dr, c2 = c+dc;
+      if (r2 >= boardRows || c2 >= boardCols) continue;
+      if (!grid[r2][c2]) continue;
+      swapInGrid({r,c},{r:r2,c:c2});
+      if (hasGroup()) res.push({a:{r,c}, b:{r:r2,c:c2}});
+      swapInGrid({r,c},{r:r2,c:c2});
+    }
+  }
+  return res;
+}
+function findInvalidSwap(){
+  const dirs = [[0,1],[1,0]];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    for (const [dr,dc] of dirs){
+      const r2 = r+dr, c2 = c+dc;
+      if (r2 >= boardRows || c2 >= boardCols) continue;
+      if (!grid[r][c] || !grid[r2][c2]) continue;  /* 石板マスは対象外 */
+      if (grid[r][c].special || grid[r2][c2].special) continue;  /* 特殊同士・特殊との入れ替えは発動するので無効手にしない */
+      swapInGrid({r,c},{r:r2,c:c2});
+      const ok = hasGroup();
+      swapInGrid({r,c},{r:r2,c:c2});
+      if (!ok) return {a:{r,c}, b:{r:r2,c:c2}};
+    }
+  }
+  return null;
+}
+
+/* ---------- 盤面生成（初期マッチ・2×2なし＋有効手3手以上を保証） ---------- */
+function genBoard(){
+  for (let attempt = 0; attempt < 400; attempt++){
+    grid = Array.from({length: boardRows}, () => Array(boardCols).fill(null));
+    for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+      if (!isPlayable(r, c) || isSlate(r, c)) continue;   /* 欠けマス・石板マスには置かない */
+      if (apples[r][c] > 0){
+        grid[r][c] = { id: 0, type: -1, apple: apples[r][c], special: null, arrowDir: null, r, c, el: null };
+        continue;
+      }
+      let t;
+      do { t = randomType(); }
+      while (
+        (c >= 2 && grid[r][c-1] && grid[r][c-2] && grid[r][c-1].type === t && grid[r][c-2].type === t) ||
+        (r >= 2 && grid[r-1][c] && grid[r-2][c] && grid[r-1][c].type === t && grid[r-2][c].type === t)
+      );
+      grid[r][c] = { id: 0, type: t, special: null, arrowDir: null, r, c, el: null };
+    }
+    if (findSquares().length === 0 && findValidMoves().length >= 3) return;
+  }
+}
+
+/* ---------- シャッフル（詰み回避） ---------- */
+function shuffleBoard(){
+  const blocks = [];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++)
+    if (grid[r][c] && !grid[r][c].apple) blocks.push(grid[r][c]);   /* 石板マス・りんごは混ぜない */
+  const types = blocks.map(b => b.type);
+  for (let attempt = 0; attempt < 300; attempt++){
+    for (let i = types.length - 1; i > 0; i--){ const j = rnd(i+1); [types[i],types[j]] = [types[j],types[i]]; }
+    blocks.forEach((b, i) => { b.type = types[i]; renderBlock(b); });
+    if (findMatches().size === 0 && findSquares().length === 0 && findValidMoves().length >= 1) return;
+  }
+}
+
+/* ---------- HUD ---------- */
+function say(msg, joy){
+  mizuMsgEl.textContent = msg;
+  mizuFaceEl.innerHTML = mizuFaceSVG(!!joy);
+}
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(() => toastEl.classList.remove("show"), 1600);
+}
+/* ---------- 見せ方（止めずに、流れの中で分かる表示） ---------- */
+/* 連鎖を盤面の近くに大きく出す（連鎖数が多いほど大きく・派手に） */
+function showChain(n){
+  chainBannerEl.textContent = n + " れんさ！";
+  const lv = Math.min(Math.max(n - 1, 1), 5);   /* 2れんさ=Lv1 … 6れんさ以上=Lv5 */
+  chainBannerEl.style.fontSize = (42 + lv * 8) + "px";
+  chainBannerEl.style.textShadow =
+    "0 2px 0 #b85c1e, 0 0 " + (18 + lv * 7) + "px rgba(255,157,46," + (0.85 + lv * 0.03) + "), 0 3px 8px rgba(0,0,0,.55)";
+  chainBannerEl.dataset.shown = String((parseInt(chainBannerEl.dataset.shown || "0", 10) || 0) + 1);
+  chainBannerEl.classList.remove("show");
+  void chainBannerEl.offsetWidth;
+  chainBannerEl.classList.add("show");
+}
+/* ---------- 発動予告（一拍）の調整値 ----------
+   特殊ブロックが発動する直前、消える範囲を光らせる時間(ms)。
+   ユーザー指摘「矢印爆弾や連鎖が速すぎて何が起きているか分からない」への対応。
+   全体を遅くするのではなく、特殊発動の瞬間だけ因果が目で追える一拍を入れる。
+   通常マッチのみの波・連鎖には入れない（テンポ維持）。体感調整はこの定数だけ触る。 */
+const SPECIAL_TELEGRAPH_MS = 180;
+
+/* 発動エフェクト: 消去と同時に、消える方向・範囲へ光を流す（待ち時間は作らない）。
+   やじるし=一列に光の帯、ダブル/レインボー/ハチ=広がる輪。 */
+let fxSpawned = 0;
+function spawnFx(ev){
+  fxSpawned++;
+  const el = document.createElement("div");
+  if (ev.kind === "arrow"){
+    el.className = "fx fx-line " + (ev.dir === "h" ? "fx-h" : "fx-v");
+    if (ev.dir === "h"){
+      el.style.left = "0px"; el.style.top = (ev.r * cell) + "px";
+      el.style.width = (boardCols * cell) + "px"; el.style.height = cell + "px";
+    } else {
+      el.style.top = "0px"; el.style.left = (ev.c * cell) + "px";
+      el.style.width = cell + "px"; el.style.height = (boardRows * cell) + "px";
+    }
+  } else {
+    el.className = "fx fx-ring" + (ev.kind === "rainbow" ? " fx-rainbow" : "");
+    const size = (ev.kind === "double" ? 5 : 3) * cell;
+    el.style.width = size + "px"; el.style.height = size + "px";
+    el.style.left = ((ev.c + 0.5) * cell) + "px";
+    el.style.top = ((ev.r + 0.5) * cell) + "px";
+  }
+  boardEl.appendChild(el);
+  setTimeout(() => el.remove(), 520);
+}
+/* --- 発動予告の表示: 消える範囲を先に光らせ、発動する特殊ブロック本体も光らせる。
+   descs: {kind:"line",r,c,dir} | {kind:"area",r,c,rad} | {kind:"cell",r,c}
+          | {kind:"cells",keys:[...]} | {kind:"all"}
+   戻り値は表示を消す関数。 */
+let teleCount = 0;            /* 検証用: 予告が出た波の数 */
+let teleLastKinds = [];       /* 検証用: 直近の予告の種類 */
+function showTelegraph(descs, firingBlocks){
+  const els = [];
+  const addCellGlow = (r, c) => {
+    const el = document.createElement("div");
+    el.className = "tele tele-cell";
+    el.style.left = (c * cell) + "px"; el.style.top = (r * cell) + "px";
+    el.style.width = cell + "px"; el.style.height = cell + "px";
+    boardEl.appendChild(el); els.push(el);
+  };
+  for (const d of descs){
+    if (d.kind === "line"){
+      const el = document.createElement("div");
+      el.className = "tele tele-line";
+      if (d.dir === "h"){
+        el.style.left = "0px"; el.style.top = (d.r * cell) + "px";
+        el.style.width = (boardCols * cell) + "px"; el.style.height = cell + "px";
+      } else {
+        el.style.top = "0px"; el.style.left = (d.c * cell) + "px";
+        el.style.width = cell + "px"; el.style.height = (boardRows * cell) + "px";
+      }
+      boardEl.appendChild(el); els.push(el);
+    } else if (d.kind === "area"){
+      const el = document.createElement("div");
+      el.className = "tele tele-area";
+      const x0 = Math.max(0, (d.c - d.rad) * cell), x1 = Math.min(boardCols * cell, (d.c + d.rad + 1) * cell);
+      const y0 = Math.max(0, (d.r - d.rad) * cell), y1 = Math.min(boardRows * cell, (d.r + d.rad + 1) * cell);
+      el.style.left = x0 + "px"; el.style.top = y0 + "px";
+      el.style.width = (x1 - x0) + "px"; el.style.height = (y1 - y0) + "px";
+      boardEl.appendChild(el); els.push(el);
+    } else if (d.kind === "cell"){
+      addCellGlow(d.r, d.c);
+    } else if (d.kind === "cells"){
+      for (const k of d.keys){ const p = k.split(","); addCellGlow(+p[0], +p[1]); }
+    } else if (d.kind === "all"){
+      const el = document.createElement("div");
+      el.className = "tele tele-area";
+      el.style.left = "0px"; el.style.top = "0px";
+      el.style.width = (boardCols * cell) + "px"; el.style.height = (boardRows * cell) + "px";
+      boardEl.appendChild(el); els.push(el);
+    }
+  }
+  for (const b of firingBlocks) if (b && b.el) b.el.classList.add("firing");
+  return () => {
+    for (const el of els) el.remove();
+    for (const b of firingBlocks) if (b && b.el) b.el.classList.remove("firing");
+  };
+}
+/* --- 消去の演出ヘルパー（白い四角片・渦巻き煙・スコアポップ・画面シェイク。すべて非ブロッキング） --- */
+let particlesSpawned = 0, popupsSpawned = 0, shakeCount = 0, smokeSpawned = 0;
+/* 本家寄せ: 小さな白い四角片が控えめに散る（星型・色つき・多量はやめた） */
+function spawnParticles(r, c, type, n){
+  const cx = (c + 0.5) * cell, cy = (r + 0.5) * cell;
+  for (let i = 0; i < n; i++){
+    const el = document.createElement("div");
+    el.className = "particle";
+    const size = 4 + vrnd() * 4;
+    el.style.width = size + "px"; el.style.height = size + "px";
+    el.style.left = cx + "px"; el.style.top = cy + "px";
+    el.style.background = vrnd() < 0.25 ? "#dfe9f5" : "#ffffff";
+    boardEl.appendChild(el);
+    particlesSpawned++;
+    const ang = vrnd() * Math.PI * 2;
+    const dist = cell * (0.3 + vrnd() * 0.5);
+    const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist - cell * 0.25;
+    const rot = Math.floor(vrnd() * 200 - 100);
+    const anim = el.animate([
+      { transform: "translate(-50%,-50%) rotate(0deg)", opacity: .95 },
+      { transform: "translate(calc(-50% + " + dx.toFixed(1) + "px), calc(-50% + " + dy.toFixed(1) + "px)) rotate(" + rot + "deg)", opacity: 0 },
+    ], { duration: 300 + vrnd() * 120, easing: "cubic-bezier(.17,.67,.35,1)" });
+    anim.onfinish = () => el.remove();
+    setTimeout(() => el.remove(), 600);
+  }
+}
+/* 消えたマスに白い渦巻き／煙の痕を残す（本家寄せ） */
+const SMOKE_SVG = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="rgba(255,255,255,.32)"/><path d="M50,50 m0,-5 a5,5 0 0,1 5,5 a10,10 0 0,1 -10,10 a17,17 0 0,1 -17,-17 a26,26 0 0,1 26,-26 a36,36 0 0,1 36,36" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="7" stroke-linecap="round"/></svg>';
+function spawnSmoke(r, c){
+  const el = document.createElement("div");
+  el.className = "smoke";
+  const size = cell * 0.95;
+  el.style.width = size + "px"; el.style.height = size + "px";
+  el.style.left = ((c + 0.5) * cell) + "px";
+  el.style.top = ((r + 0.5) * cell) + "px";
+  el.innerHTML = SMOKE_SVG;
+  boardEl.appendChild(el);
+  smokeSpawned++;
+  const anim = el.animate([
+    { transform: "translate(-50%,-50%) rotate(0deg) scale(.45)", opacity: .9 },
+    { transform: "translate(-50%,-50%) rotate(75deg) scale(1.15)", opacity: 0 },
+  ], { duration: 430, easing: "ease-out" });
+  anim.onfinish = () => el.remove();
+  setTimeout(() => el.remove(), 600);
+}
+function spawnScorePopup(keysArr, points, chain){
+  if (!keysArr.length || points <= 0) return;
+  let sr = 0, sc = 0;
+  for (const k of keysArr){ const p = k.split(","); sr += +p[0]; sc += +p[1]; }
+  const r = sr / keysArr.length, c = sc / keysArr.length;
+  const el = document.createElement("div");
+  el.className = "score-pop";
+  el.textContent = "+" + points;
+  el.style.left = ((c + 0.5) * cell) + "px";
+  el.style.top = ((r + 0.5) * cell) + "px";
+  el.style.fontSize = (17 + Math.min(Math.max(chain - 1, 0), 4) * 2) + "px";
+  boardEl.appendChild(el);
+  popupsSpawned++;
+  setTimeout(() => el.remove(), 900);
+}
+function doShake(){
+  shakeCount++;
+  const wrap = document.getElementById("boardWrap");
+  wrap.classList.remove("shake");
+  void wrap.offsetWidth;
+  wrap.classList.add("shake");
+  setTimeout(() => wrap.classList.remove("shake"), 280);
+}
+/* 特殊ブロックが生まれた時の一言（ミズーの吹き出し。遊びは止めない） */
+const SP_SHORT = {
+  arrow: "やじるし爆弾！入れ替えると一列消えるよ",
+  double: "ダブル爆弾！大きく爆発するよ",
+  bee: "ハチ爆弾！飛んでいって1個消すよ",
+  rainbow: "レインボー爆弾！入れ替えた色を全部消すよ",
+};
+function updateHUD(){
+  movesVal.textContent = movesLeft;
+  scoreVal.textContent = score;
+  const def = STAGES[stage];
+  goalLineEl.textContent = def.goals.map(g => goalText(g)).join(" ・ ");
+  const barGoal = def.goals.find(g => g.kind === "score") || def.goals[0];
+  scoreBar.style.width = Math.min(100, goalCurrent(barGoal) / barGoal.target * 100) + "%";
+  renderTargetPanel();
+}
+/* ターゲットパネル（本家形式）: 目標ブロックの絵＋残り個数を大きく出し、消すたびに減って、達成でチェックになる */
+function renderTargetPanel(){
+  const panel = document.getElementById("targetPanel");
+  if (!panel) return;
+  const cols = STAGES[stage].goals.filter(g => g.kind === "collect");
+  if (!cols.length){ panel.style.display = "none"; return; }
+  panel.style.display = "";
+  document.getElementById("targetChips").innerHTML = cols.map(g => {
+    const left = Math.max(0, g.target - collected[g.type]);
+    return '<span class="tchip' + (left === 0 ? " done" : "") + '"><span class="ticon">' + svgFor(g.type) +
+      '</span><span class="tnum">' + (left === 0 ? "✓" : left) + "</span></span>";
+  }).join("");
+}
+
+/* ---------- スコア（連鎖ティア式） ---------- */
+function tierUnit(chain){
+  return chain <= 1 ? 80 : chain === 2 ? 120 : chain === 3 ? 160 : chain === 4 ? 200 : 320;
+}
+
+/* ---------- 特殊ブロックの効果範囲 ---------- */
+function lineCells(r, c, dir){
+  const s = new Set();
+  if (dir === "h"){
+    if (r < 0 || r >= boardRows) return s;
+    for (let cc = 0; cc < boardCols; cc++) s.add(key(r, cc));
+  } else {
+    if (c < 0 || c >= boardCols) return s;
+    for (let rr = 0; rr < boardRows; rr++) s.add(key(rr, c));
+  }
+  return s;
+}
+function boxCells(r, c, rad, rounded){
+  const s = new Set();
+  for (let rr = r - rad; rr <= r + rad; rr++) for (let cc = c - rad; cc <= c + rad; cc++){
+    if (rr < 0 || rr >= boardRows || cc < 0 || cc >= boardCols) continue;
+    const dx = Math.abs(rr - r), dy = Math.abs(cc - c);
+    if (rounded && rad >= 3 &&
+        ((dx === rad && dy === rad) || (dx === rad && dy === rad - 1) || (dx === rad - 1 && dy === rad))) continue;
+    s.add(key(rr, cc));
+  }
+  return s;
+}
+function pickBeeTarget(bee, exclude){
+  const cands = [];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    const b = grid[r][c];
+    if (b && b !== bee && !exclude.has(key(r, c))) cands.push(key(r, c));
+  }
+  return cands.length ? cands[rnd(cands.length)] : null;
+}
+async function flyBee(bee, targetKey){
+  const parts = targetKey.split(",");
+  const tr = +parts[0], tc = +parts[1];
+  Snd.bee();
+  bee.el.classList.add("flying");
+  bee.el.style.transform = "translate(" + (tc * cell) + "px," + (tr * cell) + "px)";
+  await wait(480);
+  bee.el.classList.remove("flying");
+}
+
+/* ---------- 落下の物理感（本家寄せ: 距離で時間が変わり、加速しながら落ちる） ----------
+   旧仕様は距離によらず固定180ms・ease-in-out。新仕様は WAAPI で
+   「時間 ≒ 145ms × √(距離マス数)」（上限520ms・下限120ms）の加速落下にする。
+   複数マスの落下は約0.4〜0.5秒になり、新規ブロックは盤面の上から流れ込む。
+   applyGravity は今回の最大落下時間(ms)を返す。呼び出し側は固定待ちではなく
+   落下の完了で次に進む（連鎖のリズムを落下でつなぐため）。 */
+let fallLog = [];        /* 検証用: 直近の落下 {dist, ms} */
+let lastFallMaxMs = 0;   /* 検証用: 直近の applyGravity の最大落下時間 */
+function fallDurationMs(dist){
+  const d = Math.max(dist, 0.5);
+  return Math.round(Math.min(520, Math.max(120, 145 * Math.sqrt(d))));
+}
+function setPosInstant(b){
+  b.el.style.transition = "none";
+  b.el.style.transform = "translate(" + (b.c * cell) + "px," + (b.r * cell) + "px)";
+  void b.el.offsetWidth;
+  b.el.style.transition = "";
+}
+/* ブロックを fromR の高さから現在の b.r まで加速落下させる。最終位置は先に確定させる */
+function animateBlockFall(b, fromR){
+  const dist = b.r - fromR;
+  if (dist <= 0) return 0;
+  const dur = fallDurationMs(dist);
+  const startT = "translate(" + (b.c * cell) + "px," + (fromR * cell) + "px)";
+  const endT = "translate(" + (b.c * cell) + "px," + (b.r * cell) + "px)";
+  b.el.animate([
+    { transform: startT },
+    { transform: endT },
+  ], { duration: dur, easing: "cubic-bezier(.11,0,.5,0)" });
+  fallLog.push({ dist, ms: dur });
+  if (fallLog.length > 60) fallLog.shift();
+  return dur;
+}
+
+/* ---------- 落下＋補充（石板マスと欠けマスが列の区切りになる） ---------- */
+function applyGravity(){
+  let maxMs = 0;
+  for (let c = 0; c < boardCols; c++){
+    let segBottom = boardRows - 1;
+    for (let r = boardRows - 1; r >= -1; r--){
+      if (r !== -1 && !isSlate(r, c) && isPlayable(r, c)) continue;
+      const segTop = r + 1;
+      let write = segBottom;
+      for (let rr = segBottom; rr >= segTop; rr--){
+        if (grid[rr][c]){
+          const b = grid[rr][c];
+          if (write !== rr){
+            grid[write][c] = b; grid[rr][c] = null;
+            b.r = write; b.el.dataset.r = write;
+            setPosInstant(b);
+            const ms = animateBlockFall(b, rr);
+            if (ms > maxMs) maxMs = ms;
+          }
+          write--;
+        }
+      }
+      const missing = write - segTop + 1;
+      for (let rr = write; rr >= segTop; rr--){
+        const b = makeBlock(randomType(), rr, c);
+        grid[rr][c] = b;
+        setPosInstant(b);
+        const ms = animateBlockFall(b, rr - missing);
+        if (ms > maxMs) maxMs = ms;
+      }
+      segBottom = r - 1;
+    }
+  }
+  lastFallMaxMs = maxMs;
+  return maxMs;
+}
+
+/* ---------- 消去の波（効果の展開・誘爆・ダブルの2段階目まで処理） ----------
+   mode "tier": 通常プレイ。消したブロックは連鎖ティア単価で得点。
+   mode "bonus": クリアボーナス。爆弾1000点・巻き込みブロック80点。 */
+async function clearWave(initialKeys, chain, mode, depth, preTriggered, extraTele){
+  const toClear = new Set();
+  const triggered = new Set(preTriggered || []);
+  const queue = [];
+  const fxEvents = [];
+  const addKey = (k) => { if (!toClear.has(k)){ toClear.add(k); queue.push(k); } };
+  for (const k of initialKeys) addKey(k);
+  while (queue.length){
+    const k = queue.shift();
+    const parts = k.split(",");
+    const r = +parts[0], c = +parts[1];
+    const b = grid[r] && grid[r][c];
+    if (!b || !b.special || triggered.has(b.id)) continue;
+    triggered.add(b.id);
+    if (b.special === "arrow"){
+      fxEvents.push({ kind: "arrow", r, c, dir: b.arrowDir });
+      lineCells(r, c, b.arrowDir).forEach(addKey);
+    } else if (b.special === "double"){
+      fxEvents.push({ kind: "double", r, c });
+      boxCells(r, c, 2, false).forEach(addKey);
+      pendingStage2.push({ r, c, rad: 3 });
+    } else if (b.special === "bee"){
+      const t = pickBeeTarget(b, toClear);
+      fxEvents.push({ kind: "bee", r, c, tgt: t });
+      if (t) addKey(t);
+    } else if (b.special === "rainbow"){
+      const rcells = [];
+      for (let rr = 0; rr < boardRows; rr++) for (let cc = 0; cc < boardCols; cc++){
+        const bb = grid[rr][cc];
+        if (bb && bb.type === b.type){ rcells.push(key(rr, cc)); addKey(key(rr, cc)); }
+      }
+      fxEvents.push({ kind: "rainbow", r, c, cells: rcells });
+    }
+  }
+  if (!toClear.size) return;
+  const slateHits = collectSlateHits(toClear);
+  /* --- 発動予告（一拍）: この波で特殊ブロックが発動する場合だけ、消える範囲を
+     先に光らせてから消す。「どの特殊が・どこを消したか」が目で追えるようにする。
+     通常マッチのみの波（fxEvents も extraTele も無い）では予告も待ちも入れない。
+     組み合わせ発動・ダブルの2段階目・ボーナス中の連鎖も、この共通経路を通るので
+     同じ可読性が効く。 --- */
+  const teleDescs = [];
+  for (const ev of fxEvents){
+    if (ev.kind === "arrow") teleDescs.push({ kind: "line", r: ev.r, c: ev.c, dir: ev.dir });
+    else if (ev.kind === "double") teleDescs.push({ kind: "area", r: ev.r, c: ev.c, rad: 2 });
+    else if (ev.kind === "bee" && ev.tgt){ const p = ev.tgt.split(","); teleDescs.push({ kind: "cell", r: +p[0], c: +p[1] }); }
+    else if (ev.kind === "rainbow" && ev.cells && ev.cells.length) teleDescs.push({ kind: "cells", keys: ev.cells });
+  }
+  if (extraTele) for (const d of extraTele) teleDescs.push(d);
+  if (teleDescs.length){
+    const firing = [];
+    for (const k of toClear){
+      const p = k.split(",");
+      const b = grid[+p[0]] && grid[+p[0]][+p[1]];
+      if (b && b.special && triggered.has(b.id)) firing.push(b);
+    }
+    const hideTele = showTelegraph(teleDescs, firing);
+    teleCount++;
+    teleLastKinds = teleDescs.map(d => d.kind);
+    await fxWait(SPECIAL_TELEGRAPH_MS);
+    hideTele();
+  }
+  /* 発動エフェクトは消去と同時に出す（予告の後に発動する） */
+  for (const ev of fxEvents) spawnFx(ev);
+  /* --- 効果音: 消去音は連鎖ごとに音程が上がる。爆弾は種類別の音 --- */
+  if (depth === 0) Snd.pop(chain);
+  for (const ev of fxEvents){
+    if (ev.kind === "arrow") Snd.arrow();
+    else if (ev.kind === "double" || ev.kind === "rainbow") Snd.boom();
+    else if (ev.kind === "bee") Snd.bee();
+  }
+  /* 大きな爆発（ダブル/レインボー）では画面がほんの少し揺れる */
+  if (fxEvents.some(ev => ev.kind === "double" || ev.kind === "rainbow")) doShake();
+  /* --- 消去の演出: 潰れて伸びて変形→弾ける＋白い四角片＋スコアが浮き上がる --- */
+  let gained = 0;
+  const pCount = 2;
+  for (const k of toClear){
+    const parts = k.split(",");
+    const rr = +parts[0], cc = +parts[1];
+    const b = grid[rr] && grid[rr][cc];
+    if (!b) continue;
+    const pts = mode === "bonus" ? (b.special ? 1000 : 80) : tierUnit(chain);
+    score += pts; gained += pts;
+    b.el.classList.add("pop");
+    spawnParticles(rr, cc, b.type, pCount + (b.special ? 1 : 0));
+  }
+  spawnScorePopup([...toClear], gained, chain);
+  updateHUD();
+  await fxWait(150);
+  for (const k of toClear){
+    const parts = k.split(",");
+    const b = grid[+parts[0]] && grid[+parts[0]][+parts[1]];
+    if (b){ b.el.classList.remove("pop"); b.el.classList.add("clearing"); }
+  }
+  await fxWait(60);
+  for (const k of toClear){
+    const parts = k.split(",");
+    const b = grid[+parts[0]] && grid[+parts[0]][+parts[1]];
+    if (b){
+      blocksClearedTotal++;
+      if (b.apple){ movesLeft += b.apple; apples[+parts[0]][+parts[1]] = 0; Snd.born(); }
+      else if (b.type >= 0) collected[b.type]++;
+      spawnSmoke(+parts[0], +parts[1]); b.el.remove(); grid[+parts[0]][+parts[1]] = null;
+    }
+  }
+  updateHUD();
+  applySlateDamage(slateHits, chain, mode);
+  /* 次の波は固定待ちではなく、落下が終わった勢いでつなぐ */
+  const fallMs = applyGravity();
+  await fxWait(fallMs + 40);
+  if (pendingStage2.length && depth < 4){
+    const centers = pendingStage2;
+    pendingStage2 = [];
+    const s2 = new Set();
+    for (const ctr of centers) boxCells(ctr.r, ctr.c, ctr.rad, true).forEach(k => s2.add(k));
+    /* 2段階目の大爆発も、消える範囲を予告してから消す */
+    await clearWave(s2, chain, mode, depth + 1, null,
+      centers.map(ctr => ({ kind: "area", r: ctr.r, c: ctr.c, rad: ctr.rad })));
+  }
+}
+
+/* ---------- 盤面解決（マッチ→特殊生成→消去→連鎖） ---------- */
+async function resolveBoard(pref){
+  let chain = 1;
+  let preferred = pref || null;
+  while (true){
+    const groups = analyzeMatches();
+    if (!groups.length) break;
+    const clearSet = new Set();
+    const gens = [];
+    for (const g of groups){
+      let genCell = null;
+      if (g.kind) genCell = pickGenCell(g, preferred);
+      if (genCell) gens.push({ cell: genCell, kind: g.kind, arrowDir: g.arrowDir });
+      for (const cl of g.cellsList){
+        if (!genCell || cl.r !== genCell.r || cl.c !== genCell.c) clearSet.add(key(cl.r, cl.c));
+      }
+    }
+    for (const gen of gens){
+      const b = grid[gen.cell.r][gen.cell.c];
+      if (b && !b.special){
+        b.special = gen.kind;
+        if (gen.kind === "arrow") b.arrowDir = gen.arrowDir;
+        renderBlock(b);
+        b.el.classList.add("born");
+        setTimeout(() => b.el.classList.remove("born"), 1250);
+      }
+    }
+    if (gens.length){
+      toast(spName(gens[0].kind) + "ができた！");
+      say(SP_SHORT[gens[0].kind], true);
+      Snd.born();
+    } else if (chain >= 2){
+      say(chain + "れんさ！すごい！", true);
+      toast(chain + " れんさ！");
+    }
+    if (chain >= 2) showChain(chain);
+    await clearWave(clearSet, chain, "tier", 0, null);
+    preferred = null;
+    chain++;
+  }
+}
+
+/* ---------- ヒント表示（しばらく操作しないと有効手のペアが光る） ---------- */
+function clearHint(){
+  if (hintPair){
+    for (const p of [hintPair.a, hintPair.b]){
+      const b = grid[p.r] && grid[p.r][p.c];
+      if (b) b.el.classList.remove("hint");
+    }
+    hintPair = null;
+  }
+}
+function showHint(){
+  if (hintPair) return;
+  const moves = findValidMoves();
+  if (!moves.length) return;
+  hintPair = moves[0];
+  for (const p of [hintPair.a, hintPair.b]){
+    const b = grid[p.r][p.c];
+    if (b) b.el.classList.add("hint");
+  }
+}
+setInterval(() => {
+  if (busy || hintPair || mapVisible || anyOverlayOpen()) return;
+  if (Date.now() - lastActionAt >= 3000) showHint();
+}, 400);
+
+/* ---------- プレイアイテム ---------- */
+/* ハンマー用の単純除去（特殊ブロックでも効果は発動しない） */
+async function removePlain(keys){
+  const slateHits = collectSlateHits(keys);
+  let gained = 0;
+  for (const k of keys){
+    const parts = k.split(",");
+    const rr = +parts[0], cc = +parts[1];
+    const b = grid[rr] && grid[rr][cc];
+    if (!b) continue;
+    if (b.apple){ movesLeft += b.apple; apples[rr][cc] = 0; }
+    else if (b.type >= 0) collected[b.type]++;
+    score += tierUnit(1); gained += tierUnit(1);
+    b.el.classList.add("pop");
+    spawnParticles(rr, cc, b.type, 2);
+  }
+  spawnScorePopup([...keys], gained, 1);
+  updateHUD();
+  await wait(150);
+  for (const k of keys){
+    const parts = k.split(",");
+    const b = grid[+parts[0]] && grid[+parts[0]][+parts[1]];
+    if (b){ b.el.classList.remove("pop"); b.el.classList.add("clearing"); }
+  }
+  await wait(60);
+  for (const k of keys){
+    const parts = k.split(",");
+    const b = grid[+parts[0]] && grid[+parts[0]][+parts[1]];
+    if (b){ spawnSmoke(+parts[0], +parts[1]); b.el.remove(); grid[+parts[0]][+parts[1]] = null; }
+  }
+  applySlateDamage(slateHits, 1, "tier");
+  const fallMs = applyGravity();
+  await wait(fallMs + 40);
+}
+async function useHammer(r, c){
+  if (busy) return;
+  busy = true;
+  deselect();
+  clearHint();
+  Snd.hammer();
+  if (isSlate(r, c)){
+    applySlateDamage(new Set([key(r, c)]), 1, "tier");
+    await wait(200);
+    const fallMs = applyGravity();
+    await wait(fallMs + 40);
+  } else if (grid[r][c]){
+    toast("ハンマー！");
+    await removePlain(new Set([key(r, c)]));
+  }
+  await resolveBoard(null);
+  await finishTurn();
+  lastActionAt = Date.now();
+  busy = false;
+}
+async function useShuffleItem(){
+  if (busy) return;
+  busy = true;
+  deselect();
+  clearHint();
+  Snd.swap();
+  toast("シャッフル！");
+  say("シャッフルするね！");
+  shuffleBoard();
+  await wait(150);
+  await finishTurn();
+  lastActionAt = Date.now();
+  busy = false;
+}
+
+/* ---------- 特殊ブロック同士・特殊×通常の入れ替え発動 ---------- */
+async function activateSwap(na, nb){
+  const sp = [na, nb].filter(b => b && b.special);
+  if (sp.length === 1){
+    const s = sp[0];
+    toast(spName(s.special) + "！");
+    say(spName(s.special) + "、発動！", true);
+    if (s.special === "rainbow"){
+      /* レインボー×通常ブロック: 入れ替えた相手の種類を全消しする */
+      const partner = s === na ? nb : na;
+      const T = partner.type;
+      const initial = new Set([key(s.r, s.c)]);
+      for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+        const b = grid[r][c];
+        if (b && b.type === T) initial.add(key(r, c));
+      }
+      /* 消える色のマス全部を予告してから消す */
+      await clearWave(initial, 1, "tier", 0, new Set([s.id]), [{ kind: "cells", keys: [...initial] }]);
+    } else if (s.special === "bee"){
+      const target = pickBeeTarget(s, new Set());
+      if (target){
+        await flyBee(s, target);
+        await clearWave(new Set([key(s.r, s.c), target]), 1, "tier", 0, new Set([s.id]));
+      } else {
+        await clearWave(new Set([key(s.r, s.c)]), 1, "tier", 0, new Set([s.id]));
+      }
+    } else {
+      await clearWave(new Set([key(s.r, s.c)]), 1, "tier", 0, null);
+    }
+    return;
+  }
+  const s1 = sp[0], s2 = sp[1];
+  const rb = sp.find(b => b.special === "rainbow");
+  if (rb && sp.every(b => b.special === "rainbow")){
+    toast("レインボー×レインボー！");
+    say("ぜんぶ消えた！", true);
+    const all = new Set();
+    for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++) if (grid[r][c]) all.add(key(r, c));
+    await clearWave(all, 1, "tier", 0, new Set([s1.id, s2.id]), [{ kind: "all" }]);
+    return;
+  }
+  if (rb){
+    const other = sp.find(b => b !== rb);
+    const T = other.type;
+    toast("レインボー×" + spName(other.special) + "！");
+    say("すごい組み合わせ！", true);
+    const initial = new Set([key(rb.r, rb.c), key(other.r, other.c)]);
+    for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+      const b = grid[r][c];
+      if (b && b !== other && b.type === T && !b.special){
+        b.special = other.special;
+        if (other.special === "arrow") b.arrowDir = rnd(2) === 0 ? "h" : "v";
+        renderBlock(b);
+        b.el.classList.add("born");
+        setTimeout(() => b.el.classList.remove("born"), 1250);
+        initial.add(key(r, c));
+      }
+    }
+    await clearWave(initial, 1, "tier", 0, new Set([rb.id]));
+    return;
+  }
+  const kinds = sp.map(b => b.special);
+  if (kinds.includes("arrow") && kinds.includes("double")){
+    const ctr = sp.find(b => b.special === "double");
+    toast("やじるし×ダブル！");
+    const s = new Set();
+    const tele = [];
+    for (let d = -1; d <= 1; d++){
+      lineCells(ctr.r + d, ctr.c, "h").forEach(k => s.add(k));
+      lineCells(ctr.r, ctr.c + d, "v").forEach(k => s.add(k));
+      if (ctr.r + d >= 0 && ctr.r + d < boardRows) tele.push({ kind: "line", r: ctr.r + d, c: ctr.c, dir: "h" });
+      if (ctr.c + d >= 0 && ctr.c + d < boardCols) tele.push({ kind: "line", r: ctr.r, c: ctr.c + d, dir: "v" });
+    }
+    await clearWave(s, 1, "tier", 0, new Set([s1.id, s2.id]), tele);
+    return;
+  }
+  if (kinds.every(k => k === "arrow")){
+    toast("やじるし×やじるし！");
+    const s = new Set([...lineCells(s1.r, s1.c, "h"), ...lineCells(s1.r, s1.c, "v")]);
+    await clearWave(s, 1, "tier", 0, new Set([s1.id, s2.id]),
+      [{ kind: "line", r: s1.r, c: s1.c, dir: "h" }, { kind: "line", r: s1.r, c: s1.c, dir: "v" }]);
+    return;
+  }
+  if (kinds.every(k => k === "double")){
+    toast("ダブル×ダブル！");
+    pendingStage2.push({ r: s1.r, c: s1.c, rad: 4 });
+    await clearWave(boxCells(s1.r, s1.c, 3, true), 1, "tier", 0, new Set([s1.id, s2.id]),
+      [{ kind: "area", r: s1.r, c: s1.c, rad: 3 }]);
+    return;
+  }
+  /* ハチを含む組み合わせ: それぞれの効果がその場で発動する */
+  toast("組み合わせ発動！");
+  await clearWave(new Set([key(s1.r, s1.c), key(s2.r, s2.c)]), 1, "tier", 0, null);
+}
+
+/* ---------- 入れ替え ---------- */
+async function trySwap(a, b){
+  if (bonusActive) bonusStats.swaps++;   /* 検証用: ボーナス中に入れ替えが起きたら記録する */
+  if (busy) return false;
+  if (!grid[a.r][a.c] || !grid[b.r][b.c]) return false;
+  busy = true;
+  deselect();
+  Snd.swap();
+  const [ba, bb] = swapInGrid(a, b);
+  if (ba) place(ba, true);
+  if (bb) place(bb, true);
+  await wait(190);
+  const na = grid[a.r][a.c], nb = grid[b.r][b.c];
+  if ((na && na.special) || (nb && nb.special)){
+    movesLeft--;
+    updateHUD();
+    await activateSwap(na, nb);
+    await resolveBoard(null);
+    await finishTurn();
+    busy = false;
+    return true;
+  }
+  if (!hasGroup()){
+    Snd.invalid();
+    const [ca, cb] = swapInGrid(a, b);
+    if (ca) place(ca, true);
+    if (cb) place(cb, true);
+    await wait(190);
+    busy = false;
+    return false;   /* マッチなし: 手数を消費せず戻る */
+  }
+  movesLeft--;
+  updateHUD();
+  await resolveBoard([{ r: b.r, c: b.c }, { r: a.r, c: a.c }]);
+  await finishTurn();
+  busy = false;
+  return true;
+}
+async function finishTurn(){
+  lastActionAt = Date.now();
+  clearHint();
+  if (goalsMet()){ await onClear(); return; }
+  if (movesLeft <= 0){ onOutOfMoves(); return; }
+  if (findValidMoves().length === 0 && !boardHasSpecial()){
+    toast("手がなくなったのでシャッフル！");
+    say("シャッフルするね！");
+    shuffleBoard();
+    await wait(60);
+  }
+  say("がんばれ！");
+}
+
+/* ---------- クリア/失敗 ---------- */
+/* ---------- クリア演出（本家形式） ----------
+   目標達成 → 「STAGE CLEAR」の大きな表示 → クリアボーナス → 最後にクリアパネル。
+   ボーナス中は盤面タップで「早送り」: 演出の待ちを飛ばして最後まで一気に進める。
+   【クリアボーナスの仕様（本家の実挙動・2026-11-28にユーザーが確認）】
+   入れ替えは一切しない。残り手数1回につき1回、ランダムに通常ブロックが1個消える
+   （ランダム消去が残り手数の回数だけ起きる）。消えた後の落下・補充でブロックが
+   揃えば、その分は通常マッチとして消える（連鎖）。揃わなければ、その回は
+   ランダム消去だけで終わる。 */
+/* ボーナス1回分: ランダムに通常ブロック1個を消去演出つきで消し、
+   落下で揃った分を通常の盤面解決（連鎖・特殊生成込み）で処理する。
+   対象は通常ブロックのみ（りんご・特殊ブロック・石板マスは対象外）。 */
+async function bonusRandomClear(){
+  const normals = [];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    const b = grid[r][c];
+    if (b && !b.apple && !b.special) normals.push(b);
+  }
+  if (!normals.length) return null;
+  const b = normals[rnd(normals.length)];
+  const beforeRandom = blocksClearedTotal;
+  await clearWave(new Set([key(b.r, b.c)]), 1, "bonus", 0, null);
+  const randomCleared = blocksClearedTotal - beforeRandom;
+  const beforeChain = blocksClearedTotal;
+  await resolveBoard(null);
+  return { random: randomCleared, chained: blocksClearedTotal - beforeChain };
+}
+async function runBonusPhase(n){
+  const before = score;
+  bonusActive = true;
+  bonusFast = false;
+  bonusStats = { rounds: 0, randomClears: 0, chainedClears: 0, swaps: 0, log: [] };
+  document.getElementById("ffLabel").classList.add("show");
+  bonusBannerEl.classList.add("show");
+  toast("のこり手数ボーナス！");
+  say("ボーナス！どんどん消えるよ！", true);
+  for (let i = 0; i < n; i++){
+    movesLeft--;                 /* 手数カウンタが1ずつ減っていく表示にする */
+    updateHUD();
+    const res = await bonusRandomClear();
+    if (!res) break;             /* 消せる通常ブロックが無い場合は打ち切る */
+    bonusStats.rounds++;
+    bonusStats.randomClears += res.random;
+    bonusStats.chainedClears += res.chained;
+    bonusStats.log.push(res);
+    await fxWait(90);
+  }
+  movesLeft = 0;
+  updateHUD();
+  document.getElementById("ffLabel").classList.remove("show");
+  bonusBannerEl.classList.remove("show");
+  bonusActive = false;
+  return score - before;
+}
+async function onClear(){
+  clearedStages.add(stage);
+  progress.cleared[stage] = true;
+  const leftMoves = movesLeft;
+  say("クリア！やったね！", true);
+  Snd.clear();
+  /* 「STAGE CLEAR」を大きく出す（お祝いの表示。操作は止めない） */
+  stageClearCount++;
+  const scb = document.getElementById("stageClearBanner");
+  scb.classList.remove("show");
+  void scb.offsetWidth;
+  scb.classList.add("show");
+  await wait(1150);
+  scb.classList.remove("show");   /* 残すと画面の表示切替でアニメーションが再生されてしまう */
+  let bonus = 0;
+  if (leftMoves > 0) bonus = await runBonusPhase(leftMoves);
+  /* ほし評価: 最終スコア（ボーナス込み）で判定し、ベストを保存する */
+  const earned = starsForScore(stage, score);
+  if (earned > progress.stars[stage]) progress.stars[stage] = earned;
+  saveProgress();
+  const reward = 5 + earned * 5;   /* リワード表示（試作値。正式版ではコイン経済に載せる） */
+  const cs = document.getElementById("clearStars");
+  cs.innerHTML = [0, 1, 2].map(() => starSVGStr(true, "cstar")).join("");
+  document.getElementById("clearDetail").innerHTML =
+    STAGES[stage].goals.map(g => goalText(g) + " ✓").join("<br>") +
+    "<br>スコア " + score + " 点" + (bonus > 0 ? "<br>のこり手数ボーナス +" + bonus + " 点" : "") +
+    "<br>リワード コイン +" + reward;
+  document.getElementById("nextBtn").style.display = stage < STAGES.length - 1 ? "" : "none";
+  document.getElementById("clearOverlay").classList.add("show");
+  /* ほしが1個ずつ点く見せ方（クリア画面＝面と面の間なので止めて見せてよい） */
+  const starEls = cs.querySelectorAll(".cstar");
+  for (let k = 0; k < earned; k++){
+    setTimeout(() => { if (starEls[k]){ starEls[k].classList.add("lit"); Snd.born(); } }, 400 * (k + 1));
+  }
+  updateHUD();
+}
+/* 手数切れ: まずコンティニューを提示し、断られたら失敗確定 */
+function onOutOfMoves(){
+  say("手数がなくなった…");
+  document.getElementById("continueDetail").innerHTML =
+    STAGES[stage].goals.map(g => goalText(g)).join("<br>") +
+    "<br>広告を見ると +5手 で続けられます";
+  document.getElementById("continueOverlay").classList.add("show");
+}
+function onFail(){
+  Snd.fail();
+  say("つぎはできるよ！");
+  document.getElementById("failDetail").innerHTML =
+    STAGES[stage].goals.map(g => goalText(g)).join("<br>") +
+    "<br>スコア " + score + " 点";
+  document.getElementById("failOverlay").classList.add("show");
+}
+
+/* ---------- 選択・入力 ---------- */
+function select(r, c){
+  deselect();
+  selected = { r, c };
+  const b = grid[r][c];
+  if (b) b.el.classList.add("selected");
+  Snd.select();
+}
+function deselect(){
+  if (selected){
+    const b = grid[selected.r] && grid[selected.r][selected.c];
+    if (b) b.el.classList.remove("selected");
+  }
+  selected = null;
+}
+function cellFromEvent(e){
+  const rect = boardEl.getBoundingClientRect();
+  const x = (e.clientX - rect.left), y = (e.clientY - rect.top);
+  const c = Math.floor(x / cell), r = Math.floor(y / cell);
+  if (r < 0 || r >= boardRows || c < 0 || c >= boardCols) return null;
+  return { r, c };
+}
+let pStart = null, pDragged = false;
+boardEl.addEventListener("pointerdown", e => {
+  lastActionAt = Date.now();
+  clearHint();
+  if (busy) return;
+  const p = cellFromEvent(e);
+  if (!p) return;
+  pStart = { p, x: e.clientX, y: e.clientY };
+  pDragged = false;
+});
+boardEl.addEventListener("pointermove", e => {
+  if (!pStart || busy || pDragged) return;
+  const dx = e.clientX - pStart.x, dy = e.clientY - pStart.y;
+  if (Math.hypot(dx, dy) < cell * 0.45) return;
+  pDragged = true;
+  const dir = Math.abs(dx) > Math.abs(dy) ? { r: 0, c: Math.sign(dx) } : { r: Math.sign(dy), c: 0 };
+  const a = pStart.p, b = { r: a.r + dir.r, c: a.c + dir.c };
+  pStart = null;
+  if (b.r >= 0 && b.r < boardRows && b.c >= 0 && b.c < boardCols) trySwap(a, b);
+});
+boardEl.addEventListener("pointerup", e => {
+  if (!pStart) return;
+  const wasDrag = pDragged;
+  const p = pStart.p;
+  pStart = null; pDragged = false;
+  if (busy) return;
+  if (hammerMode){
+    if (!wasDrag){
+      hammerMode = false;
+      hammerBtn.classList.remove("active");
+      useHammer(p.r, p.c);
+    }
+    return;
+  }
+  if (wasDrag) return;
+  /* タップ式（石板マスは選択しない） */
+  if (isSlate(p.r, p.c)){ deselect(); return; }
+  if (!selected){ select(p.r, p.c); return; }
+  if (selected.r === p.r && selected.c === p.c){ deselect(); return; }
+  const dist = Math.abs(selected.r - p.r) + Math.abs(selected.c - p.c);
+  if (dist === 1){ const a = selected; deselect(); trySwap(a, p); }
+  else select(p.r, p.c);
+});
+boardEl.addEventListener("pointercancel", () => { pStart = null; pDragged = false; });
+/* クリアボーナス中の盤面タップ = 早送り（本家形式） */
+document.getElementById("boardWrap").addEventListener("pointerdown", () => { if (bonusActive) bonusFast = true; });
+
+/* ---------- 進捗（クリア・ほし）の保存 ---------- */
+const PROGRESS_KEY = "pokoProgress-v2";   /* 面構成を本家準拠に変えたため旧キーとは分ける */
+let progress = { stars: STAGES.map(() => 0), cleared: STAGES.map(() => false) };
+function starSVGStr(filled, cls){
+  return '<svg class="' + (cls || "") + '" viewBox="0 0 100 100"><polygon points="50,5 62,37 96,37 68,57 79,92 50,71 21,92 32,57 4,37 38,37" fill="' +
+    (filled ? "#ffc93c" : "#b9c7d6") + '" stroke="' + (filled ? "#d99400" : "#8fa3b5") +
+    '" stroke-width="4" stroke-linejoin="round"/></svg>';
+}
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw){
+      const p = JSON.parse(raw);
+      if (p && Array.isArray(p.stars) && Array.isArray(p.cleared)){
+        progress.stars = STAGES.map((_, i) => Math.min(3, Math.max(0, p.stars[i] | 0)));
+        progress.cleared = STAGES.map((_, i) => !!p.cleared[i]);
+      }
+    }
+  } catch (e) {}
+  clearedStages = new Set(progress.cleared.map((v, i) => v ? i : -1).filter(i => i >= 0));
+}
+function saveProgress(){
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (e) {}
+}
+/* ほし評価のしきい値（仮置き）: 基準スコアの 1倍/1.5倍/2.2倍 */
+function starThresholds(i){
+  const g = STAGES[i].goals.find(g => g.kind === "score");
+  const base = g ? g.target : (STAGES[i].starBase || 2500);
+  return [base, Math.round(base * 1.5), Math.round(base * 2.2)];
+}
+function starsForScore(i, sc){
+  let n = 0;
+  for (const t of starThresholds(i)) if (sc >= t) n++;
+  return n;
+}
+
+/* ---------- マップ画面（下から上へ道が続く一本道） ---------- */
+const mapScreenEl = document.getElementById("mapScreen");
+const mapScrollEl = document.getElementById("mapScroll");
+const mapWorldEl = document.getElementById("mapWorld");
+const appEl = document.getElementById("app");
+let mapVisible = false;
+const NODE_X = [50, 33, 55, 71, 50, 31];   /* 道のうねり（左%） */
+const NODE_STEP = 150, NODE_BASE = 110;
+function nextStageIndex(){
+  for (let i = 0; i < STAGES.length; i++) if (!progress.cleared[i]) return i;
+  return STAGES.length - 1;
+}
+function isUnlocked(i){ return i === 0 || !!progress.cleared[i - 1]; }
+function renderMap(){
+  const H = NODE_BASE + (STAGES.length - 1) * NODE_STEP + 130;
+  mapWorldEl.style.height = H + "px";
+  mapWorldEl.innerHTML = "";
+  const W = mapWorldEl.clientWidth || 400;
+  const pts = STAGES.map((_, i) => ({
+    x: NODE_X[i % NODE_X.length] / 100 * W,
+    y: H - (NODE_BASE + i * NODE_STEP),
+  }));
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "path");
+  svg.setAttribute("width", W);
+  svg.setAttribute("height", H);
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.innerHTML = '<polyline points="' + pts.map(p => p.x.toFixed(0) + "," + p.y.toFixed(0)).join(" ") +
+    '" fill="none" stroke="rgba(159,197,255,.55)" stroke-width="6" stroke-linecap="round" stroke-dasharray="0.1 16"/>';
+  mapWorldEl.appendChild(svg);
+  const nx = nextStageIndex();
+  STAGES.forEach((_, i) => {
+    const node = document.createElement("button");
+    node.className = "map-node" +
+      (progress.cleared[i] ? " cleared" : "") +
+      (!progress.cleared[i] && i === nx ? " next" : "") +
+      (!isUnlocked(i) ? " locked" : "");
+    node.dataset.i = i;
+    node.style.left = NODE_X[i % NODE_X.length] + "%";
+    node.style.top = pts[i].y + "px";
+    node.innerHTML = (i + 1) + '<span class="mini-stars">' +
+      [0, 1, 2].map(k => starSVGStr(k < progress.stars[i])).join("") + "</span>";
+    node.addEventListener("click", () => {
+      if (busy) return;
+      if (!isUnlocked(i)){
+        node.classList.remove("denied");
+        void node.offsetWidth;
+        node.classList.add("denied");
+        return;
+      }
+      openIntro(i);
+    });
+    mapWorldEl.appendChild(node);
+  });
+  /* ミズーを「次に遊べる面」の上に置く */
+  const mizu = document.createElement("div");
+  mizu.className = "map-mizu";
+  mizu.style.left = NODE_X[nx % NODE_X.length] + "%";
+  mizu.style.top = (pts[nx].y - 38) + "px";
+  mizu.innerHTML = mizuFaceSVG(false);
+  mapWorldEl.appendChild(mizu);
+  const total = progress.stars.reduce((a, b) => a + b, 0);
+  document.getElementById("mapStarTotal").innerHTML = starSVGStr(true) + total + " / " + (STAGES.length * 3);
+}
+function showMap(){
+  mapVisible = true;
+  mapScreenEl.classList.add("show");
+  appEl.style.display = "none";
+  renderMap();
+  /* 次に遊べる面が見える位置までスクロールする */
+  const nx = nextStageIndex();
+  const H = mapWorldEl.clientHeight;
+  const y = H - (NODE_BASE + nx * NODE_STEP);
+  mapScrollEl.scrollTop = Math.max(0, y - mapScrollEl.clientHeight / 2);
+}
+function showPlay(){
+  mapVisible = false;
+  mapScreenEl.classList.remove("show");
+  appEl.style.display = "";
+}
+
+/* ---------- ステージ開始 ---------- */
+function prepareStage(i){
+  stage = i;
+  const def = STAGES[i];
+  setGeometry(def);
+  score = 0;
+  movesLeft = def.moves;
+  collected = [0, 0, 0, 0, 0];
+  selected = null;
+  pendingStage2 = [];
+  hammerMode = false;
+  hammerBtn.classList.remove("active");
+  bonusActive = false;
+  bonusFast = false;
+  clearHint();
+  boardEl.innerHTML = "";
+  layout();
+  initSlates(def.slates || []);
+  for (const a of def.apples || []) apples[a.r][a.c] = a.v || 1;
+  genBoard();
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    const ph = grid[r][c];
+    if (!ph) continue;   /* 欠けマス・石板マス */
+    grid[r][c] = ph.apple ? makeAppleBlock(ph.apple, r, c) : makeBlock(ph.type, r, c);
+    place(grid[r][c], false);
+  }
+  /* アイテム使用不可の面ではボタンをロックする（本家形式） */
+  hammerBtn.disabled = !!def.noItems;
+  document.getElementById("shuffleBtn").disabled = !!def.noItems;
+  document.getElementById("clearOverlay").classList.remove("show");
+  document.getElementById("failOverlay").classList.remove("show");
+  document.getElementById("continueOverlay").classList.remove("show");
+  bonusBannerEl.classList.remove("show");
+  document.getElementById("ffLabel").classList.remove("show");
+  document.getElementById("stageClearBanner").classList.remove("show");
+  chainBannerEl.classList.remove("show");
+  lastActionAt = Date.now();
+  say("がんばれ！");
+  updateHUD();
+}
+/* 開始前パネル（本家形式）: ステージ番号・手数・目標を絵で提示してからスタートする。
+   アイテム使用不可の面ではその旨も出す。ブースター選択は使える面だけに出す */
+let boostSel = { bomb: false, moves: false };
+function openIntro(i){
+  prepareStage(i);
+  boostSel = { bomb: false, moves: false };
+  document.getElementById("boostBomb").classList.remove("active");
+  document.getElementById("boostMoves").classList.remove("active");
+  const def = STAGES[i];
+  document.getElementById("introTitle").textContent = "ステージ " + (i + 1);
+  document.getElementById("introMoves").innerHTML = "手数<b>" + def.moves + "</b>";
+  document.getElementById("introGoals").innerHTML = def.goals.map(g => {
+    if (g.kind === "collect") return '<span class="gchip"><span class="ticon">' + svgFor(g.type) + "</span>× " + g.target + "</span>";
+    if (g.kind === "slate") return '<span class="gchip"><span class="ticon">' + slateSVG() + "</span>× " + g.target + "</span>";
+    return '<span class="gchip">スコア ' + g.target + "</span>";
+  }).join("");
+  const detail = document.getElementById("introDetail");
+  detail.textContent = def.noItems ? "このステージではアイテムが使えないよ" : "";
+  detail.style.display = def.noItems ? "" : "none";
+  document.getElementById("introBoostArea").style.display = def.noItems ? "none" : "";
+  document.getElementById("introOverlay").classList.add("show");
+  lastActionAt = Date.now();
+}
+/* ブースター「はじめから爆弾」: 通常ブロック1個をやじるし爆弾にして開始する */
+function placeStartBomb(){
+  const cells = [];
+  for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+    const b = grid[r][c];
+    if (b && !b.special && !b.apple) cells.push(b);
+  }
+  if (!cells.length) return;
+  const b = cells[rnd(cells.length)];
+  b.special = "arrow";
+  b.arrowDir = rnd(2) === 0 ? "h" : "v";
+  renderBlock(b);
+  b.el.classList.add("born");
+  setTimeout(() => b.el.classList.remove("born"), 1250);
+  Snd.born();
+  say("爆弾をおいておいたよ！", true);
+}
+document.getElementById("nextBtn").addEventListener("click", () => openIntro(Math.min(stage + 1, STAGES.length - 1)));
+document.getElementById("replayBtn1").addEventListener("click", () => openIntro(stage));
+document.getElementById("retryBtn").addEventListener("click", () => openIntro(stage));
+document.getElementById("mapBtn").addEventListener("click", () => {
+  document.getElementById("clearOverlay").classList.remove("show");
+  showMap();
+});
+document.getElementById("mapBtn2").addEventListener("click", () => {
+  document.getElementById("failOverlay").classList.remove("show");
+  showMap();
+});
+document.getElementById("mapBackBtn").addEventListener("click", () => {
+  if (busy || anyOverlayOpen()) return;
+  showMap();
+});
+document.getElementById("boostBomb").addEventListener("click", (e) => {
+  boostSel.bomb = !boostSel.bomb;
+  e.currentTarget.classList.toggle("active", boostSel.bomb);
+});
+document.getElementById("boostMoves").addEventListener("click", (e) => {
+  boostSel.moves = !boostSel.moves;
+  e.currentTarget.classList.toggle("active", boostSel.moves);
+});
+document.getElementById("startBtn").addEventListener("click", () => {
+  document.getElementById("introOverlay").classList.remove("show");
+  if (boostSel.moves){ movesLeft += 3; }
+  if (boostSel.bomb) placeStartBomb();
+  if (boostSel.moves || boostSel.bomb) updateHUD();
+  showPlay();
+  lastActionAt = Date.now();
+});
+document.getElementById("continueBtn").addEventListener("click", () => {
+  document.getElementById("continueOverlay").classList.remove("show");
+  movesLeft += 5;   /* 試作では広告の代わりにそのまま+5手 */
+  updateHUD();
+  say("あと5手！がんばれ！", true);
+  lastActionAt = Date.now();
+  if (findValidMoves().length === 0 && !boardHasSpecial()){
+    toast("手がなくなったのでシャッフル！");
+    shuffleBoard();
+  }
+});
+document.getElementById("giveUpBtn").addEventListener("click", () => {
+  document.getElementById("continueOverlay").classList.remove("show");
+  onFail();
+});
+/* 初回のタップで AudioContext を開始する（自動再生ポリシーの通常の作法） */
+document.addEventListener("pointerdown", () => Snd.unlock(), { passive: true });
+/* ミュート切替ボタン */
+const ICON_SND_ON = '<svg viewBox="0 0 100 100"><path d="M14,38 L34,38 L58,18 L58,82 L34,62 L14,62 Z" fill="#dceaff"/><path d="M68,32 Q82,50 68,68" fill="none" stroke="#ffd93c" stroke-width="7" stroke-linecap="round"/><path d="M78,22 Q98,50 78,78" fill="none" stroke="#ffd93c" stroke-width="7" stroke-linecap="round"/></svg>';
+const ICON_SND_OFF = '<svg viewBox="0 0 100 100"><path d="M14,38 L34,38 L58,18 L58,82 L34,62 L14,62 Z" fill="#9db8dd"/><path d="M68,36 L90,64 M90,36 L68,64" stroke="#ff8a8a" stroke-width="8" stroke-linecap="round"/></svg>';
+function renderMuteBtn(){
+  muteBtn.innerHTML = (Snd.muted ? ICON_SND_OFF : ICON_SND_ON) + (Snd.muted ? "音オフ" : "音オン");
+}
+muteBtn.addEventListener("click", () => {
+  Snd.unlock();
+  Snd.toggleMute();
+  renderMuteBtn();
+  if (!Snd.muted) Snd.select();
+});
+renderMuteBtn();
+hammerBtn.addEventListener("click", () => {
+  if (busy || anyOverlayOpen()) return;
+  hammerMode = !hammerMode;
+  hammerBtn.classList.toggle("active", hammerMode);
+  say(hammerMode ? "消したいマスをタップ！" : "がんばれ！");
+  lastActionAt = Date.now();
+});
+document.getElementById("shuffleBtn").addEventListener("click", (e) => {
+  if (busy || anyOverlayOpen() || e.currentTarget.disabled) return;
+  if (hammerMode){ hammerMode = false; hammerBtn.classList.remove("active"); }
+  useShuffleItem();
+});
+window.addEventListener("resize", () => { layout(); if (mapVisible) renderMap(); });
+
+say("がんばれ！");
+layout();
+loadProgress();
+showMap();
+
+/* ---------- 検証用デバッグAPI ---------- */
+window.POKO = {
+  state(){
+    return {
+      stage, score, movesLeft,
+      target: (STAGES[stage].goals.find(g => g.kind === "score") || {}).target ?? null,
+      goals: STAGES[stage].goals.map(g => ({
+        kind: g.kind, type: g.type != null ? g.type : null,
+        target: g.target, current: goalCurrent(g),
+      })),
+      collected: collected.slice(),
+      rows: boardRows, cols: boardCols,
+      holes: maskGrid.flatMap((row, r) => row.map((v, c) => v ? null : r + "," + c)).filter(Boolean),
+      apples: apples.map(row => row.slice()),
+      noItems: !!STAGES[stage].noItems,
+      bonusActive, stageClearCount,
+      bonus: {
+        rounds: bonusStats.rounds, randomClears: bonusStats.randomClears,
+        chainedClears: bonusStats.chainedClears, swaps: bonusStats.swaps,
+        log: bonusStats.log.map(e => ({ random: e.random, chained: e.chained })),
+      },
+      slates: slates.map(row => row.slice()),
+      slatesBroken,
+      types: grid.map(row => row.map(b => b ? b.type : -1)),
+      specials: grid.map(row => row.map(b => b
+        ? (b.special ? (b.special === "arrow" ? "arrow:" + b.arrowDir : b.special) : null)
+        : null)),
+      filled: grid.flat().filter(Boolean).length,
+      mapVisible,
+      stars: progress.stars.slice(),
+      clearedFlags: progress.cleared.slice(),
+      fxSpawned,
+      tele: { count: teleCount, lastKinds: teleLastKinds.slice(), ms: SPECIAL_TELEGRAPH_MS },
+      particles: particlesSpawned,
+      smokes: smokeSpawned,
+      falls: fallLog.slice(-20),
+      lastFallMaxMs,
+      popups: popupsSpawned,
+      shakes: shakeCount,
+      sound: { ctx: Snd.hasCtx, muted: Snd.muted, plays: Snd.plays },
+    };
+  },
+  hintCells(){
+    return hintPair ? [hintPair.a, hintPair.b] : [];
+  },
+  findValidMoves,
+  findInvalidSwap,
+  cellPoint(r, c){
+    const rect = boardEl.getBoundingClientRect();
+    return { x: rect.left + (c + 0.5) * cell, y: rect.top + (r + 0.5) * cell };
+  },
+  boardRect(){
+    const rect = boardEl.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, cell };
+  },
+  isBusy: () => busy,
+  /* 落下時間の設計値を検証するための読み取り専用API */
+  fallInfo(){
+    return { durationFor: (d) => fallDurationMs(d), lastMaxMs: lastFallMaxMs, log: fallLog.slice() };
+  },
+  openStage: (i) => openIntro(i),
+  showMap: () => showMap(),
+  /* クリアボーナスだけを単体で実行する（検証専用） */
+  debugBonus: (n) => runBonusPhase(n),
+  /* 決め打ちの盤面を置く（検証専用）: spec = {types, specials, slates, moves, score, stage, collected, apples, geometry}
+     geometry = {rows, cols, typeSet, mask:["r,c",...]}。省略時は従来どおり 8×7・5色の検証盤面。
+     slates は [[r,c],...]。省略時はステージ定義の配置を使う。石板マス・欠けマスにはブロックを置かない。
+     apples は [{r,c,v},...] で、そのマスはりんごブロックになる。 */
+  debugSetup(spec){
+    if (spec.stage != null) stage = spec.stage;
+    const g = spec.geometry || { rows: 8, cols: 7, typeSet: [0, 1, 2, 3, 4] };
+    setGeometry({ rows: g.rows, cols: g.cols, typeSet: g.typeSet, mask: g.mask });
+    boardEl.innerHTML = "";
+    layout();
+    initSlates(spec.slates != null ? spec.slates : (STAGES[stage].slates || []));
+    for (const a of spec.apples || []) apples[a.r][a.c] = a.v || 1;
+    grid = Array.from({length: boardRows}, () => Array(boardCols).fill(null));
+    pendingStage2 = [];
+    collected = spec.collected ? spec.collected.slice() : [0, 0, 0, 0, 0];
+    for (let r = 0; r < boardRows; r++) for (let c = 0; c < boardCols; c++){
+      if (!isPlayable(r, c) || isSlate(r, c)) continue;
+      if (apples[r][c] > 0){
+        grid[r][c] = makeAppleBlock(apples[r][c], r, c);
+        place(grid[r][c], false);
+        continue;
+      }
+      const b = makeBlock(spec.types[r][c], r, c);
+      const sp = spec.specials && spec.specials[r] ? spec.specials[r][c] : null;
+      if (sp){
+        if (sp.indexOf("arrow") === 0){ b.special = "arrow"; b.arrowDir = sp.split(":")[1] === "v" ? "v" : "h"; }
+        else b.special = sp;
+        renderBlock(b);
+      }
+      grid[r][c] = b;
+      place(b, false);
+    }
+    score = spec.score != null ? spec.score : 0;
+    movesLeft = spec.moves != null ? spec.moves : STAGES[stage].moves;
+    selected = null;
+    busy = false;
+    hammerMode = false;
+    hammerBtn.classList.remove("active");
+    hammerBtn.disabled = false;
+    document.getElementById("shuffleBtn").disabled = false;
+    bonusActive = false;
+    bonusFast = false;
+    bonusStats = { rounds: 0, randomClears: 0, chainedClears: 0, swaps: 0, log: [] };
+    document.getElementById("ffLabel").classList.remove("show");
+    clearHint();
+    lastActionAt = Date.now();
+    document.getElementById("clearOverlay").classList.remove("show");
+    document.getElementById("failOverlay").classList.remove("show");
+    document.getElementById("continueOverlay").classList.remove("show");
+    document.getElementById("introOverlay").classList.remove("show");
+    showPlay();
+    say("がんばれ！");
+    updateHUD();
+  },
+};
+</script>
+</body>
+</html>
